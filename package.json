@@ -4,7 +4,7 @@
   "description": "Coffect BackEnd Repository",
   "main": "./dist/index.js",
   "scripts": {
-    "dev": "nodemon dist/index.ts"
+    "dev": "nodemon --exec ts-node dist/index.ts"
   },
   "author": "",
   "license": "ISC",
