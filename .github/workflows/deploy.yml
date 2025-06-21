@@ -37,7 +37,7 @@ jobs:
           EOF
 
       - name: Test SSH Connection
-        run: ssh -vvv playground-umc-8th "echo '✅ SSH Connection Successful'"
+        run: ssh playground-umc-8th "echo '✅ SSH Connection Successful'"
 
       - name: Check for package.json changes
         id: check-package
@@ -60,9 +60,22 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Sync Changed Files
+      - name: Backup and Sync Files
         run: |
-          ssh playground-umc-8th 'mkdir -p /home/ubuntu/coffect-BE'
+          ssh playground-umc-8th '
+            # 백업 디렉토리 생성
+            mkdir -p /home/ubuntu/coffect-BE-backup
+            
+            # 기존 애플리케이션이 있다면 백업
+            if [ -d /home/ubuntu/coffect-BE ]; then
+              cp -r /home/ubuntu/coffect-BE/* /home/ubuntu/coffect-BE-backup/ 2>/dev/null || true
+            fi
+            
+            # 메인 디렉토리 생성
+            mkdir -p /home/ubuntu/coffect-BE
+          '
+          
+          # 변경된 파일들 동기화
           git diff --name-only HEAD^1 HEAD | while read file; do
             if [ -f "$file" ] || [ -d "$file" ]; then
               rsync -avzr --relative "$file" playground-umc-8th:/home/ubuntu/coffect-BE/
@@ -74,94 +87,93 @@ jobs:
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
-            npm install
+            echo "📦 Installing dependencies..."
+            npm ci --production=false
+            echo "✅ Dependencies installed"
           '
 
-      - name: Create or Update .env file
+      - name: Create Environment File
         run: |
-          ssh playground-umc-8th "cat > /home/ubuntu/coffect-BE/.env << EOF
+          ssh playground-umc-8th "cat > /home/ubuntu/coffect-BE/.env << 'EOF'
           DATABASE_NAME=${{ secrets.DATABASE_NAME }}
           DATABASE_HOST=${{ secrets.DATABASE_HOST }}
           DATABASE_PORT=${{ secrets.DATABASE_PORT }}
           DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
           DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-          
           EC2_PORT=${{ secrets.EC2_PORT }}
-          EOF
-          "
+          NODE_ENV=production
+          EOF"
 
-      # 🚨 디버깅을 위한 상세 환경 체크
-      - name: Debug Environment Check
+      - name: Verify Setup and Build
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
-            echo "=========================================="
-            echo "🔍 DEBUGGING ENVIRONMENT"
-            echo "=========================================="
             
-            echo "📁 Current directory:"
-            pwd
+            echo "🔍 Verifying setup..."
             
-            echo "📋 Directory contents:"
-            ls -la
-            
-            echo "📦 package.json exists:"
-            test -f package.json && echo "✅ YES" || echo "❌ NO"
-            
-            echo "🔧 package.json scripts section:"
-            if [ -f package.json ]; then
-              cat package.json | grep -A 20 "\"scripts\"" || echo "No scripts section found"
+            # package.json 확인
+            if [ ! -f package.json ]; then
+              echo "❌ package.json not found"
+              exit 1
             fi
             
-            echo "🌍 .env file exists:"
-            test -f .env && echo "✅ YES" || echo "❌ NO"
+            # scripts 확인
+            echo "📋 Available scripts:"
+            npm run 2>&1 | grep -A 20 "available via" || echo "Could not list scripts"
             
-            echo "🌍 .env contents (masked):"
+            # .env 파일 확인 (내용은 마스킹)
             if [ -f .env ]; then
-              sed "s/=.*/=***MASKED***/" .env
+              echo "✅ .env file created"
+              echo "📝 Environment variables count: $(wc -l < .env)"
+            else
+              echo "❌ .env file missing"
+              exit 1
             fi
             
-            echo "📁 node_modules exists:"
-            test -d node_modules && echo "✅ YES" || echo "❌ NO"
+            # 빌드 실행
+            echo "🏗️ Building application..."
+            if npm run build; then
+              echo "✅ Build successful"
+            else
+              echo "❌ Build failed"
+              exit 1
+            fi
             
-            echo "🏗️ Build directory (dist/build) exists:"
-            test -d dist && echo "✅ dist exists" || echo "❌ dist missing"
-            test -d build && echo "✅ build exists" || echo "❌ build missing"
-            
-            echo "🚀 Node.js version:"
-            node --version
-            
-            echo "📦 NPM version:"
-            npm --version
-            
-            echo "🔍 Available npm scripts:"
-            npm run 2>&1 | grep -A 50 "available via" || echo "Could not list scripts"
-          '
-
-      - name: Build on Server
-        run: |
-          ssh playground-umc-8th '
-            cd /home/ubuntu/coffect-BE
-            echo "🏗️ Starting build process..."
-            npm run build
-            echo "✅ Build completed"
-            
-            echo "📁 Post-build directory contents:"
+            # 빌드 결과 확인
+            echo "📁 Post-build files:"
             ls -la
+            
+            # 일반적인 빌드 결과 디렉토리 확인
+            for dir in dist build out; do
+              if [ -d "$dir" ]; then
+                echo "✅ $dir directory exists"
+                ls -la "$dir" | head -5
+              fi
+            done
           '
 
       - name: Stop Existing Application
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
+            
+            echo "🛑 Stopping existing application..."
+            
+            # PM2 프로세스 정리 (있다면)
+            if command -v pm2 >/dev/null 2>&1; then
+              pm2 stop all 2>/dev/null || true
+              pm2 delete all 2>/dev/null || true
+            fi
+            
+            # PID 파일 기반 정리
             if [ -f app.pid ]; then
               PID=$(cat app.pid)
               if kill -0 $PID 2>/dev/null; then
-                echo "Stopping existing application (PID: $PID)"
-                kill $PID
+                echo "Stopping application (PID: $PID)"
+                kill -TERM $PID
                 sleep 5
                 if kill -0 $PID 2>/dev/null; then
-                  kill -9 $PID
+                  kill -KILL $PID
                 fi
               fi
               rm -f app.pid
@@ -169,26 +181,180 @@ jobs:
             
             # 포트 기반 정리
             if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
-              PID=$(lsof -ti:${{ secrets.EC2_PORT }} 2>/dev/null | head -1)
-              if [ ! -z "$PID" ]; then
-                echo "Stopping process on port ${{ secrets.EC2_PORT }} (PID: $PID)"
-                kill $PID 2>/dev/null || true
+              PIDS=$(lsof -ti:${{ secrets.EC2_PORT }} 2>/dev/null || true)
+              if [ ! -z "$PIDS" ]; then
+                echo "Stopping processes on port ${{ secrets.EC2_PORT }}: $PIDS"
+                echo "$PIDS" | xargs -r kill -TERM
                 sleep 3
+                echo "$PIDS" | xargs -r kill -KILL 2>/dev/null || true
               fi
             fi
+            
+            echo "✅ Cleanup completed"
           '
 
-      # 🚨 테스트용: 직접 실행해보기
-      - name: Test Direct Execution
+      - name: Determine Start Command
+        id: start-cmd
+        run: |
+          # package.json에서 start 스크립트 확인
+          START_SCRIPT=$(ssh playground-umc-8th 'cd /home/ubuntu/coffect-BE && cat package.json | grep -o "\"start\":[^,}]*" | cut -d: -f2 | tr -d " \"" || echo ""')
+          
+          if [ -z "$START_SCRIPT" ]; then
+            echo "start_command=npm run dev" >> $GITHUB_OUTPUT
+            echo "Using dev command as fallback"
+          else
+            echo "start_command=npm run start" >> $GITHUB_OUTPUT
+            echo "Using start command: $START_SCRIPT"
+          fi
+
+      - name: Start Application
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
-            echo "=========================================="
-            echo "🧪 TESTING DIRECT EXECUTION"
-            echo "=========================================="
             
-            echo "📋 Testing npm run start directly (5초 제한):"
-            timeout 5s npm run start || echo "Command terminated after 5 seconds or failed"
+            # 로그 디렉토리 생성
+            mkdir -p logs
             
-            echo "📋 Exit code: $?"
+            echo "🚀 Starting application..."
+            echo "Command: ${{ steps.start-cmd.outputs.start_command }}"
+            
+            # 시작 시간 기록
+            echo "$(date): Starting application with command: ${{ steps.start-cmd.outputs.start_command }}" > logs/deploy.log
+            
+            # 백그라운드에서 애플리케이션 시작
+            nohup bash -c "
+              ${{ steps.start-cmd.outputs.start_command }} >> logs/app.log 2>> logs/app.error.log
+            " > /dev/null 2>&1 &
+            
+            APP_PID=$!
+            echo $APP_PID > app.pid
+            
+            echo "Application started with PID: $APP_PID"
+            echo "$(date): Application started with PID: $APP_PID" >> logs/deploy.log
+            
+            # 초기 상태 확인
+            sleep 3
+            if kill -0 $APP_PID 2>/dev/null; then
+              echo "✅ Initial process check passed"
+            else
+              echo "❌ Process died immediately"
+              echo "=== Error Log ==="
+              if [ -f logs/app.error.log ]; then
+                tail -20 logs/app.error.log
+              fi
+              exit 1
+            fi
+          '
+
+      - name: Health Check
+        run: |
+          ssh playground-umc-8th '
+            cd /home/ubuntu/coffect-BE
+            
+            echo "🏥 Starting health check..."
+            
+            # 최대 1분간 헬스체크
+            for i in {1..12}; do
+              echo "Health check attempt $i/12..."
+              
+              # PID 확인
+              if [ -f app.pid ]; then
+                PID=$(cat app.pid)
+                if kill -0 $PID 2>/dev/null; then
+                  echo "✅ Process is alive (PID: $PID)"
+                  
+                  # 포트 확인
+                  if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
+                    if netstat -ln 2>/dev/null | grep ":${{ secrets.EC2_PORT }}" > /dev/null; then
+                      echo "✅ Application is listening on port ${{ secrets.EC2_PORT }}"
+                      echo "🎉 Deployment successful!"
+                      echo "$(date): Deployment successful - app listening on port ${{ secrets.EC2_PORT }}" >> logs/deploy.log
+                      exit 0
+                    elif [ $i -lt 8 ]; then
+                      echo "⏳ Waiting for port binding... ($i/8)"
+                      sleep 5
+                      continue
+                    else
+                      echo "⚠️ Application running but not binding to expected port"
+                      echo "🎉 Deployment completed (process running)"
+                      echo "$(date): Deployment completed - process running but port check failed" >> logs/deploy.log
+                      exit 0
+                    fi
+                  else
+                    echo "✅ Application is running (no port specified)"
+                    echo "🎉 Deployment successful!"
+                    echo "$(date): Deployment successful - no port check needed" >> logs/deploy.log
+                    exit 0
+                  fi
+                else
+                  echo "❌ Process died (PID: $PID)"
+                  break
+                fi
+              else
+                echo "❌ PID file not found"
+                break
+              fi
+            done
+            
+            # 실패한 경우 로그 출력
+            echo "❌ Health check failed"
+            echo "$(date): Health check failed" >> logs/deploy.log
+            
+            echo "=== Application Log (last 20 lines) ==="
+            if [ -f logs/app.log ]; then
+              tail -20 logs/app.log
+            else
+              echo "No application log found"
+            fi
+            
+            echo "=== Error Log (last 20 lines) ==="
+            if [ -f logs/app.error.log ]; then
+              tail -20 logs/app.error.log
+            else
+              echo "No error log found"
+            fi
+            
+            # 백업에서 복구 시도
+            echo "🔄 Attempting to restore from backup..."
+            if [ -d /home/ubuntu/coffect-BE-backup ] && [ "$(ls -A /home/ubuntu/coffect-BE-backup)" ]; then
+              cp -r /home/ubuntu/coffect-BE-backup/* /home/ubuntu/coffect-BE/
+              echo "Backup restored, please check manually"
+            fi
+            
+            exit 1
+          '
+
+      - name: Deployment Summary
+        if: always()
+        run: |
+          ssh playground-umc-8th '
+            cd /home/ubuntu/coffect-BE
+            
+            echo "📊 Deployment Summary"
+            echo "===================="
+            
+            if [ -f logs/deploy.log ]; then
+              echo "=== Deployment Log ==="
+              cat logs/deploy.log
+            fi
+            
+            echo "=== Current Status ==="
+            if [ -f app.pid ]; then
+              PID=$(cat app.pid)
+              if kill -0 $PID 2>/dev/null; then
+                echo "✅ Application is running (PID: $PID)"
+                
+                if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
+                  if netstat -ln 2>/dev/null | grep ":${{ secrets.EC2_PORT }}" > /dev/null; then
+                    echo "✅ Listening on port ${{ secrets.EC2_PORT }}"
+                  else
+                    echo "⚠️ Not listening on expected port"
+                  fi
+                fi
+              else
+                echo "❌ Application is not running"
+              fi
+            else
+              echo "❌ No PID file found"
+            fi
           '
