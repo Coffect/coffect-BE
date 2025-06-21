@@ -39,6 +39,7 @@ tsc -w
 npm i mysql2
 npm i bcrypt
 npm i crypto
+npm i cors
 npm i swagger-autogen
 npm i swagger-ui-express
 npm install swagger-jsdoc
