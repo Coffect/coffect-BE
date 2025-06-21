@@ -228,7 +228,7 @@ jobs:
             
             echo "🏥 Starting health check..."
             
-            for i in {1..12}; do
+            for i in {1..5}; do
               echo "Health check attempt $i/12..."
               
               if [ -f app.pid ]; then
