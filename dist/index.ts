@@ -16,12 +16,13 @@ app.use(express.json()); // JSON 본문을 파싱
 app.use(express.urlencoded({ extended : true })); // HTML Form에서 전송된 데이터를 파싱
 app.use(morgan('dev')); // HTTP Req 요청 로그 출력
 
-app.use('/swagger-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Health Check Router (HTTPS때 사용 예정)
 router.get('/', (req, res) => {
     res.json({ message : 'Health check' });
 });
+
+app.use('/swagger-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // 상단 Router 설정
 router.use('/user', userRouter);
