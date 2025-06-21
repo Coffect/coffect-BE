@@ -63,19 +63,15 @@ jobs:
       - name: Backup and Sync Files
         run: |
           ssh playground-umc-8th '
-            # 백업 디렉토리 생성
             mkdir -p /home/ubuntu/coffect-BE-backup
             
-            # 기존 애플리케이션이 있다면 백업
             if [ -d /home/ubuntu/coffect-BE ]; then
               cp -r /home/ubuntu/coffect-BE/* /home/ubuntu/coffect-BE-backup/ 2>/dev/null || true
             fi
             
-            # 메인 디렉토리 생성
             mkdir -p /home/ubuntu/coffect-BE
           '
           
-          # 변경된 파일들 동기화
           git diff --name-only HEAD^1 HEAD | while read file; do
             if [ -f "$file" ] || [ -d "$file" ]; then
               rsync -avzr --relative "$file" playground-umc-8th:/home/ubuntu/coffect-BE/
@@ -111,17 +107,14 @@ jobs:
             
             echo "🔍 Verifying setup..."
             
-            # package.json 확인
             if [ ! -f package.json ]; then
               echo "❌ package.json not found"
               exit 1
             fi
             
-            # scripts 확인
             echo "📋 Available scripts:"
             npm run 2>&1 | grep -A 20 "available via" || echo "Could not list scripts"
             
-            # .env 파일 확인 (내용은 마스킹)
             if [ -f .env ]; then
               echo "✅ .env file created"
               echo "📝 Environment variables count: $(wc -l < .env)"
@@ -130,7 +123,6 @@ jobs:
               exit 1
             fi
             
-            # 빌드 실행
             echo "🏗️ Building application..."
             if npm run build; then
               echo "✅ Build successful"
@@ -139,11 +131,9 @@ jobs:
               exit 1
             fi
             
-            # 빌드 결과 확인
             echo "📁 Post-build files:"
             ls -la
             
-            # 일반적인 빌드 결과 디렉토리 확인
             for dir in dist build out; do
               if [ -d "$dir" ]; then
                 echo "✅ $dir directory exists"
@@ -159,13 +149,11 @@ jobs:
             
             echo "🛑 Stopping existing application..."
             
-            # PM2 프로세스 정리 (있다면)
             if command -v pm2 >/dev/null 2>&1; then
               pm2 stop all 2>/dev/null || true
               pm2 delete all 2>/dev/null || true
             fi
             
-            # PID 파일 기반 정리
             if [ -f app.pid ]; then
               PID=$(cat app.pid)
               if kill -0 $PID 2>/dev/null; then
@@ -179,7 +167,6 @@ jobs:
               rm -f app.pid
             fi
             
-            # 포트 기반 정리
             if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
               PIDS=$(lsof -ti:${{ secrets.EC2_PORT }} 2>/dev/null || true)
               if [ ! -z "$PIDS" ]; then
@@ -196,32 +183,21 @@ jobs:
       - name: Determine Start Command
         id: start-cmd
         run: |
-          # package.json에서 start 스크립트 확인
-          START_SCRIPT=$(ssh playground-umc-8th 'cd /home/ubuntu/coffect-BE && cat package.json | grep -o "\"start\":[^,}]*" | cut -d: -f2 | tr -d " \"" || echo ""')
-          
-          if [ -z "$START_SCRIPT" ]; then
-            echo "start_command=npm run dev" >> $GITHUB_OUTPUT
-            echo "Using dev command as fallback"
-          else
-            echo "start_command=npm run start" >> $GITHUB_OUTPUT
-            echo "Using start command: $START_SCRIPT"
-          fi
+          echo "start_command=npm run dev" >> $GITHUB_OUTPUT
+          echo "Using 'npm run dev' as start command"
 
       - name: Start Application
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             
-            # 로그 디렉토리 생성
             mkdir -p logs
             
             echo "🚀 Starting application..."
             echo "Command: ${{ steps.start-cmd.outputs.start_command }}"
             
-            # 시작 시간 기록
             echo "$(date): Starting application with command: ${{ steps.start-cmd.outputs.start_command }}" > logs/deploy.log
             
-            # 백그라운드에서 애플리케이션 시작
             nohup bash -c "
               ${{ steps.start-cmd.outputs.start_command }} >> logs/app.log 2>> logs/app.error.log
             " > /dev/null 2>&1 &
@@ -232,7 +208,6 @@ jobs:
             echo "Application started with PID: $APP_PID"
             echo "$(date): Application started with PID: $APP_PID" >> logs/deploy.log
             
-            # 초기 상태 확인
             sleep 3
             if kill -0 $APP_PID 2>/dev/null; then
               echo "✅ Initial process check passed"
@@ -253,17 +228,14 @@ jobs:
             
             echo "🏥 Starting health check..."
             
-            # 최대 1분간 헬스체크
             for i in {1..12}; do
               echo "Health check attempt $i/12..."
               
-              # PID 확인
               if [ -f app.pid ]; then
                 PID=$(cat app.pid)
                 if kill -0 $PID 2>/dev/null; then
                   echo "✅ Process is alive (PID: $PID)"
                   
-                  # 포트 확인
                   if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
                     if netstat -ln 2>/dev/null | grep ":${{ secrets.EC2_PORT }}" > /dev/null; then
                       echo "✅ Application is listening on port ${{ secrets.EC2_PORT }}"
@@ -296,7 +268,6 @@ jobs:
               fi
             done
             
-            # 실패한 경우 로그 출력
             echo "❌ Health check failed"
             echo "$(date): Health check failed" >> logs/deploy.log
             
@@ -314,7 +285,6 @@ jobs:
               echo "No error log found"
             fi
             
-            # 백업에서 복구 시도
             echo "🔄 Attempting to restore from backup..."
             if [ -d /home/ubuntu/coffect-BE-backup ] && [ "$(ls -A /home/ubuntu/coffect-BE-backup)" ]; then
               cp -r /home/ubuntu/coffect-BE-backup/* /home/ubuntu/coffect-BE/
