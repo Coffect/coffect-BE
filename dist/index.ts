@@ -9,7 +9,7 @@ import { swaggerSpec, swaggerUi } from './config/swagger';
 dotenv.config();
 const app = express();
 const router = express.Router();
-const port = process.env.EC2_PORT;
+const port = process.env.EC2_PORT || 3000;
 
 app.use(cors());
 app.use(express.json()); // JSON 본문을 파싱
