@@ -27,7 +27,7 @@ jobs:
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           cat > ~/.ssh/config << EOF
-          Host playground-umc-7th
+          Host playground-umc-8th
             HostName ${{ secrets.EC2_HOST }}
             User ubuntu
             IdentityFile ~/.ssh/id_rsa
@@ -50,7 +50,7 @@ jobs:
         id: package-lock-hash
         run: |
           if ssh playground-umc-8th "test -f /home/ubuntu/coffect-BE/package-lock.json"; then
-            REMOTE_HASH=$(ssh playground-umc-7th "md5sum /home/ubuntu/coffect-BE/package-lock.json | cut -d' ' -f1")
+            REMOTE_HASH=$(ssh playground-umc-8th "md5sum /home/ubuntu/coffect-BE/package-lock.json | cut -d' ' -f1")
             LOCAL_HASH=$(md5sum package-lock.json | cut -d' ' -f1)
             if [ "$REMOTE_HASH" != "$LOCAL_HASH" ]; then
               echo "::set-output name=changed::true"
@@ -63,24 +63,24 @@ jobs:
 
       - name: Sync Changed Files
         run: |
-          ssh playground-umc-7th 'mkdir -p /home/ubuntu/coffect-BE'
+          ssh playground-umc-8th 'mkdir -p /home/ubuntu/coffect-BE'
           git diff --name-only HEAD^1 HEAD | while read file; do
             if [ -f "$file" ]; then
-              rsync -avz --relative "$file" playground-umc-7th:/home/ubuntu/coffect-BE/
+              rsync -avz --relative "$file" playground-umc-8th:/home/ubuntu/coffect-BE/
             fi
           done
 
       - name: Install Dependencies if needed
         if: steps.check-package.outputs.changed != '' || steps.package-lock-hash.outputs.changed == 'true'
         run: |
-          ssh playground-umc-7th '
+          ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             npm install
           '
 
       - name: Create or Update .env file
         run: |
-            ssh playground-umc-7th 'cat > /home/ubuntu/coffect-BE/.env << EOF
+            ssh playground-umc-8th 'cat > /home/ubuntu/coffect-BE/.env << EOF
             DATABASE_NAME=${{ secrets.DATABASE_NAME }}
             DATABASE_HOST=${{ secrets.DATABASE_HOST }}
             DATABASE_PORT=${{ secrets.DATABASE_PORT }}
@@ -92,7 +92,7 @@ jobs:
 
       - name: Restart Application
         run: |
-          ssh playground-umc-7th '
+          ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             if pgrep node; then
               pkill node
@@ -103,7 +103,7 @@ jobs:
 
       - name: Check if Application is Running
         run: |
-          ssh playground-umc-7th '
+          ssh playground-umc-8th '
             sleep 10
             if pgrep -x "node" > /dev/null; then
               echo "✅ Application is running."
