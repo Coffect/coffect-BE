@@ -90,6 +90,22 @@ jobs:
           EOF
           "
 
+      - name: Verify Environment Setup
+        run: |
+          ssh playground-umc-8th '
+            cd /home/ubuntu/coffect-BE
+            echo "=== Directory contents ==="
+            ls -la
+            echo "=== .env file exists ==="
+            test -f .env && echo "✅ .env file exists" || echo "❌ .env file missing"
+            echo "=== package.json scripts ==="
+            if [ -f package.json ]; then
+              cat package.json | grep -A 10 "scripts"
+            else
+              echo "❌ package.json not found"
+            fi
+          '
+
       - name: Build on Server
         run: |
           ssh playground-umc-8th '
@@ -97,30 +113,113 @@ jobs:
             npm run build
           '
 
-      - name: Restart Application
+      - name: Stop Existing Application
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
-            if pgrep -x node > /dev/null; then
-              pkill node
-              sleep 5
+            # PID 파일이 있다면 해당 프로세스만 종료
+            if [ -f app.pid ]; then
+              PID=$(cat app.pid)
+              if kill -0 $PID 2>/dev/null; then
+                echo "Stopping existing application (PID: $PID)"
+                kill $PID
+                sleep 5
+                # 강제 종료가 필요한 경우
+                if kill -0 $PID 2>/dev/null; then
+                  kill -9 $PID
+                fi
+              fi
+              rm -f app.pid
+            else
+              # PID 파일이 없는 경우 포트 기반으로 프로세스 찾기
+              if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
+                PID=$(lsof -ti:${{ secrets.EC2_PORT }} | head -1)
+                if [ ! -z "$PID" ]; then
+                  echo "Stopping process on port ${{ secrets.EC2_PORT }} (PID: $PID)"
+                  kill $PID
+                  sleep 5
+                fi
+              fi
             fi
-            nohup npm run start > /home/ubuntu/coffect-BE/app.log 2> /home/ubuntu/coffect-BE/app.error.log &
           '
 
-      - name: Check if Application is Running
+      - name: Start Application
         run: |
           ssh playground-umc-8th '
-            sleep 10
-            if pgrep -x node > /dev/null; then
-              echo "✅ Application is running."
+            cd /home/ubuntu/coffect-BE
+            # 로그 디렉토리 생성
+            mkdir -p logs
+            
+            # 애플리케이션 시작 (PID 저장)
+            nohup npm run start > logs/app.log 2> logs/app.error.log &
+            APP_PID=$!
+            echo $APP_PID > app.pid
+            
+            echo "Application started with PID: $APP_PID"
+            
+            # 잠시 대기 후 프로세스 상태 확인
+            sleep 3
+            if kill -0 $APP_PID 2>/dev/null; then
+              echo "✅ Application process is running"
             else
-              echo "❌ Application failed to start."
-              if [ -f /home/ubuntu/coffect-BE/app.error.log ]; then
-                cat /home/ubuntu/coffect-BE/app.error.log
-              else
-                echo "No error log found."
-              fi
+              echo "❌ Application process died immediately"
               exit 1
             fi
+          '
+
+      - name: Health Check
+        run: |
+          ssh playground-umc-8th '
+            cd /home/ubuntu/coffect-BE
+            
+            # 최대 30초 동안 애플리케이션 시작 대기
+            for i in {1..6}; do
+              sleep 5
+              echo "Health check attempt $i/6..."
+              
+              # PID 확인
+              if [ -f app.pid ]; then
+                PID=$(cat app.pid)
+                if kill -0 $PID 2>/dev/null; then
+                  echo "✅ Process is running (PID: $PID)"
+                  
+                  # 포트 리스닝 확인 (EC2_PORT가 설정된 경우)
+                  if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
+                    if netstat -ln | grep ":${{ secrets.EC2_PORT }}" > /dev/null; then
+                      echo "✅ Application is listening on port ${{ secrets.EC2_PORT }}"
+                      exit 0
+                    else
+                      echo "⏳ Waiting for application to start listening on port ${{ secrets.EC2_PORT }}..."
+                    fi
+                  else
+                    echo "✅ Application appears to be running"
+                    exit 0
+                  fi
+                else
+                  echo "❌ Process died (PID: $PID)"
+                  break
+                fi
+              else
+                echo "❌ PID file not found"
+                break
+              fi
+            done
+            
+            # 실패한 경우 로그 출력
+            echo "❌ Application failed to start properly"
+            echo "=== Application Log ==="
+            if [ -f logs/app.log ]; then
+              tail -20 logs/app.log
+            else
+              echo "No application log found"
+            fi
+            
+            echo "=== Error Log ==="
+            if [ -f logs/app.error.log ]; then
+              tail -20 logs/app.error.log
+            else
+              echo "No error log found"
+            fi
+            
+            exit 1
           '
