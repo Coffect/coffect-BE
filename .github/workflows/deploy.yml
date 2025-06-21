@@ -13,13 +13,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2  # 이전 커밋도 가져오기 위해 설정
+          fetch-depth: 2
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          cache: 'npm'   # npm 캐시 활성화
+          cache: 'npm'
 
       - name: Configure SSH
         run: |
@@ -37,8 +37,7 @@ jobs:
           EOF
 
       - name: Test SSH Connection
-        run: |
-          ssh -vvv playground-umc-8th "echo '✅ SSH Connection Successful'"
+        run: ssh -vvv playground-umc-8th "echo '✅ SSH Connection Successful'"
 
       - name: Check for package.json changes
         id: check-package
@@ -80,15 +79,22 @@ jobs:
 
       - name: Create or Update .env file
         run: |
-            ssh playground-umc-8th 'cat > /home/ubuntu/coffect-BE/.env << EOF
-            DATABASE_NAME=${{ secrets.DATABASE_NAME }}
-            DATABASE_HOST=${{ secrets.DATABASE_HOST }}
-            DATABASE_PORT=${{ secrets.DATABASE_PORT }}
-            DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
-            DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+          ssh playground-umc-8th 'cat > /home/ubuntu/coffect-BE/.env << EOF
+          DATABASE_NAME=${{ secrets.DATABASE_NAME }}
+          DATABASE_HOST=${{ secrets.DATABASE_HOST }}
+          DATABASE_PORT=${{ secrets.DATABASE_PORT }}
+          DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
 
-            EC2_PORT=${{ secrets.EC2_PORT }}
-            EOF'
+          EC2_PORT=${{ secrets.EC2_PORT }}
+          EOF'
+
+      - name: Build on Server
+        run: |
+          ssh playground-umc-8th '
+            cd /home/ubuntu/coffect-BE
+            npm run build
+          '
 
       - name: Restart Application
         run: |
@@ -98,7 +104,7 @@ jobs:
               pkill node
               sleep 5
             fi
-            nohup npm run dev > /home/ubuntu/coffect-BE/app.log 2> /home/ubuntu/coffect-BE/app.error.log &
+            nohup npm run start > /home/ubuntu/coffect-BE/app.log 2> /home/ubuntu/coffect-BE/app.error.log &
           '
 
       - name: Check if Application is Running
