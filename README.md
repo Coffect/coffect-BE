@@ -21,6 +21,26 @@ Coffect BackEnd Repository
 | :memo: Docs        | 문서 수정 및 기타 코드 수정 (CICD)                                      |
 
 
+## File Struct
+### DDD (Domain Driven Design)
+<pre>
+📁 COFFE...
+├── 📁 dist
+│   └── 📁 config
+├── 📁 user
+│   ├── 📁 user.Controller
+│   ├── 📁 user.Model
+│   ├── 📁 user.Server
+│   ├── user.Router.ts
+├── 📁 thread
+│   ├── 📁 thread.Controller
+│   ├── 📁 thread.Model
+│   ├── 📁 thread.Server
+│   ├── thread.Router.ts
+├── index.ts
+├── 📁 node_modules
+├── 📁 prisma
+</pre>
 
 ## init Develope Env Setting 
 <pre>
