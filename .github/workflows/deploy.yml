@@ -183,7 +183,7 @@ jobs:
       - name: Determine Start Command
         id: start-cmd
         run: |
-          echo "start_command=npm run dev" >> $GITHUB_OUTPUT
+          echo "start_command=npm run lint" >> $GITHUB_OUTPUT
           echo "Using 'npm run dev' as start command"
 
       - name: Start Application
