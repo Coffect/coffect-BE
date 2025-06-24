@@ -1,0 +1,132 @@
+{
+	"openapi": "3.0.0",
+	"components": {
+		"examples": {},
+		"headers": {},
+		"parameters": {},
+		"requestBodies": {},
+		"responses": {},
+		"schemas": {
+			"ErrorMessage": {
+				"properties": {
+					"statusCode": {
+						"type": "number",
+						"format": "double"
+					},
+					"customCode": {
+						"type": "string"
+					},
+					"message": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"statusCode",
+					"customCode",
+					"message"
+				],
+				"type": "object",
+				"additionalProperties": false
+			}
+		},
+		"securitySchemes": {}
+	},
+	"info": {
+		"title": "coffect-be",
+		"version": "1.0.0",
+		"description": "Coffect BackEnd Repository",
+		"license": {
+			"name": "ISC"
+		},
+		"contact": {}
+	},
+	"paths": {
+		"/user/userInfo": {
+			"post": {
+				"operationId": "TestuserInfo",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"API 테스트 중입니다.": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorMessage"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"statusCode": 400,
+											"customCode": "EC400",
+											"message": "회원 정보를 입력하지 않은 유저입니다."
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ErrorMessage"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"statusCode": 500,
+											"customCode": "EC500",
+											"message": "서버 에러입니다."
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "Coffect API 테스트 중입니다.",
+				"summary": "Coffect BE Test",
+				"tags": [
+					"User Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "유저 정보",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"userName": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"userName"
+								],
+								"type": "object",
+								"description": "유저 정보"
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"servers": [
+		{
+			"url": "/"
+		}
+	]
+}
