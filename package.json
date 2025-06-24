@@ -4,10 +4,11 @@
   "description": "Coffect BackEnd Repository",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "build": "npm run lint && tsc",
+    "start": "node src/index.js",
+    "lint": "eslint 'src/**/*.{ts,tsx}' --fix --ext .ts,.tsx",
     "dev": "npm run build && nodemon src/index.js"
-},
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
@@ -34,6 +35,12 @@
     "@types/nodemailer": "^6.4.17",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.0",
+    "prettier": "^3.6.0",
     "ts-node": "^10.9.2"
   }
 }
