@@ -4,9 +4,9 @@
   "description": "Coffect BackEnd Repository",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "npm run lint && tsc",
+    "build": "npm run lint && tsoa spec-and-routes && tsc",
     "start": "node src/index.js",
-    "lint": "eslint 'src/**/*.{ts,tsx}' --fix --ext .ts,.tsx",
+    "lint": "eslint src/**/*.{ts,tsx} --fix --ext .ts,.tsx",
     "dev": "npm run build && nodemon src/index.js"
   },
   "author": "",
@@ -25,7 +25,8 @@
     "prisma": "^6.10.1",
     "swagger-autogen": "^2.23.7",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "tsoa": "^6.6.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
