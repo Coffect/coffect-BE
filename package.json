@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run lint && tsoa spec-and-routes && tsc",
     "start": "node src/index.js",
-    "lint": "eslint src --ext .ts,.tsx --fix",
+    "lint": "eslint src/**/*.ts --fix --ext .ts",
     "dev": "npm run build && nodemon --watch '*.ts' --exec 'ts-node' src/index.ts"
   },
   "author": "",
