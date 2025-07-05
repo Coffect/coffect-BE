@@ -2,7 +2,12 @@
   "parser": "@typescript-eslint/parser",
   "parserOptions": { "project": "./tsconfig.json", "sourceType": "module" },
   "plugins": ["prettier", "@typescript-eslint"],
-  "ignorePatterns": ["dist/**/*", "node_modules/**/*", "generated/**/*"],
+  "ignorePatterns": [
+    "dist/**/*",
+    "node_modules/**/*",
+    "generated/**/*",
+    "@types"
+  ],
   "rules": {
     // Prettier 충돌 방지
     // "prettier/prettier": "warn",
