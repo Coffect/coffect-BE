@@ -6,7 +6,9 @@ import morgan from 'morgan';
 import * as swaggerJson from './config/swagger.json';
 import * as swaggerUI from 'swagger-ui-express';
 
-import { RegisterRoutes } from './routes/tsoaRoutes';
+import {Request, Response, NextFunction} from 'express';
+import {RegisterRoutes} from './routes/tsoaRoutes';
+import { errorHandler } from './middleware/error';
 import test from './routes/tokentest';
 
 dotenv.config();
@@ -35,3 +37,5 @@ app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerJson));
 app.listen(port, () => {
   console.log(`Sever is running on port ${port}`);
 });
+
+app.use(errorHandler);
