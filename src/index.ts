@@ -6,7 +6,10 @@ import morgan from 'morgan';
 import * as swaggerJson from './config/swagger.json';
 import * as swaggerUI from 'swagger-ui-express';
 
+import {Request, Response, NextFunction} from 'express';
 import {RegisterRoutes} from './routes/tsoaRoutes';
+import { errorHandler } from './middleware/error';
+import test from './routes/tokentest';
 
 dotenv.config();
 const app = express();
@@ -21,6 +24,7 @@ app.use(morgan('dev')); // HTTP Req 요청 로그 출력
 //라우터 설정
 RegisterRoutes(app);
 
+app.use('/test', test);
 // Health Check Router (HTTPS때 사용 예정)
 router.get('/', (req, res) => {
   res.json({ message: 'Health check' });
@@ -33,3 +37,5 @@ app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerJson));
 app.listen(port, () => {
   console.log(`Sever is running on port ${port}`);
 });
+
+app.use(errorHandler);

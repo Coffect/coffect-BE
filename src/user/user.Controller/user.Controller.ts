@@ -9,7 +9,19 @@ import {
   Response
 } from 'tsoa';
 import { Request as ExpressRequest } from 'express';
-import { ErrorMessage, userError } from '../user.Message/user.Message';
+import {
+  UserNotSignUpError, 
+  UserForbiddenError, 
+  UserMissingFieldError, 
+  UserUnauthorizedError,
+  UserServerError
+} from '../user.Message/user.Message';
+
+import { 
+  ITsoaErrorResponse, 
+  ITsoaSuccessResponse, 
+  TsoaSuccessResponse 
+} from '../../config/tsoaResponse';
 
 @Route('user')
 @Tags('User Controller')
@@ -22,23 +34,31 @@ export class UserController extends Controller{
    * @returns 요청 성공 여부
    */
   @Post('userInfo')
-  @SuccessResponse('200', 'OK', 'API 테스트 중입니다.')
-  @Response<ErrorMessage>(
+  @SuccessResponse('200', 'API 테스트 성공.')
+  @Response<ITsoaErrorResponse>(
     400,
     'Bad Request', 
     {
-      statusCode: 400,
-      customCode: 'EC400',
-      message: '회원 정보를 입력하지 않은 유저입니다.'
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'EC400',
+        reason: '회원 정보를 입력하지 않은 유저입니다.',
+        data: null
+      },
+      success: null
     }
   )
-  @Response<ErrorMessage>(
+  @Response<ITsoaErrorResponse>(
     500,
     'Internal Server Error', 
     {
-      statusCode: 500,
-      customCode: 'EC500',
-      message: '서버 에러입니다.'
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'EC500',
+        reason: '서버 오류가 발생했습니다.',
+        data: null
+      },
+      success: null
     }
   )
   public async testuserInfo (
@@ -46,18 +66,13 @@ export class UserController extends Controller{
     @Body() body: {
       userName: string
     }
-  ): Promise<string> {
-    try {
-      const user = body.userName;
+  ): Promise<ITsoaSuccessResponse<string>> {
+    const user: string = body.userName;
 
-      if(!user) {
-        throw userError.notSignUp;
-      }
-
-    } catch (error : any) {
-      throw userError.serverError;
+    if(user === null || user === '') {
+      throw new UserNotSignUpError('유저 정보가 없습니다.');
     }
 
-    return 'API Test 중입니다.';
+    return new TsoaSuccessResponse<string>('API 테스트 중입니다.');
   };
 };

@@ -6,8 +6,8 @@
   "scripts": {
     "build": "npm run lint && tsoa spec-and-routes && tsc",
     "start": "node src/index.js",
-    "lint": "eslint src/**/*.{ts,tsx} --fix --ext .ts,.tsx",
-    "dev": "npm run build && nodemon src/index.js"
+    "lint": "eslint src/**/*.ts --fix --ext .ts",
+    "dev": "npm run build && nodemon --watch '*.ts' --exec ts-node src/index.ts"
   },
   "author": "",
   "license": "ISC",
@@ -32,6 +32,7 @@
     "@types/bcrypt": "^5.0.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
     "@types/nodemailer": "^6.4.17",
     "@types/swagger-jsdoc": "^6.0.4",
