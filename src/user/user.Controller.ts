@@ -96,7 +96,7 @@ export class UserController extends Controller {
   public async login(
     @Request() req: ExpressRequest,
     @Body()
-    body: {
+      body: {
       userPassword: string;
       userId: string;
     }
@@ -104,7 +104,11 @@ export class UserController extends Controller {
     const userid = body.userId;
     const userPassword = body.userPassword;
 
-    const loginResult = await UserService.loginService(userid, userPassword);
+    const loginResult = await UserService.loginService(
+      userid,
+      userPassword,
+      req
+    );
     return new TsoaSuccessResponse(loginResult);
   }
 

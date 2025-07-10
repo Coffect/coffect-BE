@@ -17,6 +17,6 @@ async function testConnection() {
 // (async () => {
 //   await testConnection();
 // })();
-//connection test code
+// connection test code
 
 export { prisma };
