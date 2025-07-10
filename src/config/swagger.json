@@ -66,6 +66,46 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"UserLogin": {
+				"properties": {
+					"aToken": {
+						"type": "string"
+					},
+					"rToken": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"aToken",
+					"rToken"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_UserLogin_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"$ref": "#/components/schemas/UserLogin"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -164,6 +204,90 @@
 								],
 								"type": "object",
 								"description": "유저 정보"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/user/login": {
+			"post": {
+				"operationId": "Login",
+				"responses": {
+					"200": {
+						"description": "로그인성공",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_UserLogin_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"User Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"userPassword": {
+										"type": "string"
+									},
+									"userId": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"userPassword",
+									"userId"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/user/refresh": {
+			"post": {
+				"operationId": "Refresh",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"User Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"token": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"token"
+								],
+								"type": "object"
 							}
 						}
 					}

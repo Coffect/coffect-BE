@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { accessToken, refreshToken } from '../config/token';
-import verifyToken from '../middleware/verify';
+import verifyToken from '../middleware/verifyJWT';
 
 const test = express.Router();
 
