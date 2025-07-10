@@ -5,7 +5,8 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_HOST")
+  url      = env("DATABASE_LOCAL") //TODO: commit전에 수정할것
+  
 }
 
 model User {

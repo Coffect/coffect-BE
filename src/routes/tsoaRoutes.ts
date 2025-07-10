@@ -12,26 +12,6 @@ import type { Request as ExRequest, Response as ExResponse, RequestHandler, Rout
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
 const models: TsoaRoute.Models = {
-    "ITsoaSuccessResponse_string_": {
-        "dataType": "refObject",
-        "properties": {
-            "resultType": {"dataType":"string","required":true},
-            "error": {"dataType":"enum","enums":[null],"required":true},
-            "success": {"dataType":"string","required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ITsoaErrorResponse": {
-        "dataType": "refObject",
-        "properties": {
-            "resultType": {"dataType":"string","required":true},
-            "error": {"dataType":"nestedObjectLiteral","nestedProperties":{"data":{"dataType":"union","subSchemas":[{"dataType":"any"},{"dataType":"enum","enums":[null]}]},"reason":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},"errorCode":{"dataType":"string"}},"required":true},
-            "success": {"dataType":"enum","enums":[null],"required":true},
-        },
-        "additionalProperties": false,
-    },
-    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "UserLogin": {
         "dataType": "refObject",
         "properties": {
@@ -47,6 +27,26 @@ const models: TsoaRoute.Models = {
             "resultType": {"dataType":"string","required":true},
             "error": {"dataType":"enum","enums":[null],"required":true},
             "success": {"ref":"UserLogin","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ITsoaErrorResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "resultType": {"dataType":"string","required":true},
+            "error": {"dataType":"nestedObjectLiteral","nestedProperties":{"data":{"dataType":"union","subSchemas":[{"dataType":"any"},{"dataType":"enum","enums":[null]}]},"reason":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}]},"errorCode":{"dataType":"string"}},"required":true},
+            "success": {"dataType":"enum","enums":[null],"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ITsoaSuccessResponse_string_": {
+        "dataType": "refObject",
+        "properties": {
+            "resultType": {"dataType":"string","required":true},
+            "error": {"dataType":"enum","enums":[null],"required":true},
+            "success": {"dataType":"string","required":true},
         },
         "additionalProperties": false,
     },
@@ -68,40 +68,9 @@ export function RegisterRoutes(app: Router) {
 
 
     
-        const argsUserController_testuserInfo: Record<string, TsoaRoute.ParameterSchema> = {
-                req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"userName":{"dataType":"string","required":true}}},
-        };
-        app.post('/user/userInfo',
-            ...(fetchMiddlewares<RequestHandler>(UserController)),
-            ...(fetchMiddlewares<RequestHandler>(UserController.prototype.testuserInfo)),
-
-            async function UserController_testuserInfo(request: ExRequest, response: ExResponse, next: any) {
-
-            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-
-            let validatedArgs: any[] = [];
-            try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsUserController_testuserInfo, request, response });
-
-                const controller = new UserController();
-
-              await templateService.apiHandler({
-                methodName: 'testuserInfo',
-                controller,
-                response,
-                next,
-                validatedArgs,
-                successStatus: 200,
-              });
-            } catch (err) {
-                return next(err);
-            }
-        });
-        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsUserController_login: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"userPassword":{"dataType":"string","required":true},"userId":{"dataType":"string","required":true}}},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"userId":{"dataType":"string","required":true},"userPassword":{"dataType":"string","required":true}}},
         };
         app.post('/user/login',
             ...(fetchMiddlewares<RequestHandler>(UserController)),
@@ -123,7 +92,7 @@ export function RegisterRoutes(app: Router) {
                 response,
                 next,
                 validatedArgs,
-                successStatus: 200,
+                successStatus: undefined,
               });
             } catch (err) {
                 return next(err);

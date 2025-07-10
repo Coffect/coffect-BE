@@ -63,3 +63,13 @@ export class UserInvalidBodyError extends BasicError {
     super(400, 'EC405', '잘못된 요청 데이터입니다.', description);
   }
 }
+export class UserNotExist extends BasicError {
+  constructor(description: string) {
+    super(404, 'EC404', '존재하지 않는 아이디입니다', description);
+  }
+}
+export class UserInvaildPassword extends BasicError {
+  constructor(description: string) {
+    super(405, 'EC405', '비밀번호가 일치하지 않습니다', description);
+  }
+}

@@ -6,7 +6,8 @@
     "dist/**/*",
     "node_modules/**/*",
     "generated/**/*",
-    "@types"
+    "@types",
+    "test/"
   ],
   "rules": {
     // Prettier 충돌 방지

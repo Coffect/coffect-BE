@@ -6,8 +6,8 @@ import morgan from 'morgan';
 import * as swaggerJson from './config/swagger.json';
 import * as swaggerUI from 'swagger-ui-express';
 
-import {Request, Response, NextFunction} from 'express';
-import {RegisterRoutes} from './routes/tsoaRoutes';
+import { Request, Response, NextFunction } from 'express';
+import { RegisterRoutes } from './routes/tsoaRoutes';
 import { errorHandler } from './middleware/error';
 import test from './routes/tokentest';
 
