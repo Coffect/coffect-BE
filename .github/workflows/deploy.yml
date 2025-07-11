@@ -98,6 +98,7 @@ jobs:
           DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
           DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
           EC2_PORT=${{ secrets.EC2_PORT }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
           NODE_ENV=production
           EOF"
 
