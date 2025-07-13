@@ -2,10 +2,15 @@ import { sign, verify } from 'jsonwebtoken';
 import process from 'node:process';
 import { CustomJwt } from '../../@types/jwt';
 
-const decodeToken = (token: string): Promise<CustomJwt> => {
+const decodeToken = (
+  token: string,
+  isRefreshToken: boolean = false
+): Promise<CustomJwt> => {
   return new Promise((resolve, reject) => {
-    const jwtSercet = process.env.JWT_SECRET!;
-    verify(token, jwtSercet, (err, decoded) => {
+    const jwtSecret = isRefreshToken
+      ? process.env.JWT_REFRESH!
+      : process.env.JWT_SECRET!;
+    verify(token, jwtSecret, (err, decoded) => {
       if (err) {
         console.log(err);
         reject(err);

@@ -16,7 +16,7 @@ export class UserService {
       if (verify) {
         const atoken = accessToken(userInfo.name, userInfo.userId);
         const rToken = refreshToken(userInfo.name, userInfo.userId);
-        const token = await decodeToken(rToken);
+        const token = await decodeToken(rToken, true);
         const userAgent = userLogin.req.headers['user-agent']!;
         await UserModel.insertRefreshToken(token, rToken, userAgent);
         return new UserLoginResponse(atoken, rToken);
