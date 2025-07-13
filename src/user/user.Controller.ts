@@ -18,7 +18,10 @@ import {
 } from '../config/tsoaResponse';
 import { UserService } from './user.Service';
 import verifyToken from '../middleware/verifyJWT';
-import { UserLogin } from '../middleware/user.DTO/user.DTO';
+import {
+  UserLoginRequest,
+  UserLoginResponse
+} from '../middleware/user.DTO/user.DTO';
 
 @Route('user')
 @Tags('User Controller')
@@ -100,15 +103,12 @@ export class UserController extends Controller {
       userPassword: string;
       userId: string;
     }
-  ): Promise<ITsoaSuccessResponse<UserLogin>> {
+  ): Promise<ITsoaSuccessResponse<UserLoginResponse>> {
     const userid = body.userId;
     const userPassword = body.userPassword;
+    const userLogin = new UserLoginRequest(userid, userPassword, req);
 
-    const loginResult = await UserService.loginService(
-      userid,
-      userPassword,
-      req
-    );
+    const loginResult = await UserService.loginService(userLogin);
     return new TsoaSuccessResponse(loginResult);
   }
 

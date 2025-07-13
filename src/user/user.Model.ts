@@ -1,4 +1,3 @@
-import { Request } from 'express';
 import { CustomJwt } from '../../@types/jwt';
 import { prisma } from '../config/prisma.config';
 

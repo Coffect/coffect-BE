@@ -12,7 +12,7 @@ import type { Request as ExRequest, Response as ExResponse, RequestHandler, Rout
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
 const models: TsoaRoute.Models = {
-    "UserLogin": {
+    "UserLoginResponse": {
         "dataType": "refObject",
         "properties": {
             "aToken": {"dataType":"string","required":true},
@@ -21,12 +21,12 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-    "ITsoaSuccessResponse_UserLogin_": {
+    "ITsoaSuccessResponse_UserLoginResponse_": {
         "dataType": "refObject",
         "properties": {
             "resultType": {"dataType":"string","required":true},
             "error": {"dataType":"enum","enums":[null],"required":true},
-            "success": {"ref":"UserLogin","required":true},
+            "success": {"ref":"UserLoginResponse","required":true},
         },
         "additionalProperties": false,
     },

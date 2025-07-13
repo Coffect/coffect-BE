@@ -7,7 +7,7 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
-			"UserLogin": {
+			"UserLoginResponse": {
 				"properties": {
 					"aToken": {
 						"type": "string"
@@ -23,7 +23,7 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"ITsoaSuccessResponse_UserLogin_": {
+			"ITsoaSuccessResponse_UserLoginResponse_": {
 				"properties": {
 					"resultType": {
 						"type": "string"
@@ -36,7 +36,7 @@
 						"nullable": true
 					},
 					"success": {
-						"$ref": "#/components/schemas/UserLogin"
+						"$ref": "#/components/schemas/UserLoginResponse"
 					}
 				},
 				"required": [
@@ -129,7 +129,7 @@
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ITsoaSuccessResponse_UserLogin_"
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_UserLoginResponse_"
 								}
 							}
 						}

@@ -9,29 +9,31 @@ datasource db {
 }
 
 model User {
-  userId        Int             @id
-  id            String          @unique
-  password      String
-  mail          String
-  name          String
-  introduce     String?
-  salt          String
-  createdAt     DateTime        @default(now())
-  profileImage  String
-  questionIndex Json?
-  categoryMatch CategoryMatch[]
-  chatJoins     ChatJoin[]
-  coffeeChats1  CoffeeChat[]    @relation("FirstUser")
-  coffeeChats2  CoffeeChat[]    @relation("SecondUser")
-  comments      Comment[]
-  follows       Follow?
-  messages      Message[]
-  refreshTokens RefeshToken[]
-  specifyInfo   SpecifyInfo?
-  threads       Thread[]
-  threadLikes   ThreadLike[]
-  threadScraps  ThreadScrap[]
-  userTimetable UserTimetable?
+  userId          Int             @id
+  id              String          @unique
+  password        String
+  mail            String
+  name            String
+  introduce       String?
+  salt            String
+  createdAt       DateTime        @default(now())
+  profileImage    String
+  questionIndex   Json?
+  coffeeChatCount Int             @default(4)
+  todayInterest   Int?
+  categoryMatch   CategoryMatch[]
+  chatJoins       ChatJoin[]
+  coffeeChats1    CoffeeChat[]    @relation("FirstUser")
+  coffeeChats2    CoffeeChat[]    @relation("SecondUser")
+  comments        Comment[]
+  follows         Follow?
+  messages        Message[]
+  refreshTokens   RefeshToken[]
+  specifyInfo     SpecifyInfo?
+  threads         Thread[]
+  threadLikes     ThreadLike[]
+  threadScraps    ThreadScrap[]
+  userTimetable   UserTimetable?
 }
 
 model UserTimetable {
@@ -184,14 +186,14 @@ model CategoryMatch {
 }
 
 model RefeshToken {
-  Key         Int      @id @default(autoincrement())
-  userId      Int
-  tokenHashed String   @db.VarChar(256)
-  createdAt   DateTime
-  expiredAt   DateTime
-  userAgent   String?
-  ipAddress   String?
-  user        User     @relation(fields: [userId], references: [userId])
+  refreshTokenIndex Int      @id @default(autoincrement())
+  userId            Int
+  tokenHashed       String   @db.VarChar(256)
+  createdAt         DateTime
+  expiredAt         DateTime
+  userAgent         String?
+  ipAddress         String?
+  user              User     @relation(fields: [userId], references: [userId])
 
   @@index([userId], map: "RefeshToken_userId_fkey")
 }

@@ -1,27 +1,25 @@
 import { accessToken, decodeToken, refreshToken } from '../config/token';
 import { UserInvaildPassword, UserNotExist } from './user.Message';
-import { UserLogin } from '../middleware/user.DTO/user.DTO';
+import {
+  UserLoginRequest,
+  UserLoginResponse
+} from '../middleware/user.DTO/user.DTO';
 import { UserModel } from './user.Model';
 import { verifyPassword } from '../config/crypto';
-import { Request } from 'express';
 
 export class UserService {
-  static async loginService(
-    userid: string,
-    userPassword: string,
-    req: Request
-  ) {
-    const userInfo = await UserModel.selectUserInfo(userid);
+  static async loginService(userLogin: UserLoginRequest) {
+    const userInfo = await UserModel.selectUserInfo(userLogin.id);
     if (userInfo) {
-      const hashedData = [userPassword, userInfo.salt, userInfo.password];
+      const hashedData = [userLogin.password, userInfo.salt, userInfo.password];
       const verify = await verifyPassword(hashedData);
       if (verify) {
         const atoken = accessToken(userInfo.name, userInfo.userId);
         const rToken = refreshToken(userInfo.name, userInfo.userId);
         const token = await decodeToken(rToken);
-        const userAgent = req.headers['user-agent']!;
+        const userAgent = userLogin.req.headers['user-agent']!;
         await UserModel.insertRefreshToken(token, rToken, userAgent);
-        return new UserLogin(atoken, rToken);
+        return new UserLoginResponse(atoken, rToken);
       }
       throw new UserInvaildPassword('비밀번호가 맞지 않습니다');
     }

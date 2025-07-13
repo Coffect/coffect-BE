@@ -1,3 +1,4 @@
+// 비밀번호 암호화
 import * as crypto from 'crypto';
 import * as util from 'util';
 
