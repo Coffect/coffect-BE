@@ -19,9 +19,17 @@ export class UserModel {
     rToken: string,
     userAgent: string
   ) {
-    const q = await prisma.refeshToken.create({
-      data: {
+    await prisma.refeshToken.upsert({
+      where: { userId: token.index },
+      update: {
+        tokenHashed: rToken,
+        createdAt: new Date(token.iat! * 1000),
+        expiredAt: new Date(token.exp! * 1000),
+        userAgent: userAgent
+      },
+      create: {
         userId: token.index,
+        userName: token.userName,
         tokenHashed: rToken,
         createdAt: new Date(token.iat! * 1000),
         expiredAt: new Date(token.exp! * 1000),

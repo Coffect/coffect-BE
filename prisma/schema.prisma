@@ -187,12 +187,12 @@ model CategoryMatch {
 
 model RefeshToken {
   refreshTokenIndex Int      @id @default(autoincrement())
-  userId            Int
+  userId            Int      @unique
+  userName          String   @db.VarChar(25)
   tokenHashed       String   @db.VarChar(256)
   createdAt         DateTime
   expiredAt         DateTime
   userAgent         String?
-  ipAddress         String?
   user              User     @relation(fields: [userId], references: [userId])
 
   @@index([userId], map: "RefeshToken_userId_fkey")
