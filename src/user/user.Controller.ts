@@ -26,13 +26,13 @@ import {
 @Route('user')
 @Tags('User Controller')
 export class UserController extends Controller {
-  /**
-   * Coffect API 테스트 중입니다.
-   *
-   * @summary Coffect BE Test
-   * @param body 유저 정보
-   * @returns 요청 성공 여부
-   */
+  // /**
+  //  * Coffect API 테스트 중입니다.
+  //  *
+  //  * @summary Coffect BE Test
+  //  * @param body 유저 정보
+  //  * @returns 요청 성공 여부
+  //  */
   // @Post('userInfo')
   // @SuccessResponse('200', 'API 테스트 성공.')
   // @Response<ITsoaErrorResponse>(400, 'Bad Request', {

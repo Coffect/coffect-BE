@@ -181,8 +181,8 @@
 						}
 					}
 				},
-				"description": "Coffect API 테스트 중입니다.",
-				"summary": "Coffect BE Test",
+				"description": "로그인",
+				"summary": "로그인",
 				"tags": [
 					"User Controller"
 				],
