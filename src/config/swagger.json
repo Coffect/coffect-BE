@@ -7,7 +7,23 @@
 		"requestBodies": {},
 		"responses": {},
 		"schemas": {
-			"ITsoaSuccessResponse_string_": {
+			"UserLoginResponse": {
+				"properties": {
+					"aToken": {
+						"type": "string"
+					},
+					"rToken": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"aToken",
+					"rToken"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_UserLoginResponse_": {
 				"properties": {
 					"resultType": {
 						"type": "string"
@@ -20,7 +36,7 @@
 						"nullable": true
 					},
 					"success": {
-						"type": "string"
+						"$ref": "#/components/schemas/UserLoginResponse"
 					}
 				},
 				"required": [
@@ -66,6 +82,30 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_string_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -80,22 +120,22 @@
 		"contact": {}
 	},
 	"paths": {
-		"/user/userInfo": {
+		"/user/login": {
 			"post": {
-				"operationId": "TestuserInfo",
+				"operationId": "Login",
 				"responses": {
 					"200": {
-						"description": "API 테스트 성공.",
+						"description": "로그인성공",
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_UserLoginResponse_"
 								}
 							}
 						}
 					},
 					"400": {
-						"description": "Bad Request",
+						"description": "비밀번호 불일치",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -106,9 +146,9 @@
 										"value": {
 											"resultType": "FAIL",
 											"error": {
-												"errorCode": "EC400",
-												"reason": "회원 정보를 입력하지 않은 유저입니다.",
-												"data": null
+												"errorCode": "EC405",
+												"reason": "비밀번호가 일치하지 않습니다",
+												"data": "비밀번호가 일치하지 않습니다"
 											},
 											"success": null
 										}
@@ -117,8 +157,8 @@
 							}
 						}
 					},
-					"500": {
-						"description": "Internal Server Error",
+					"404": {
+						"description": "존재하지 않는 아이디",
 						"content": {
 							"application/json": {
 								"schema": {
@@ -129,9 +169,9 @@
 										"value": {
 											"resultType": "FAIL",
 											"error": {
-												"errorCode": "EC500",
-												"reason": "서버 오류가 발생했습니다.",
-												"data": null
+												"errorCode": "EC404",
+												"reason": "존재하지 않는 아이디입니다",
+												"data": "존재하지 않는 아이디입니다"
 											},
 											"success": null
 										}
@@ -141,29 +181,73 @@
 						}
 					}
 				},
-				"description": "Coffect API 테스트 중입니다.",
-				"summary": "Coffect BE Test",
+				"description": "로그인",
+				"summary": "로그인",
 				"tags": [
 					"User Controller"
 				],
 				"security": [],
 				"parameters": [],
 				"requestBody": {
-					"description": "유저 정보",
+					"description": "유저아이디, 비밀번호",
 					"required": true,
 					"content": {
 						"application/json": {
 							"schema": {
 								"properties": {
-									"userName": {
+									"userId": {
+										"type": "string"
+									},
+									"userPassword": {
 										"type": "string"
 									}
 								},
 								"required": [
-									"userName"
+									"userId",
+									"userPassword"
 								],
 								"type": "object",
-								"description": "유저 정보"
+								"description": "유저아이디, 비밀번호"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/user/refresh": {
+			"post": {
+				"operationId": "Refresh",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"User Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"token": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"token"
+								],
+								"type": "object"
 							}
 						}
 					}

@@ -6,8 +6,10 @@ const decodeToken = (token: string): Promise<CustomJwt> => {
   return new Promise((resolve, reject) => {
     const jwtSercet = process.env.JWT_SECRET!;
     verify(token, jwtSercet, (err, decoded) => {
-      if (err) reject(err);
-      else resolve(decoded as CustomJwt);
+      if (err) {
+        console.log(err);
+        reject(err);
+      } else resolve(decoded as CustomJwt);
     });
   });
 };
@@ -22,7 +24,7 @@ const accessToken = (name: string, userId: number) => {
     jwtSercet,
     {
       issuer: name,
-      expiresIn: '1s'
+      expiresIn: '6h'
     }
   );
   return token;

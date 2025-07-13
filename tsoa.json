@@ -1,14 +1,14 @@
 {
-    "entryFile": "src/index.ts",
-    "noImplicitAdditionalProperties": "throw-on-extras",
-    "controllerPathGlobs": ["src/**/*.Controller/*.Controller.ts"],
-    "spec": {
-        "outputDirectory": "src/config",
-        "specVersion": 3
-    },
-    "routes": {
-        "routesDir": "src/routes",
-        "routesFileName": "tsoaRoutes.ts",
-        "middleware": "express"
-    }
+  "entryFile": "src/index.ts",
+  "noImplicitAdditionalProperties": "throw-on-extras",
+  "controllerPathGlobs": ["src/**/*.Controller.ts"],
+  "spec": {
+    "outputDirectory": "src/config",
+    "specVersion": 3
+  },
+  "routes": {
+    "routesDir": "src/routes",
+    "routesFileName": "tsoaRoutes.ts",
+    "middleware": "express"
+  }
 }
