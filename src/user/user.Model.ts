@@ -37,4 +37,14 @@ export class UserModel {
       }
     });
   }
+  static async selectRefreshToken(userIndex: number) {
+    const q = await prisma.refeshToken.findMany({
+      where: { userId: userIndex }
+    });
+    if (q[0]) {
+      return q[0];
+    } else {
+      return null;
+    }
+  }
 }
