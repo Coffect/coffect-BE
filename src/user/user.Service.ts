@@ -1,11 +1,22 @@
-import { accessToken, decodeToken, refreshToken } from '../config/token';
-import { UserInvaildPassword, UserNotExist } from './user.Message';
+import {
+  accessToken,
+  decodeToken,
+  refreshToken,
+  verifyToken
+} from '../config/token';
+import {
+  UserInvaildPassword,
+  UserMissingFieldError,
+  UserNotExist
+} from './user.Message';
 import {
   UserLoginRequest,
   UserLoginResponse
 } from '../middleware/user.DTO/user.DTO';
 import { UserModel } from './user.Model';
 import { verifyPassword } from '../config/crypto';
+import { JwtExpiredError, JwtTokenInvaild } from '../middleware/error';
+import { Request } from 'express';
 
 export class UserService {
   static async loginService(userLogin: UserLoginRequest) {
@@ -16,8 +27,8 @@ export class UserService {
       if (verify) {
         const atoken = accessToken(userInfo.name, userInfo.userId);
         const rToken = refreshToken(userInfo.name, userInfo.userId);
-        const token = await decodeToken(rToken, true);
-        const userAgent = userLogin.req.headers['user-agent']!;
+        const token = decodeToken(rToken);
+        const userAgent = userLogin.req.headers['user-agent'] || '';
         await UserModel.insertRefreshToken(token, rToken, userAgent);
         return new UserLoginResponse(atoken, rToken);
       }
@@ -26,7 +37,33 @@ export class UserService {
     throw new UserNotExist('존재하지 않는 아이디입니다');
   }
 
-  static async refreshService(decoded: any) {
-    console.log(decoded);
+  static async refreshService(req: Request) {
+    const userToken = req.headers['authorization'];
+    const userAgent = req.headers['user-agent'] || '';
+    if (userToken === '') {
+      throw new UserMissingFieldError('헤더에 토큰이 존재하지 않습니다.');
+    }
+
+    try {
+      const auth = await verifyToken(userToken!, true);
+      const tokenInfo = await UserModel.selectRefreshToken(auth.index);
+      if (tokenInfo) {
+        if (userToken !== tokenInfo.tokenHashed) {
+          throw new JwtTokenInvaild('유효하지 않은 토큰입니다.');
+        }
+
+        const newAccessToken = accessToken(auth.userName, auth.index);
+        const newRefreshToken = refreshToken(auth.userName, auth.index);
+        const token = decodeToken(newRefreshToken);
+        await UserModel.insertRefreshToken(token, newRefreshToken, userAgent);
+        return new UserLoginResponse(newAccessToken, newRefreshToken);
+      }
+
+      throw new JwtTokenInvaild(
+        'DB에 사용자 로그인 정보가 존재하지 않습니다. 다시 로그인해주세요'
+      );
+    } catch (err) {
+      throw new JwtTokenInvaild(err as string);
+    }
   }
 }

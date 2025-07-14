@@ -7,7 +7,8 @@ import {
   Request,
   Body,
   Response,
-  Middlewares
+  Middlewares,
+  Get
 } from 'tsoa';
 import { Request as ExpressRequest } from 'express';
 
@@ -17,11 +18,11 @@ import {
   TsoaSuccessResponse
 } from '../config/tsoaResponse';
 import { UserService } from './user.Service';
-import verifyToken from '../middleware/verifyJWT';
 import {
   UserLoginRequest,
   UserLoginResponse
 } from '../middleware/user.DTO/user.DTO';
+import { decodeToken } from '../config/token';
 
 @Route('user')
 @Tags('User Controller')
@@ -112,14 +113,74 @@ export class UserController extends Controller {
     return new TsoaSuccessResponse(loginResult);
   }
 
-  @Post('refresh')
-  @Middlewares(verifyToken)
+  /**
+   * 토큰검증
+   *
+   * @summary 데이터베이스에 토큰이 존재하는지 검증하고, 유효할 경우 새로운 토큰을 발급해준다.
+   * @returns accessToken, refreshToken
+   */
+  @Get('refresh')
+  @SuccessResponse(200, '토큰 재발급')
+  @Response<ITsoaErrorResponse>(400, '헤더 누락값 존재', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC404',
+      reason: '누락값이 존재합니다.',
+      data: '헤더에 토큰이 존재하지 않습니다.'
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(401, 'jwt 토큰 만료', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-1',
+      reason: 'Expired',
+      data: {
+        name: 'TokenExpiredError',
+        message: 'jwt expired',
+        expiredAt: '2025-07-14T01:29:15.000Z'
+      }
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(404, '로그인 정보 없음', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-1',
+      reason: 'JsonWebToken error',
+      data: 'DB에 사용자 로그인 정보가 존재하지 않습니다. 다시 로그인해주세요'
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(404, '엑세스 토큰을 보냄', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-1',
+      reason: 'JsonWebToken error',
+      data: {
+        name: 'JsonWebTokenError',
+        message: 'invalid signature'
+      }
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(404, '일치하지 않는 토큰 사용', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-1',
+      reason: 'JsonWebToken error',
+      data: {
+        statusCode: 404,
+        code: 'ERR-1',
+        description: '유효하지 않은 토큰입니다.'
+      }
+    },
+    success: null
+  })
   public async refresh(
-    @Request() req: ExpressRequest,
-    @Body() body: { token: string }
-  ): Promise<ITsoaSuccessResponse<string>> {
-    const decoded = req.decoded;
-    const tokenCheck = await UserService.refreshService(decoded);
-    return new TsoaSuccessResponse<string>('test');
+    @Request() req: ExpressRequest
+  ): Promise<ITsoaSuccessResponse<UserLoginResponse>> {
+    const tokenCheck = await UserService.refreshService(req);
+    return new TsoaSuccessResponse(tokenCheck);
   }
 }
