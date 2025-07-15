@@ -1,15 +1,25 @@
-import { sign, verify } from 'jsonwebtoken';
+import { sign, verify, decode } from 'jsonwebtoken';
 import process from 'node:process';
 import { CustomJwt } from '../../@types/jwt';
 
-const decodeToken = (token: string): Promise<CustomJwt> => {
+const verifyToken = (
+  token: string,
+  isRefreshToken: boolean = false
+): Promise<CustomJwt> => {
   return new Promise((resolve, reject) => {
-    const jwtSercet = process.env.JWT_SECRET!;
-    verify(token, jwtSercet, (err, decoded) => {
-      if (err) reject(err);
-      else resolve(decoded as CustomJwt);
+    const jwtSecret = isRefreshToken
+      ? process.env.JWT_REFRESH!
+      : process.env.JWT_SECRET!;
+    verify(token, jwtSecret, (err, decoded) => {
+      if (err) {
+        reject(err);
+      } else resolve(decoded as CustomJwt);
     });
   });
+};
+
+const decodeToken = (token: string) => {
+  return decode(token) as CustomJwt;
 };
 
 const accessToken = (name: string, userId: number) => {
@@ -22,7 +32,7 @@ const accessToken = (name: string, userId: number) => {
     jwtSercet,
     {
       issuer: name,
-      expiresIn: '1s'
+      expiresIn: '6h'
     }
   );
   return token;
@@ -38,10 +48,10 @@ const refreshToken = (name: string, userId: number) => {
     jwtRefresh,
     {
       issuer: name,
-      expiresIn: '365d'
+      expiresIn: '180d'
     }
   );
   return token;
 };
 
-export { accessToken, decodeToken, refreshToken };
+export { accessToken, verifyToken, refreshToken, decodeToken };

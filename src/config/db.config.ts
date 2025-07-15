@@ -2,7 +2,7 @@ import mysql from 'mysql2';
 import dotenv, { parse } from 'dotenv';
 dotenv.config();
 
-const isLocal : boolean = process.env.ENV === 'local';
+const isLocal: boolean = process.env.ENV === 'local';
 
 let connectionConfig : mysql.ConnectionOptions = {
   user: process.env.DATABASE_USERNAME,

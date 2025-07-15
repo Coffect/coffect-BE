@@ -42,47 +42,46 @@ model User {
 model UserTimetable {
   userId    Int     @id
   timetable String?
-
-  user User @relation(fields: [userId], references: [userId])
+  user      User    @relation(fields: [userId], references: [userId])
 }
 
 model Follow {
-  userId      Int @id
+  userId      Int  @id
   followingId Int
   followerId  Int
-
-  user User @relation(fields: [userId], references: [userId])
+  user        User @relation(fields: [userId], references: [userId])
 }
 
 model ChatRoom {
   chatRoomId  Int        @id
   createdAt   DateTime   @default(now())
   createdTime DateTime
-
-  chatJoins ChatJoin[]
-  messages  Message[]
+  chatJoins   ChatJoin[]
+  messages    Message[]
 }
 
 model ChatJoin {
   userId     Int
   chatRoomId Int
-
-  user      User     @relation(fields: [userId], references: [userId])
-  chatRoom  ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId])
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId])
+  user       User     @relation(fields: [userId], references: [userId])
 
   @@id([userId, chatRoomId])
+  @@index([chatRoomId], map: "ChatJoin_chatRoomId_fkey")
 }
 
 model Message {
-  messageId  Int      @id
-  chatRoomId Int
-  userId     Int
+  messageId   Int      @id
+  chatRoomId  Int
+  userId      Int
   messageBody String
   createdAt   DateTime
-  check       Boolean @default(false)
+  check       Boolean  @default(false)
+  chatRoom    ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId])
+  user        User     @relation(fields: [userId], references: [userId])
 
-  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId])
-  user     User     @relation(fields: [userId], references: [userId])
+  @@index([chatRoomId], map: "Message_chatRoomId_fkey")
+  @@index([userId], map: "Message_userId_fkey")
 }
 
 model Thread {
@@ -93,85 +92,88 @@ model Thread {
   thradBody    String?
   createdAt    DateTime       @default(now())
   threadShare  Int
-
+  comments     Comment[]
+  scraps       ScrapMatch[]
+  subjectMatch SubjectMatch[]
   user         User           @relation(fields: [userId], references: [userId])
   images       ThreadImage[]
   likes        ThreadLike[]
-  scraps       ScrapMatch[]
-  comments     Comment[]
-  subjectMatch SubjectMatch[]
+
+  @@index([userId], map: "Thread_userId_fkey")
 }
 
 model ThreadImage {
   imageId  String @id @default(uuid())
   threadId String
+  thread   Thread @relation(fields: [threadId], references: [threadId])
 
-  thread Thread @relation(fields: [threadId], references: [threadId])
+  @@index([threadId], map: "ThreadImage_threadId_fkey")
 }
 
 model ThreadLike {
   threadId String
   userId   Int
-
-  thread Thread @relation(fields: [threadId], references: [threadId])
-  user   User   @relation(fields: [userId], references: [userId])
+  thread   Thread @relation(fields: [threadId], references: [threadId])
+  user     User   @relation(fields: [userId], references: [userId])
 
   @@id([threadId, userId])
+  @@index([userId], map: "ThreadLike_userId_fkey")
 }
 
 model ThreadScrap {
-  scrapId   String   @id @default(uuid())
-  userId    Int
-  createdAt DateTime @default(now())
-
-  user       User        @relation(fields: [userId], references: [userId])
+  scrapId    String       @id @default(uuid())
+  userId     Int
+  createdAt  DateTime     @default(now())
   scrapMatch ScrapMatch[]
+  user       User         @relation(fields: [userId], references: [userId])
+
+  @@index([userId], map: "ThreadScrap_userId_fkey")
 }
 
 model ScrapMatch {
-  threadId String
-  scrapId  String
-
-  thread    Thread      @relation(fields: [threadId], references: [threadId])
+  threadId    String
+  scrapId     String
   threadScrap ThreadScrap @relation(fields: [scrapId], references: [scrapId])
+  thread      Thread      @relation(fields: [threadId], references: [threadId])
 
   @@id([threadId, scrapId])
+  @@index([scrapId], map: "ScrapMatch_scrapId_fkey")
 }
 
 model Comment {
-  commentId   Int     @id
+  commentId   Int      @id
   userId      Int
   threadId    String
   commentBody String
   quote       Int?
   createdAtD  DateTime @default(now())
+  thread      Thread   @relation(fields: [threadId], references: [threadId])
+  user        User     @relation(fields: [userId], references: [userId])
 
-  user   User   @relation(fields: [userId], references: [userId])
-  thread Thread @relation(fields: [threadId], references: [threadId])
+  @@index([threadId], map: "Comment_threadId_fkey")
+  @@index([userId], map: "Comment_userId_fkey")
 }
 
 model ThreadSubject {
-  subjectId   Int          @id @default(autoincrement())
-  subjectName SubjectEnum
-
+  subjectId    Int            @id @default(autoincrement())
+  subjectName  SubjectEnum
   subjectMatch SubjectMatch[]
 }
 
 model SubjectMatch {
-  threadId  String
-  subjectId Int
-
-  thread      Thread        @relation(fields: [threadId], references: [threadId])
+  threadId      String
+  subjectId     Int
   threadSubject ThreadSubject @relation(fields: [subjectId], references: [subjectId])
+  thread        Thread        @relation(fields: [threadId], references: [threadId])
 
   @@id([threadId, subjectId])
+  @@index([subjectId], map: "SubjectMatch_subjectId_fkey")
 }
 
 model Category {
   categotyId    Int             @id @default(autoincrement())
   categoryName  CategoryEnum
   categoryColor String
-
   categoryMatch CategoryMatch[]
 }
 
@@ -179,44 +181,46 @@ model CategoryMatch {
   userId     Int
   categotyId Int
   createdAt  DateTime @default(now())
-
-  user     User     @relation(fields: [userId], references: [userId])
-  category Category @relation(fields: [categotyId], references: [categotyId])
+  category   Category @relation(fields: [categotyId], references: [categotyId])
+  user       User     @relation(fields: [userId], references: [userId])
 
   @@id([userId, categotyId])
+  @@index([categotyId], map: "CategoryMatch_categotyId_fkey")
 }
 
 model RefeshToken {
-  Key         String   @id
-  userId      Int
-  tokenHashed String
-  createdAt   DateTime
-  expiredAt   DateTime
-  userAgent   String?
-  ipAddress   String?
+  refreshTokenIndex Int      @id @default(autoincrement())
+  userId            Int      @unique
+  userName          String   @db.VarChar(25)
+  tokenHashed       String   @db.VarChar(256)
+  createdAt         DateTime
+  expiredAt         DateTime
+  userAgent         String?
+  user              User     @relation(fields: [userId], references: [userId])
 
-  user User @relation(fields: [userId], references: [userId])
+  @@index([userId], map: "RefeshToken_userId_fkey")
 }
 
 model CoffeeChat {
-  coffectId     Int      @id
-  firstUserId   Int
-  secondUserId  Int
-  coffectDate   DateTime
-  location      String
-  message       String?
-  createdAt     DateTime @default(now())
-  valid         Boolean  @default(false)
+  coffectId    Int      @id
+  firstUserId  Int
+  secondUserId Int
+  coffectDate  DateTime
+  location     String
+  message      String?
+  createdAt    DateTime @default(now())
+  valid        Boolean  @default(false)
+  firstUser    User     @relation("FirstUser", fields: [firstUserId], references: [userId])
+  secondUser   User     @relation("SecondUser", fields: [secondUserId], references: [userId])
 
-  firstUser  User @relation("FirstUser", fields: [firstUserId], references: [userId])
-  secondUser User @relation("SecondUser", fields: [secondUserId], references: [userId])
+  @@index([firstUserId], map: "CoffeeChat_firstUserId_fkey")
+  @@index([secondUserId], map: "CoffeeChat_secondUserId_fkey")
 }
 
 model SpecifyInfo {
-  userId Int     @id
-  info   Json? // mySQL은 string[] 같은 Primitive 타입 배열을 직접 지원하지 않음. 즉 JSON형태로 저장해야함.
-
-  user User @relation(fields: [userId], references: [userId])
+  userId Int   @id
+  info   Json?
+  user   User  @relation(fields: [userId], references: [userId])
 }
 
 enum ThreadType {
@@ -227,7 +231,7 @@ enum ThreadType {
 
 enum SubjectEnum {
   프로덕트
-  개발  
+  개발
   디자인
   기획
   인사이트
@@ -244,7 +248,7 @@ enum CategoryEnum {
   AI
   글쓰기
   독서
-  마케팅  
+  마케팅
   여행
   데이터
   분석

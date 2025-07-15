@@ -1,14 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
 
 //에러 처리 미들웨어
-export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
-  if(res.headersSent){
+export const errorHandler = (
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  if (res.headersSent) {
     next(err);
     return;
   }
 
   //커스텀 에러 처리
-  if(err instanceof BasicError){
+  if (err instanceof BasicError) {
     res.status(err.statusCode).json({
       resultType: 'FAIL',
       error: {
@@ -45,17 +50,27 @@ export class BasicError extends Error {
     code: string,
     message: string,
     description: string
-  ){
+  ) {
     super(message);
     this.statusCode = statusCode;
     this.code = code;
     this.description = description || 'No description: 에러 설명이 없습니다.';
   }
-};
+}
 
 //커스텀 에러 클래스 예시
 export class CustomErrorEx extends BasicError {
   constructor(description: string) {
     super(400, 'ERR-1', 'Bad Request', description);
   }
-};
+}
+export class JwtExpiredError extends BasicError {
+  constructor(description: string) {
+    super(401, 'ERR-1', 'Expired', description);
+  }
+}
+export class JwtTokenInvaild extends BasicError {
+  constructor(description: string) {
+    super(404, 'ERR-1', 'JsonWebToken error', description);
+  }
+}
