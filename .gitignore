@@ -1,5 +1,13 @@
-
+# prisma generated files
 /generated/prisma
+
+# dotenv files
 /.env
+
+# node modules and distribution files
 /node_modules
 /dist
+
+# tsoa generated files
+src/config/swagger.json
+src/routes/tsoaRoutes.ts
