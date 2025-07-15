@@ -47,6 +47,30 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"ITsoaSuccessResponse_string_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"ITsoaErrorResponse": {
 				"properties": {
 					"resultType": {
@@ -314,6 +338,102 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/home/postTodayInterest": {
+			"post": {
+				"operationId": "PostTodayInterestController",
+				"responses": {
+					"200": {
+						"description": "성공적으로 Data를 넣었습니다.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE400",
+												"reason": "주제 선정해주세요.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE500",
+												"reason": "서버 오류가 발생했습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "Coffect coffeeChat API 테스트 중입니다.",
+				"summary": "postTodayInterest TEST",
+				"tags": [
+					"Home Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "유저 Token & 하루 관심사 정보 수정",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"todayInterest": {
+										"type": "number",
+										"format": "double"
+									},
+									"userId": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"todayInterest",
+									"userId"
+								],
+								"type": "object",
+								"description": "유저 Token & 하루 관심사 정보 수정"
+							}
+						}
+					}
+				}
 			}
 		}
 	},
