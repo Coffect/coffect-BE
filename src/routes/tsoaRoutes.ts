@@ -5,6 +5,8 @@ import type { TsoaRoute } from '@tsoa/runtime';
 import {  fetchMiddlewares, ExpressTemplateService } from '@tsoa/runtime';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { UserController } from './../user/user.Controller/user.Controller';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { HomeController } from './../coffeeChat/coffeeChat.Controller';
 import type { Request as ExRequest, Response as ExResponse, RequestHandler, Router } from 'express';
 
 
@@ -69,6 +71,37 @@ export function RegisterRoutes(app: Router) {
 
               await templateService.apiHandler({
                 methodName: 'testuserInfo',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsHomeController_postTodayInterestController: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"todayInterest":{"dataType":"double","required":true},"userId":{"dataType":"double","required":true}}},
+        };
+        app.post('/home/postTodayInterest',
+            ...(fetchMiddlewares<RequestHandler>(HomeController)),
+            ...(fetchMiddlewares<RequestHandler>(HomeController.prototype.postTodayInterestController)),
+
+            async function HomeController_postTodayInterestController(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsHomeController_postTodayInterestController, request, response });
+
+                const controller = new HomeController();
+
+              await templateService.apiHandler({
+                methodName: 'postTodayInterestController',
                 controller,
                 response,
                 next,

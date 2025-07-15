@@ -19,6 +19,10 @@ model User {
   createdAt     DateTime      @default(now())
   profileImage  String
   questionIndex Json? // mySQL은 int[] 같은 Primitive 타입 배열을 직접 지원하지 않음. 즉 JSON형태로 저장해야함.
+  
+   // 새로운 필드
+  coffeeChatCount Int      @default(4)    // 매일 4로 초기화
+  todayInterest   Int?                   // 0~3 중 하나의 추천 주제, 매일 null로 초기화
 
   userTimetable UserTimetable?
   specifyInfo   SpecifyInfo?
