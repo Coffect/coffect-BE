@@ -18,7 +18,7 @@ export class HomeController extends Controller {
   /**
    * Coffect coffeeChat API 테스트 중입니다.
    * 
-   * @summary postTodayInterest TEST
+   * @summary 매일 커피챗 추천 항목을 받는 API (가까운 거리 순 <1>, 나와 비슷한 관심사 <2>, 같은 학번 <3>, 최근에 글을 쓴 사람 <4>)
    * @param body 유저 Token & 하루 관심사 정보 수정
    * @returns 요청 성공 여부
    */
