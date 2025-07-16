@@ -395,15 +395,88 @@
 						"application/json": {
 							"schema": {
 								"properties": {
-									"password": {
+									"interest": {
+										"items": {
+											"type": "number",
+											"format": "double"
+										},
+										"type": "array"
+									},
+									"profile": {
 										"type": "string"
 									},
+									"name": {
+										"type": "string"
+									},
+									"email": {
+										"type": "string"
+									},
+									"studentId": {
+										"type": "number",
+										"format": "double"
+									},
+									"major": {
+										"type": "string"
+									},
+									"univ": {
+										"type": "string"
+									},
+									"id": {
+										"type": "string"
+									},
+									"password": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"interest",
+									"profile",
+									"name",
+									"email",
+									"studentId",
+									"major",
+									"univ",
+									"id",
+									"password"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/user/idcheck": {
+			"post": {
+				"operationId": "Idcheck",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"User Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
 									"id": {
 										"type": "string"
 									}
 								},
 								"required": [
-									"password",
 									"id"
 								],
 								"type": "object"

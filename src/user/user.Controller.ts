@@ -7,12 +7,12 @@ import {
   Request,
   Body,
   Response,
-  Middlewares,
+  // Middlewares,
   Get
 } from 'tsoa';
 import {
-  Request as ExpressRequest,
-  Response as ExpressResponse
+  Request as ExpressRequest
+  // Response as ExpressResponse
 } from 'express';
 
 import {
@@ -24,14 +24,20 @@ import { UserService } from './user.Service';
 import {
   UserLoginRequest,
   UserLoginResponse,
+  UserSignUpRequest,
   UserSignUpResponse
 } from '../middleware/user.DTO/user.DTO';
-import { decodeToken } from '../config/token';
-import verify from '../middleware/verifyJWT';
+// import { decodeToken } from '../config/token';
+// import verify from '../middleware/verifyJWT';
 
 @Route('user')
 @Tags('User Controller')
 export class UserController extends Controller {
+  private userService: UserService;
+  constructor() {
+    super();
+    this.userService = new UserService();
+  }
   // /**
   //  * Coffect API 테스트 중입니다.
   //  *
@@ -114,7 +120,7 @@ export class UserController extends Controller {
     const userPassword = body.userPassword;
     const userLogin = new UserLoginRequest(userid, userPassword, req);
 
-    const loginResult = await UserService.loginService(userLogin);
+    const loginResult = await this.userService.loginService(userLogin);
     return new TsoaSuccessResponse(loginResult);
   }
 
@@ -185,7 +191,7 @@ export class UserController extends Controller {
   public async refresh(
     @Request() req: ExpressRequest
   ): Promise<ITsoaSuccessResponse<UserLoginResponse>> {
-    const tokenCheck = await UserService.refreshService(req);
+    const tokenCheck = await this.userService.refreshService(req);
     return new TsoaSuccessResponse(tokenCheck);
   }
 
@@ -194,10 +200,28 @@ export class UserController extends Controller {
     @Request() req: ExpressRequest,
     @Body()
       body: {
-      id: string;
       password: string;
+      id: string;
+      univ: string;
+      major: string;
+      studentId: number;
+      email: string;
+      name: string;
+      profile: string;
+      interest: number[];
     }
   ): Promise<ITsoaSuccessResponse<UserSignUpResponse>> {
-    return new TsoaSuccessResponse(1);
+    const singUpInfo = new UserSignUpRequest(req);
+    await this.userService.signUpService(singUpInfo);
+    return new TsoaSuccessResponse('회원가입 성공');
+  }
+
+  @Post('idcheck')
+  public async idcheck(
+    @Request() req: ExpressRequest,
+    @Body() body: { id: string }
+  ): Promise<ITsoaSuccessResponse<string>> {
+    await this.userService.idCheckService(body.id);
+    return new TsoaSuccessResponse('Ok');
   }
 }

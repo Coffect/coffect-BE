@@ -190,7 +190,7 @@ model CategoryMatch {
 
 model RefeshToken {
   refreshTokenIndex Int      @id @default(autoincrement())
-  userId            Int
+  userId            Int      @unique
   userName          String   @db.VarChar(25)
   tokenHashed       String   @db.VarChar(256)
   createdAt         DateTime
