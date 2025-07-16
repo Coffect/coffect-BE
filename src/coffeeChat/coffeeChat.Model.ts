@@ -102,6 +102,7 @@ export class HomeModel {
 
       case 4 : 
         // 최근에 글을 쓴 사용자
+        await this.recentPostUser(userId, filteredArray);
       break;
     }
   };
@@ -219,7 +220,41 @@ export class HomeModel {
     filteredArray : number[]
   ):Promise<void> {
     let array : number[] = []
-    
+
+    // 사용자별 최근 게시물 조회
+    const userRecentThread = await prisma.user.findMany({
+      where : { userId : { in: filteredArray }},
+      select : {
+        userId : true, 
+        threads : {
+          orderBy : {
+            createdAt : 'desc' // 내림차순
+          },
+          take : 1, // 가장 최근 게시물 1개만 조회
+          select : {
+            createdAt : true
+          }
+        }
+      }
+    });
+
+    // 최근 게시물이 존재하는 user별로 정렬 진행
+    const userFilterThread = userRecentThread
+    .filter( user => user.threads.length > 0) // 게시글이 존재하는 사용자만
+    .map( user => ({
+      userId: user.userId,
+      createdAt : user.threads[0].createdAt
+    }))
+    .sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0,4)
+    .map(user => userId);
+
+    array = userFilterThread;
+
+    await prisma.user.update({
+      where : {userId : userId},
+      data : { todayInterestArray : array }
+    })
   };
 
   public async showFrontProfile(
