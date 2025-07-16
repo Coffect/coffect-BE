@@ -38,7 +38,7 @@ export class UnivController extends Controller {
   public async certify(
     @Request() req: ExpressRequest,
     @Body()
-    body: {
+      body: {
       univMail: string;
     }
   ) {

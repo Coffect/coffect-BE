@@ -5,6 +5,10 @@ import type { TsoaRoute } from '@tsoa/runtime';
 import { fetchMiddlewares, ExpressTemplateService } from '@tsoa/runtime';
 // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 import { UserController } from './../user/user.Controller';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { UnivController } from './../univ/univ.Controller';
+// WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+import { HomeController } from './../coffeeChat/coffeeChat.Controller';
 import type {
   Request as ExRequest,
   Response as ExResponse,
@@ -60,6 +64,32 @@ const models: TsoaRoute.Models = {
         required: true
       },
       success: { dataType: 'enum', enums: [null], required: true }
+    },
+    additionalProperties: false
+  },
+  // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+  UserSignUpResponse: {
+    dataType: 'refObject',
+    properties: {},
+    additionalProperties: false
+  },
+  // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+  ITsoaSuccessResponse_UserSignUpResponse_: {
+    dataType: 'refObject',
+    properties: {
+      resultType: { dataType: 'string', required: true },
+      error: { dataType: 'enum', enums: [null], required: true },
+      success: { ref: 'UserSignUpResponse', required: true }
+    },
+    additionalProperties: false
+  },
+  // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+  ITsoaSuccessResponse_string_: {
+    dataType: 'refObject',
+    properties: {
+      resultType: { dataType: 'string', required: true },
+      error: { dataType: 'enum', enums: [null], required: true },
+      success: { dataType: 'string', required: true }
     },
     additionalProperties: false
   }
@@ -155,6 +185,156 @@ export function RegisterRoutes(app: Router) {
 
         await templateService.apiHandler({
           methodName: 'refresh',
+          controller,
+          response,
+          next,
+          validatedArgs,
+          successStatus: 200
+        });
+      } catch (err) {
+        return next(err);
+      }
+    }
+  );
+  // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+  const argsUserController_signup: Record<string, TsoaRoute.ParameterSchema> = {
+    req: { in: 'request', name: 'req', required: true, dataType: 'object' },
+    body: {
+      in: 'body',
+      name: 'body',
+      required: true,
+      dataType: 'nestedObjectLiteral',
+      nestedProperties: {
+        password: { dataType: 'string', required: true },
+        id: { dataType: 'string', required: true }
+      }
+    }
+  };
+  app.post(
+    '/user/signup',
+    ...fetchMiddlewares<RequestHandler>(UserController),
+    ...fetchMiddlewares<RequestHandler>(UserController.prototype.signup),
+
+    async function UserController_signup(
+      request: ExRequest,
+      response: ExResponse,
+      next: any
+    ) {
+      // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+      let validatedArgs: any[] = [];
+      try {
+        validatedArgs = templateService.getValidatedArgs({
+          args: argsUserController_signup,
+          request,
+          response
+        });
+
+        const controller = new UserController();
+
+        await templateService.apiHandler({
+          methodName: 'signup',
+          controller,
+          response,
+          next,
+          validatedArgs,
+          successStatus: undefined
+        });
+      } catch (err) {
+        return next(err);
+      }
+    }
+  );
+  // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+  const argsUnivController_certify: Record<string, TsoaRoute.ParameterSchema> =
+    {
+      req: { in: 'request', name: 'req', required: true, dataType: 'object' },
+      body: {
+        in: 'body',
+        name: 'body',
+        required: true,
+        dataType: 'nestedObjectLiteral',
+        nestedProperties: { univMail: { dataType: 'string', required: true } }
+      }
+    };
+  app.post(
+    '/univ/cerfify',
+    ...fetchMiddlewares<RequestHandler>(UnivController),
+    ...fetchMiddlewares<RequestHandler>(UnivController.prototype.certify),
+
+    async function UnivController_certify(
+      request: ExRequest,
+      response: ExResponse,
+      next: any
+    ) {
+      // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+      let validatedArgs: any[] = [];
+      try {
+        validatedArgs = templateService.getValidatedArgs({
+          args: argsUnivController_certify,
+          request,
+          response
+        });
+
+        const controller = new UnivController();
+
+        await templateService.apiHandler({
+          methodName: 'certify',
+          controller,
+          response,
+          next,
+          validatedArgs,
+          successStatus: undefined
+        });
+      } catch (err) {
+        return next(err);
+      }
+    }
+  );
+  // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+  const argsHomeController_postTodayInterestController: Record<
+    string,
+    TsoaRoute.ParameterSchema
+  > = {
+    req: { in: 'request', name: 'req', required: true, dataType: 'object' },
+    body: {
+      in: 'body',
+      name: 'body',
+      required: true,
+      dataType: 'nestedObjectLiteral',
+      nestedProperties: {
+        todayInterest: { dataType: 'double', required: true },
+        userId: { dataType: 'double', required: true }
+      }
+    }
+  };
+  app.post(
+    '/home/postTodayInterest',
+    ...fetchMiddlewares<RequestHandler>(HomeController),
+    ...fetchMiddlewares<RequestHandler>(
+      HomeController.prototype.postTodayInterestController
+    ),
+
+    async function HomeController_postTodayInterestController(
+      request: ExRequest,
+      response: ExResponse,
+      next: any
+    ) {
+      // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+      let validatedArgs: any[] = [];
+      try {
+        validatedArgs = templateService.getValidatedArgs({
+          args: argsHomeController_postTodayInterestController,
+          request,
+          response
+        });
+
+        const controller = new HomeController();
+
+        await templateService.apiHandler({
+          methodName: 'postTodayInterestController',
           controller,
           response,
           next,
