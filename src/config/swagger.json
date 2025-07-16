@@ -47,30 +47,6 @@
 				"type": "object",
 				"additionalProperties": false
 			},
-			"ITsoaSuccessResponse_string_": {
-				"properties": {
-					"resultType": {
-						"type": "string"
-					},
-					"error": {
-						"type": "number",
-						"enum": [
-							null
-						],
-						"nullable": true
-					},
-					"success": {
-						"type": "string"
-					}
-				},
-				"required": [
-					"resultType",
-					"error",
-					"success"
-				],
-				"type": "object",
-				"additionalProperties": false
-			},
 			"ITsoaErrorResponse": {
 				"properties": {
 					"resultType": {
@@ -106,6 +82,38 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_string_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ThreadType": {
+				"enum": [
+					"아티클",
+					"팀원모집",
+					"질문"
+				],
+				"type": "string"
 			}
 		},
 		"securitySchemes": {}
@@ -338,6 +346,124 @@
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/thread/add": {
+			"post": {
+				"operationId": "AddThread",
+				"responses": {
+					"201": {
+						"description": "게시글 업로드 성공",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "유저 인증 정보가 없습니다.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "ERR-1",
+												"reason": "유저 인증 정보가 없습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "게시글 트랜잭션 처리에 실패했습니다.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "THR-02",
+												"reason": "게시글 업로드에 실패했습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									},
+									"Example 2": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "THR-03",
+												"reason": "게시글 트랜잭션 처리에 실패했습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "\r\n게시글 업로드 API",
+				"summary": "게시글 업로드",
+				"tags": [
+					"Thread Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"description": "- 게시글 정보",
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"threadSubject": {
+										"type": "number",
+										"format": "double"
+									},
+									"threadBody": {
+										"type": "string"
+									},
+									"threadTitle": {
+										"type": "string"
+									},
+									"type": {
+										"$ref": "#/components/schemas/ThreadType"
+									},
+									"userId": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"threadSubject",
+									"threadBody",
+									"threadTitle",
+									"type"
+								],
+								"type": "object",
+								"description": "- 게시글 정보"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/home/postTodayInterest": {
