@@ -187,7 +187,7 @@ model CategoryMatch {
 
 model RefeshToken {
   refreshTokenIndex Int      @id @default(autoincrement())
-  userId            Int      @unique
+  userId            Int
   userName          String   @db.VarChar(25)
   tokenHashed       String   @db.VarChar(256)
   createdAt         DateTime
@@ -218,6 +218,22 @@ model SpecifyInfo {
   userId Int   @id
   info   Json?
   user   User  @relation(fields: [userId], references: [userId])
+}
+
+model UnivCert {
+  id        Int      @id @default(autoincrement())
+  email     String   @db.VarChar(50)
+  certCode  Int
+  createdAt DateTime @db.DateTime(0) @default(now())
+  expiredAt DateTime @db.DateTime(0)
+}
+
+model UnivList {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(50)
+  created_at  DateTime? @db.DateTime(0)
+  updataed_at DateTime? @db.DateTime(0)
+  domain      String?   @db.VarChar(30)
 }
 
 enum ThreadType {

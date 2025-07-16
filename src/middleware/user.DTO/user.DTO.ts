@@ -21,3 +21,8 @@ export class UserLoginRequest {
     this.req = req;
   }
 }
+
+export class UserSignUpResponse {}
+export class UserSignUpRequest {
+  
+}

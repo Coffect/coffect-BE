@@ -10,7 +10,10 @@ import {
   Middlewares,
   Get
 } from 'tsoa';
-import { Request as ExpressRequest } from 'express';
+import {
+  Request as ExpressRequest,
+  Response as ExpressResponse
+} from 'express';
 
 import {
   ITsoaErrorResponse,
@@ -20,9 +23,11 @@ import {
 import { UserService } from './user.Service';
 import {
   UserLoginRequest,
-  UserLoginResponse
+  UserLoginResponse,
+  UserSignUpResponse
 } from '../middleware/user.DTO/user.DTO';
 import { decodeToken } from '../config/token';
+import verify from '../middleware/verifyJWT';
 
 @Route('user')
 @Tags('User Controller')
@@ -182,5 +187,17 @@ export class UserController extends Controller {
   ): Promise<ITsoaSuccessResponse<UserLoginResponse>> {
     const tokenCheck = await UserService.refreshService(req);
     return new TsoaSuccessResponse(tokenCheck);
+  }
+
+  @Post('signup')
+  public async signup(
+    @Request() req: ExpressRequest,
+    @Body()
+    body: {
+      id: string;
+      password: string;
+    }
+  ): Promise<ITsoaSuccessResponse<UserSignUpResponse>> {
+    return new TsoaSuccessResponse(1);
   }
 }

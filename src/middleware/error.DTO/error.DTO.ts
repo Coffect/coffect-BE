@@ -3,8 +3,13 @@ export class ErrorDTO {
   code: number;
   description: string;
   path: string;
-  
-  constructor(statusCode: number, code: number, description: string, path: string) {
+
+  constructor(
+    statusCode: number,
+    code: number,
+    description: string,
+    path: string
+  ) {
     this.statusCode = statusCode;
     this.code = code;
     this.description = description;
