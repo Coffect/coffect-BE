@@ -84,6 +84,8 @@ export class HomeModel {
     userId : number,
     todayInterest : number
   ): Promise<void> {
+    const filteredArray : number[] = await this.sameSchool(userId);
+
     switch(todayInterest) {
       case 1 :
         // 가까운 거리 순 (같은 학교)
@@ -95,6 +97,7 @@ export class HomeModel {
 
       case 3 : 
         // 같은 학번 
+        await this.sameGrade(userId, filteredArray);
       break;
 
       case 4 : 
@@ -140,44 +143,83 @@ export class HomeModel {
     const users = await prisma.user.findMany({
       where: {
         userId: { not: userId },
-        mail: {
-          endsWith: `@${schoolDomain}.kr` // 더 정확한 매칭
-        }
+        mail: { endsWith: `@${schoolDomain}.kr` }
       },
-      select: {
-        userId : true
-      },
+      select: { userId : true },
       take: 20
     });
+
     return users.map(user => user.userId);
   };
 
   // <1> 가까운 거리 순 (같은 학교)
   private async closeDistance(
-    userId : number
+    userId : number,
+    filteredArray : number[]
   ):Promise<void> {
 
   };
 
   // <2> 나와 관심사가 비슷한 categoryMatch
   private async sameInterestCategory(
-    userId : number
+    userId : number,
+    filteredArray : number[]
   ):Promise<void> {
 
   };
 
   // <3> 같은 학번
   private async sameGrade(
-    userId : number
+    userId : number,
+    filteredArray : number[]
   ):Promise<void> {
+    let array : number[] = [];
 
+    const userGrade = await prisma.user.findUniqueOrThrow({
+      where : {userId : userId},
+      select : {mail : true}
+    });
+
+    const currentGrade = this.extractGrade(userGrade!.mail);
+
+    if(currentGrade === null || currentGrade === undefined) {
+      throw new Error (`Cannot extract grade from email: ${userGrade.mail}`);
+    }
+
+    // filteredArray를 순회하면서 조건에 맞는 사용자를 탐색
+    for(const targetUserId of filteredArray) {
+      if(array.length > 4) {
+        break;
+      }
+
+      const targetUser = await prisma.user.findFirst({
+        where : { userId : targetUserId },
+        select : {mail : true}
+      });
+
+      if(targetUser) {
+        const targetGrade = this.extractGrade(targetUser.mail);
+
+        if(targetGrade === currentGrade) {
+          array.push(targetUserId);
+        }
+      }
+    }
+  };
+  
+  private extractGrade(email: string): string | null {
+    // 202010836@school.kr에서 앞 4자리(2020) 추출
+    const match = email.match(/^(\d{4})/);
+    return match ? match[1] : null; 
   };
 
   // <4> 최근에 글을 쓴 사용자
   private async recentPostUser(
-    userId : number
+    userId : number,
+    filteredArray : number[]
   ):Promise<void> {
-
+    let array : number[] = []
+    
   };
 
   public async showFrontProfile(
