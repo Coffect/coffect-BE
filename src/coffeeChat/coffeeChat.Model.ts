@@ -89,6 +89,7 @@ export class HomeModel {
     switch(todayInterest) {
       case 1 :
         // 가까운 거리 순 (같은 학교)
+        await this.closeDistance(userId, filteredArray);
       break;
 
       case 2 :
@@ -158,7 +159,24 @@ export class HomeModel {
     userId : number,
     filteredArray : number[]
   ):Promise<void> {
+    let array : number[] = [];
 
+    const copyFiltedArray  = [... filteredArray];
+
+    for(let i = 0; i < 4; i++) {
+      const randomIndex = Math.floor(Math.random() * copyFiltedArray.length);
+
+      array.push(copyFiltedArray[randomIndex]);
+
+      copyFiltedArray.slice(randomIndex, 1);
+    }
+
+    await prisma.user.update({
+      where : {userId : userId},
+      data : {
+        todayInterestArray : array
+      }
+    });
   };
 
   // <2> 나와 관심사가 비슷한 categoryMatch
