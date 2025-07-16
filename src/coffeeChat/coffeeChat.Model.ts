@@ -94,6 +94,7 @@ export class HomeModel {
 
       case 2 :
         // 나와 관심사가 비슷한 categoryMatch (다 대 다)
+        await this.sameInterestCategory(userId, filteredArray);
       break;
 
       case 3 : 
@@ -137,7 +138,7 @@ export class HomeModel {
     return match ? match[1] : null;
   };
 
-  // 같은 학교 도메인 추출
+  // 같은 학교 도메인 추출 (filteredArray 생성)
   private async getUsersBySchoolDomain(
     userId: number,
     schoolDomain: string
@@ -184,7 +185,77 @@ export class HomeModel {
     userId : number,
     filteredArray : number[]
   ):Promise<void> {
+    let array : number[] = [];
 
+    const currentUserCategory = await prisma.user.findUniqueOrThrow({
+      where : {userId :userId},
+      select : {
+        categoryMatch : {
+          select : {
+            category : {
+              select : {
+                categoryName: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const myCategory = currentUserCategory.categoryMatch.map(
+      match => match.category.categoryName
+    );
+
+
+    const ArrayuserCategory = await prisma.user.findMany({
+      where : {userId : {in: filteredArray}},
+      select : {
+        userId : true,
+        categoryMatch : {
+          select : {
+            category : {
+              select : {
+                categoryName: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const score = ArrayuserCategory.map(
+      user => {
+        const userCategory = user.categoryMatch.map(
+          match => match.category.categoryName);
+
+        const sameCategory = userCategory.filter(
+          category => myCategory.includes(category));
+
+        return {
+          userId : user.userId,
+          sameCategory : sameCategory,
+          score : sameCategory.length // 공통 카테고리 갯수.
+        };
+      }).filter(user => user.score > 0) // 공통 카테고리가 존재하는 사용자만
+      .sort((a,b) => b.score - a.score);
+
+      
+      const selectedUser = new Set<number>;
+
+      for(const user of score) {
+        if(selectedUser.size > 4) break;
+
+        if(!selectedUser.has(user.userId)) selectedUser.add(user.userId);
+      }
+
+      array = Array.from(selectedUser);
+
+      await prisma.user.update({
+        where : {userId : userId},
+        data : {
+          todayInterestArray : array
+        }
+      });
   };
 
   // <3> 같은 학번
@@ -275,13 +346,13 @@ export class HomeModel {
     })
   };
 
-  public async showFrontProfile(
-    userId: number
-  ):Promise<coffectChatCardDTO> {
-    const result : coffectChatCardDTO = ;
+  // public async showFrontProfile(
+  //   userId: number
+  // ):Promise<coffectChatCardDTO> {
+  //   const result : coffectChatCardDTO = ;
 
 
-    return result;
-  };
+  //   return result;
+  // };
 }
 
