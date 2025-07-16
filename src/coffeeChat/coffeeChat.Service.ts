@@ -22,6 +22,7 @@ export class HomeService {
     userId : number
   ): Promise<coffectChatCardDTO | number> {
     // 0. todayInterestArray 값 불러오기 -> 존재하면 3번으로 이동
+    const todayInterestArray = await this.homeModel.getTodayInterestArray(userId) as number[];
 
     // 1. todayInterestArray가 존재하지 않으면 todayInterest 값 불러오기
 

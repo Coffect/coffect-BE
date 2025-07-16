@@ -14,7 +14,8 @@ cron.schedule('0 0 * * *', async () => { // 00시(다음 날)가(이) 되면 cof
     await prisma.user.updateMany({
       data: {
         coffeeChatCount: 4,
-        todayInterest: null
+        todayInterest: null,
+        todayInterestArray: null
       }
     });
     console.log('user coffeeChatCount and todayInterest reset complete');
