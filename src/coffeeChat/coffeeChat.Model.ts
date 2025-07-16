@@ -103,39 +103,90 @@ export class HomeModel {
     }
   };
 
-  // 같은 학교인지 확인하는 로직
-  public async sameSchool(
+  // 같은 학교사람 구분하는 로직
+  private async sameSchool(
     userId : number
-  ):Promise<void> {
+  ):Promise<number[]> {
+    const result = await prisma.user.findUniqueOrThrow({
+      where : {userId : userId},
+      select : {mail : true}
+    });
 
+    // mail 도메인 추출
+    const compareSameSchoole = await this.extractSchoolDomain(result.mail);
+
+    if(compareSameSchoole === null || compareSameSchoole === undefined) {
+      throw new Error(`Invalid email format: ${result.mail}`);
+    }
+
+    // 같은 학교 사용자 조회
+    const sameSchoolUsers = await this.getUsersBySchoolDomain(userId, compareSameSchoole);
+
+    return sameSchoolUsers;
+  };
+
+  // 이메일 도메인 추출
+  private extractSchoolDomain(email: string): string | null {
+    // 정규표현식: @ 다음부터 .kr 전까지
+    const match = email.match(/@([^.]+)\.kr$/);
+    return match ? match[1] : null;
+  };
+
+  // 같은 학교 도메인 추출
+  private async getUsersBySchoolDomain(
+    userId: number,
+    schoolDomain: string
+  ): Promise<number[]> {
+    const users = await prisma.user.findMany({
+      where: {
+        userId: { not: userId },
+        mail: {
+          endsWith: `@${schoolDomain}.kr` // 더 정확한 매칭
+        }
+      },
+      select: {
+        userId : true
+      },
+      take: 20
+    });
+    return users.map(user => user.userId);
   };
 
   // <1> 가까운 거리 순 (같은 학교)
-  public async closeDistance(
+  private async closeDistance(
     userId : number
   ):Promise<void> {
 
   };
 
   // <2> 나와 관심사가 비슷한 categoryMatch
-  public async sameInterestCategory(
+  private async sameInterestCategory(
     userId : number
   ):Promise<void> {
 
   };
 
   // <3> 같은 학번
-  public async sameGrade(
+  private async sameGrade(
     userId : number
   ):Promise<void> {
 
   };
 
   // <4> 최근에 글을 쓴 사용자
-  public async recentPostUser(
+  private async recentPostUser(
     userId : number
   ):Promise<void> {
 
+  };
+
+  public async showFrontProfile(
+    userId: number
+  ):Promise<coffectChatCardDTO> {
+    const result : coffectChatCardDTO = ;
+
+
+    return result;
   };
 }
 

@@ -21,21 +21,37 @@ export class HomeService {
   public async CardCoffeeChatService(
     userId : number
   ): Promise<coffectChatCardDTO | number> {
+    let showFrontProfile;
+
     // 0. todayInterestArray 값 불러오기 -> 존재하면 3번으로 이동
     const todayInterestArray = await this.homeModel.getTodayInterestArray(userId) as number[];
 
     // 1. todayInterestArray가 존재하지 않으면 todayInterest 값 불러오기
+    if(todayInterestArray === null) {
+      const getTodayInterestValue = await this.homeModel.getTodayInterestValue(userId) as number;
 
-    // 2. todayinterest값이 존재하지 않으면 0를 출력 - error 처리 0를 return함.    
+      // 2. todayinterest값이 존재하지 않으면 0를 출력 - error 처리 0를 return함.    
+      if(getTodayInterestValue === 0) {
+        throw new Error (`Invalid todayInterest value for user ${userId}: ${getTodayInterestValue}`);
+      }
 
-    // 2-2. todayInterest값이 존재하다면 todayInterestArray값을 채워넣기 (최대 3개 배열)
+      // 2-2. todayInterest값이 존재하다면 todayInterestArray값을 채워넣기 (최대 4개 배열)
+      await this.homeModel.postTodayInterestArray(userId, getTodayInterestValue);
+    }
 
     // 3. coffeeChatCount값 불러오기
+    const coffeeChatCount = await this.homeModel.getCoffeeChatCount(userId);
 
     // 3-1. coffeeChatCount값이 0이라면 - error 처리
-
+    if(coffeeChatCount === 0) {
+      throw new Error (`Invalid coffeeChatCount value for user ${userId}: ${coffeeChatCount}`);
+    } 
     // 3-2. coffeeChatCount값이 1이상 4 미만이라면 todayInterestArray값을 index 기반으로 정보 보여주기
+    else {
+      showFrontProfile = await this.homeModel.showFrontProfile(userId);
+    }
 
-    return 0;
+
+    return showFrontProfile;
   }
 }
