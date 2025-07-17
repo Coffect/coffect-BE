@@ -50,7 +50,7 @@ export class UserModel {
   }
 
   public async insertUser(info: UserSignUpRequest) {
-    await prisma.user.create({
+    const q = await prisma.user.create({
       data: {
         userId: 2,
         id: info.id,
@@ -61,5 +61,6 @@ export class UserModel {
         profileImage: info.profile
       }
     });
+    console.log(q);
   }
 }

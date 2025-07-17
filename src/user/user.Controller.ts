@@ -125,9 +125,9 @@ export class UserController extends Controller {
   }
 
   /**
-   * 토큰검증
+   *  데이터베이스에 토큰이 존재하는지 검증하고, 유효할 경우 새로운 토큰을 발급해준다.
    *
-   * @summary 데이터베이스에 토큰이 존재하는지 검증하고, 유효할 경우 새로운 토큰을 발급해준다.
+   * @summary 토큰검증
    * @returns accessToken, refreshToken
    */
   @Get('refresh')
@@ -195,7 +195,31 @@ export class UserController extends Controller {
     return new TsoaSuccessResponse(tokenCheck);
   }
 
+  /**
+   * 회원가입
+   *
+   * @summary 회원가입
+   */
   @Post('signup')
+  @SuccessResponse(200, '회원가입 성공')
+  @Response<ITsoaErrorResponse>(500, '데이터베이스 삽입 실패', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC500',
+      reason: '서버 오류가 발생했습니다.',
+      data: '데이터베이스 삽입에 실패했습니다.'
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(409, '중복된 아이디', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC409',
+      reason: '이미 중복된 아이디입니다.',
+      data: '아이디가 중복됨'
+    },
+    success: null
+  })
   public async signup(
     @Request() req: ExpressRequest,
     @Body()
@@ -216,7 +240,22 @@ export class UserController extends Controller {
     return new TsoaSuccessResponse('회원가입 성공');
   }
 
+  /**
+   * 데이터베이스를 조회해 해당 아이디가 겹치는지 아닌지 확인한다.
+   *
+   * @summary 아이디 중복 체크
+   */
   @Post('idcheck')
+  @SuccessResponse(200, '존재하지 않는 아이디')
+  @Response<ITsoaErrorResponse>(409, '중복된 아이디', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC409',
+      reason: '이미 중복된 아이디입니다.',
+      data: '아이디가 중복됨'
+    },
+    success: null
+  })
   public async idcheck(
     @Request() req: ExpressRequest,
     @Body() body: { id: string }

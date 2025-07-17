@@ -1,6 +1,5 @@
 import { HomeModel } from './coffeeChat.Model';
 
-
 export class HomeService {
   private homeModel: HomeModel;
 
@@ -9,9 +8,9 @@ export class HomeService {
   }
 
   public async postTodayInterestService(
-    userId : number,
-    todayInterest : number
-  ):Promise<void> {
+    userId: number,
+    todayInterest: number
+  ): Promise<void> {
     await this.homeModel.postTodayInterestModel(userId, todayInterest);
-  }   
+  }
 }

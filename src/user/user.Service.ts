@@ -8,17 +8,17 @@ import {
   UserExistID,
   UserInvaildPassword,
   UserMissingFieldError,
-  UserNotExist
+  UserNotExist,
+  UserServerError
 } from './user.Message';
 import {
   UserLoginRequest,
   UserLoginResponse,
-  UserSignUpRequest,
-  UserSignUpResponse
+  UserSignUpRequest
 } from '../middleware/user.DTO/user.DTO';
 import { UserModel } from './user.Model';
 import { createHashedPassword, verifyPassword } from '../config/crypto';
-import { JwtExpiredError, JwtTokenInvaild } from '../middleware/error';
+import { JwtTokenInvaild } from '../middleware/error';
 import { Request } from 'express';
 
 export class UserService {
@@ -77,12 +77,17 @@ export class UserService {
   }
 
   public async signUpService(info: UserSignUpRequest) {
+    await this.idCheckService(info.id);
     const { hashedPassword, userSalt } = await createHashedPassword(
       info.password
     );
     info.hashed = hashedPassword;
     info.salt = userSalt;
-    await this.userModel.insertUser(info);
+    try {
+      await this.userModel.insertUser(info);
+    } catch (err) {
+      throw new UserServerError('데이터베이스 삽입에 실패했습니다.');
+    }
   }
 
   public async idCheckService(id: string) {

@@ -30,7 +30,7 @@ import verify from '../middleware/verifyJWT';
 import { UnivService } from './univ.Service';
 
 @Route('univ')
-@Tags('대학 검색, 인증관련 api입니다')
+@Tags('Univ Controller')
 export class UnivController extends Controller {
   public async search() {}
 
@@ -43,6 +43,5 @@ export class UnivController extends Controller {
     }
   ) {
     const univCert = await UnivService.certService(body.univMail);
-    
   }
 }

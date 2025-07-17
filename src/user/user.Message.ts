@@ -49,6 +49,6 @@ export class UserInvaildPassword extends BasicError {
 //회원가입
 export class UserExistID extends BasicError {
   constructor(description: string) {
-    super(405, 'EC405', '이미 중복된 아이디입니다.', description);
+    super(409, 'EC409', '이미 중복된 아이디입니다.', description);
   }
 }

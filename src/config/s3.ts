@@ -15,14 +15,14 @@ const settingS3 = new S3Client({
 });
 
 const upload = multer({
-  storage : multerS3 ({
-    s3 : settingS3,
-    bucket : process.env.S3_NAME || '',
-    acl : 'public-read', // 공개적으로 읽을 수 있게 설정
-    metadata : function (req, file, cb) {
-      cb(null, { fileName : file.filename });
+  storage: multerS3({
+    s3: settingS3,
+    bucket: process.env.S3_NAME || '',
+    acl: 'public-read', // 공개적으로 읽을 수 있게 설정
+    metadata: function (req, file, cb) {
+      cb(null, { fileName: file.filename });
     },
-    key : function (req, file, cb) {
+    key: function (req, file, cb) {
       cb(null, `${file.originalname}-${uuidv4}`);
     }
   })
