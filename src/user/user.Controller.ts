@@ -8,7 +8,8 @@ import {
   Body,
   Response,
   // Middlewares,
-  Get
+  Get,
+  Middlewares
 } from 'tsoa';
 import {
   Request as ExpressRequest
@@ -27,6 +28,7 @@ import {
   UserSignUpRequest,
   UserSignUpResponse
 } from '../middleware/user.DTO/user.DTO';
+import { uploadSingle } from '../middleware/upload';
 // import { decodeToken } from '../config/token';
 // import verify from '../middleware/verifyJWT';
 
@@ -111,7 +113,7 @@ export class UserController extends Controller {
   public async login(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       userPassword: string;
       userId: string;
     }
@@ -201,6 +203,7 @@ export class UserController extends Controller {
    * @summary 회원가입
    */
   @Post('signup')
+  @Middlewares(uploadSingle)
   @SuccessResponse(200, '회원가입 성공')
   @Response<ITsoaErrorResponse>(500, '데이터베이스 삽입 실패', {
     resultType: 'FAIL',
@@ -223,7 +226,7 @@ export class UserController extends Controller {
   public async signup(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       password: string;
       id: string;
       univ: string;

@@ -74,3 +74,13 @@ export class JwtTokenInvaild extends BasicError {
     super(404, 'ERR-1', 'JsonWebToken error', description);
   }
 }
+export class MulterUploadError extends BasicError {
+  constructor(description: string) {
+    super(
+      500,
+      'ERR2',
+      '서버에 사진을 올리는중 오류가 발생했습니다.',
+      description
+    );
+  }
+}

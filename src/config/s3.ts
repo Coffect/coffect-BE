@@ -18,12 +18,13 @@ const upload = multer({
   storage: multerS3({
     s3: settingS3,
     bucket: process.env.S3_NAME || '',
-    acl: 'public-read', // 공개적으로 읽을 수 있게 설정
+    // acl: 'public-read', // 공개적으로 읽을 수 있게 설정
     metadata: function (req, file, cb) {
       cb(null, { fileName: file.filename });
     },
     key: function (req, file, cb) {
-      cb(null, `${file.originalname}-${uuidv4}`);
+      const uniqueName = `${uuidv4()}-${file.originalname}`; // 함수를 실행 안시켰음
+      cb(null, uniqueName);
     }
   })
 });
