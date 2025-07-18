@@ -114,6 +114,65 @@
 					"질문"
 				],
 				"type": "string"
+			},
+			"coffectChatCardDTO": {
+				"properties": {
+					"name": {
+						"type": "string"
+					},
+					"grade": {
+						"type": "string"
+					},
+					"introduce": {
+						"type": "string"
+					},
+					"categoryMatch": {
+						"items": {
+							"type": "string"
+						},
+						"type": "array"
+					},
+					"profileImage": {
+						"type": "string"
+					},
+					"mail": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name",
+					"grade",
+					"introduce",
+					"categoryMatch",
+					"profileImage",
+					"mail"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_coffectChatCardDTO_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"$ref": "#/components/schemas/coffectChatCardDTO"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -527,8 +586,8 @@
 						}
 					}
 				},
-				"description": "Coffect coffeeChat API 테스트 중입니다.",
-				"summary": "postTodayInterest TEST",
+				"description": "Coffect coffeeChat Home API.",
+				"summary": "매일 커피챗 추천 항목을 받는 API (가까운 거리 순 <1>, 나와 비슷한 관심사 <2>, 같은 학번 <3>, 최근에 글을 쓴 사람 <4>)",
 				"tags": [
 					"Home Controller"
 				],
@@ -560,6 +619,87 @@
 						}
 					}
 				}
+			}
+		},
+		"/home/getCardClose": {
+			"get": {
+				"operationId": "CardCloseCoffeeChatController",
+				"responses": {
+					"200": {
+						"description": "성공적으로 Data를 넣었습니다.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_coffectChatCardDTO_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE400",
+												"reason": "주제 선정해주세요.",
+												"data": null
+											},
+											"success": null
+										}
+									},
+									"Example 2": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE401",
+												"reason": "오늘 하루 추천 커피챗 횟수를 초과 했습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE500",
+												"reason": "서버 오류가 발생했습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "Coffect coffeeChat Home API.",
+				"summary": "카드를 가져오는 API (가까운 거리 순 <1>, 나와 비슷한 관심사 <2>, 같은 학번 <3>, 최근에 글을 쓴 사람 <4>)",
+				"tags": [
+					"Home Controller"
+				],
+				"security": [],
+				"parameters": []
 			}
 		}
 	},
