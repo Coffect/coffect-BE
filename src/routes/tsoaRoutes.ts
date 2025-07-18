@@ -76,6 +76,7 @@ const models: TsoaRoute.Models = {
             "success": {"ref":"coffectChatCardDTO","required":true},
         },
         "additionalProperties": false,
+    },
     "ThreadType": {
         "dataType": "refEnum",
         "enums": ["아티클","팀원모집","질문"],
