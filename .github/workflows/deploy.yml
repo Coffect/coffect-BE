@@ -148,21 +148,30 @@ jobs:
             echo "🔧 Prisma import 경로 수정 및 클라이언트 생성 중..."
             export NODE_OPTIONS="--max-old-space-size=512"
             
-            # 잘못된 Prisma import 경로 수정
+            # 잘못된 Prisma import 경로 수정 (간단한 방법)
             echo "🔍 잘못된 Prisma import 수정 중..."
-            find src/ -name "*.ts" -type f -exec sed -i "s|from ['\"].*generated/prisma['\"]|from '\''@prisma/client'\''|g" {} + 2>/dev/null || true
-            find src/ -name "*.js" -type f -exec sed -i "s|from ['\"].*generated/prisma['\"]|from '\''@prisma/client'\''|g" {} + 2>/dev/null || true
-            find src/ -name "*.ts" -type f -exec sed -i "s|require(['\"].*generated/prisma['\"])|require('\''@prisma/client'\'')|g" {} + 2>/dev/null || true
+            
+            # TypeScript 파일에서 잘못된 import 수정
+            if [ -d "src/" ]; then
+              find src/ -name "*.ts" -type f | while read file; do
+                sed -i "s|from ['\"].*generated/prisma['\"]|from '\''@prisma/client'\''|g" "$file"
+                sed -i "s|require(['\"].*generated/prisma['\"])|require('\''@prisma/client'\'')|g" "$file"
+              done
+            fi
+            
+            # 기존 dist 폴더 완전 삭제 (잘못된 빌드 제거)
+            echo "🗑️ 기존 빌드 파일 완전 삭제..."
+            rm -rf dist/
             
             # Prisma 클라이언트 생성
             echo "🔄 Prisma 클라이언트 생성 중..."
             npx prisma generate --schema=prisma/schema.prisma
             
-            echo "✅ Prisma 설정 완료"
+            # generated 폴더 위치 확인
+            echo "📍 Prisma 클라이언트 위치 확인..."
+            find . -name "*prisma*" -type d 2>/dev/null | head -5
             
-            # 수정 결과 확인
-            echo "=== Prisma import 확인 ==="
-            grep -r "@prisma/client" src/ 2>/dev/null | head -3 || echo "Prisma import 확인됨"
+            echo "✅ Prisma 설정 완료"
           '
 
       - name: Create Environment File
