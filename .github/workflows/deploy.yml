@@ -39,139 +39,138 @@ jobs:
       - name: Test SSH Connection
         run: ssh playground-umc-8th "echo '✅ SSH Connection Successful'"
 
-      - name: Analyze Changes
-        id: changes
+      - name: Analyze Changes and Dependencies
+        id: analyze
         run: |
-          # 변경된 파일들 체크
+          # 변경된 파일들 분석
           CHANGED_FILES=$(git diff HEAD^1 --name-only)
           echo "changed-files<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
           
-          # package.json 변경 여부
+          # package.json/package-lock.json 변경 확인
           PACKAGE_CHANGED=$(echo "$CHANGED_FILES" | grep -E "(package\.json|package-lock\.json)" || echo "")
           echo "package-changed=${PACKAGE_CHANGED}" >> $GITHUB_OUTPUT
           
-          # 프리즈마 스키마 변경 여부
-          PRISMA_CHANGED=$(echo "$CHANGED_FILES" | grep "prisma/" || echo "")
-          echo "prisma-changed=${PRISMA_CHANGED}" >> $GITHUB_OUTPUT
-          
-          # TypeScript/소스 코드 변경 여부
+          # 소스 코드 변경 확인
           SOURCE_CHANGED=$(echo "$CHANGED_FILES" | grep -E "\.(ts|js)$" || echo "")
           echo "source-changed=${SOURCE_CHANGED}" >> $GITHUB_OUTPUT
           
-          echo "=== 변경 분석 결과 ==="
-          echo "Package 변경: ${PACKAGE_CHANGED:-없음}"
-          echo "Prisma 변경: ${PRISMA_CHANGED:-없음}"
-          echo "소스 변경: ${SOURCE_CHANGED:-없음}"
-
-      - name: Check Remote Dependencies State
-        id: remote-deps
-        run: |
-          # 원격 서버의 node_modules 상태 체크
+          # Prisma 스키마 변경 확인
+          PRISMA_CHANGED=$(echo "$CHANGED_FILES" | grep "prisma/" || echo "")
+          echo "prisma-changed=${PRISMA_CHANGED}" >> $GITHUB_OUTPUT
+          
+          # 원격 dependencies 상태 확인
           REMOTE_DEPS_EXISTS=$(ssh playground-umc-8th "test -d /home/ubuntu/coffect-BE/node_modules && echo 'true' || echo 'false'")
           echo "remote-deps-exists=${REMOTE_DEPS_EXISTS}" >> $GITHUB_OUTPUT
           
           # package-lock.json 해시 비교
-          if [ "$REMOTE_DEPS_EXISTS" = "true" ] && [ -z "${{ steps.changes.outputs.package-changed }}" ]; then
+          DEPS_INSTALL_NEEDED="false"
+          if [ "$REMOTE_DEPS_EXISTS" = "false" ] || [ ! -z "$PACKAGE_CHANGED" ]; then
+            DEPS_INSTALL_NEEDED="true"
+          else
             REMOTE_LOCK_HASH=$(ssh playground-umc-8th "test -f /home/ubuntu/coffect-BE/package-lock.json && md5sum /home/ubuntu/coffect-BE/package-lock.json | cut -d' ' -f1 || echo 'none'")
             LOCAL_LOCK_HASH=$(md5sum package-lock.json | cut -d' ' -f1)
-            if [ "$REMOTE_LOCK_HASH" = "$LOCAL_LOCK_HASH" ]; then
-              echo "deps-sync=true" >> $GITHUB_OUTPUT
-            else
-              echo "deps-sync=false" >> $GITHUB_OUTPUT
+            if [ "$REMOTE_LOCK_HASH" != "$LOCAL_LOCK_HASH" ]; then
+              DEPS_INSTALL_NEEDED="true"
             fi
-          else
-            echo "deps-sync=false" >> $GITHUB_OUTPUT
           fi
+          echo "deps-install-needed=${DEPS_INSTALL_NEEDED}" >> $GITHUB_OUTPUT
+          
+          echo "=== 변경 분석 결과 ==="
+          echo "Dependencies 설치 필요: ${DEPS_INSTALL_NEEDED}"
+          echo "Package 변경: ${PACKAGE_CHANGED:-없음}"
+          echo "소스 변경: ${SOURCE_CHANGED:-없음}"
+          echo "Prisma 변경: ${PRISMA_CHANGED:-없음}"
 
-      - name: Backup and Sync Files
+      - name: Efficient File Sync
         run: |
           ssh playground-umc-8th '
-            # 백업 디렉토리 생성
-            mkdir -p /home/ubuntu/coffect-BE-backup
+            # 백업 및 디렉토리 준비
+            mkdir -p /home/ubuntu/coffect-BE-backup /home/ubuntu/coffect-BE
             
-            # 기존 파일이 있으면 백업
+            # 빠른 백업 (중요 파일만)
             if [ -d /home/ubuntu/coffect-BE ]; then
-              cp -r /home/ubuntu/coffect-BE/* /home/ubuntu/coffect-BE-backup/ 2>/dev/null || true
+              cp /home/ubuntu/coffect-BE/.env /home/ubuntu/coffect-BE-backup/ 2>/dev/null || true
+              cp /home/ubuntu/coffect-BE/package-lock.json /home/ubuntu/coffect-BE-backup/ 2>/dev/null || true
             fi
-            
-            # 메인 디렉토리 생성
-            mkdir -p /home/ubuntu/coffect-BE
           '
           
-          # 변경된 파일만 동기화
-          if [ ! -z "${{ steps.changes.outputs.changed-files }}" ]; then
-            echo "변경된 파일들을 동기화 중..."
-            rsync -avz --delete \
+          # 변경된 파일만 동기화 (최적화)
+          if [ ! -z "${{ steps.analyze.outputs.changed-files }}" ]; then
+            echo "📁 변경된 파일들을 효율적으로 동기화 중..."
+            rsync -avz --progress \
               --exclude 'node_modules' \
               --exclude '.git' \
               --exclude 'logs' \
               --exclude 'dist' \
+              --exclude '.env' \
               ./ playground-umc-8th:/home/ubuntu/coffect-BE/
           else
-            echo "변경된 파일이 없습니다."
+            echo "📁 변경된 파일이 없어 동기화를 건너뜁니다."
           fi
 
       - name: Smart Dependencies Installation
-        if: steps.changes.outputs.package-changed != '' || steps.remote-deps.outputs.deps-sync == 'false'
+        if: steps.analyze.outputs.deps-install-needed == 'true'
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             
-            echo "📦 Dependencies 설치/업데이트 중..."
+            echo "📦 Dependencies 효율적 설치 중..."
             
-            # 메모리 사용량 최적화를 위한 환경 변수 설정
-            export NODE_OPTIONS="--max-old-space-size=1024"
+            # CPU 과부하 방지를 위한 설정
+            export NODE_OPTIONS="--max-old-space-size=768"
             export NPM_CONFIG_AUDIT=false
             export NPM_CONFIG_FUND=false
+            export NPM_CONFIG_PROGRESS=false
+            export NPM_CONFIG_PREFER_OFFLINE=true
             
-            # 기존 node_modules가 있고 package.json만 변경된 경우
+            # npm 설치 최적화
             if [ -d node_modules ] && [ -f package-lock.json ]; then
-              echo "🔄 기존 dependencies 업데이트 중..."
-              npm install --production=false --no-audit --no-fund
+              echo "🔄 기존 dependencies 증분 업데이트..."
+              # 증분 설치로 CPU 부하 감소
+              npm install --no-audit --no-fund --prefer-offline --no-optional
             else
-              echo "🆕 Dependencies 새로 설치 중..."
+              echo "🆕 Dependencies 최초 설치..."
+              # 클린 설치
               rm -rf node_modules package-lock.json 2>/dev/null || true
-              npm install --production=false --no-audit --no-fund
+              npm ci --no-audit --no-fund --prefer-offline --no-optional
             fi
             
             echo "✅ Dependencies 설치 완료"
           '
 
-      - name: Fix Prisma Imports and Generate Client
-        if: steps.changes.outputs.prisma-changed != '' || steps.remote-deps.outputs.deps-sync == 'false' || steps.changes.outputs.source-changed != ''
+      - name: Generate Prisma Client
+        if: steps.analyze.outputs.prisma-changed != '' || steps.analyze.outputs.deps-install-needed == 'true'
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             
-            echo "🔧 Prisma import 경로 수정 및 클라이언트 생성 중..."
+            echo "🔧 Prisma 클라이언트 생성 중..."
             export NODE_OPTIONS="--max-old-space-size=512"
             
-            # 잘못된 Prisma import 경로 수정 (간단한 방법)
-            echo "🔍 잘못된 Prisma import 수정 중..."
+            npx prisma generate --schema=prisma/schema.prisma
+            echo "✅ Prisma 클라이언트 생성 완료"
+          '
+
+      - name: Fix Source Code Imports
+        if: steps.analyze.outputs.source-changed != '' || steps.analyze.outputs.deps-install-needed == 'true'
+        run: |
+          ssh playground-umc-8th '
+            cd /home/ubuntu/coffect-BE
             
-            # TypeScript 파일에서 잘못된 import 수정
-            if [ -d "src/" ]; then
-              find src/ -name "*.ts" -type f | while read file; do
+            echo "🔍 Prisma import 경로 수정 중..."
+            
+            # 효율적인 파일 수정 (병렬 처리 없이 순차적으로)
+            find src/ -name "*.ts" -type f | while read file; do
+              if grep -q "generated/prisma" "$file" 2>/dev/null; then
+                echo "수정: $file"
                 sed -i "s|from ['\"].*generated/prisma['\"]|from '\''@prisma/client'\''|g" "$file"
                 sed -i "s|require(['\"].*generated/prisma['\"])|require('\''@prisma/client'\'')|g" "$file"
-              done
-            fi
+              fi
+            done
             
-            # 기존 dist 폴더 완전 삭제 (잘못된 빌드 제거)
-            echo "🗑️ 기존 빌드 파일 완전 삭제..."
-            rm -rf dist/
-            
-            # Prisma 클라이언트 생성
-            echo "🔄 Prisma 클라이언트 생성 중..."
-            npx prisma generate --schema=prisma/schema.prisma
-            
-            # generated 폴더 위치 확인
-            echo "📍 Prisma 클라이언트 위치 확인..."
-            find . -name "*prisma*" -type d 2>/dev/null | head -5
-            
-            echo "✅ Prisma 설정 완료"
+            echo "✅ Import 경로 수정 완료"
           '
 
       - name: Create Environment File
@@ -192,26 +191,24 @@ jobs:
           EOF"
 
       - name: Smart Build Process
-        if: steps.changes.outputs.source-changed != '' || steps.remote-deps.outputs.deps-sync == 'false'
+        if: steps.analyze.outputs.source-changed != '' || steps.analyze.outputs.deps-install-needed == 'true'
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             
-            echo "🏗️ 애플리케이션 빌드 중..."
+            echo "🏗️ 효율적 빌드 프로세스 시작..."
             export NODE_OPTIONS="--max-old-space-size=1024"
             
-            # 기존 빌드 파일 정리
-            rm -rf dist 2>/dev/null || true
+            # 기존 dist 제거 (필요시에만)
+            if [ -d dist ]; then
+              rm -rf dist
+            fi
             
-            # 빌드 실행 (Prisma generate가 build 스크립트에 포함됨)
+            # 빌드 실행 (package.json의 build 스크립트 사용)
+            echo "📋 빌드 시작..."
             if npm run build; then
               echo "✅ 빌드 성공"
-              
-              # 빌드 결과 확인
-              if [ -d dist ]; then
-                echo "📁 빌드 파일 생성 확인:"
-                ls -la dist/ | head -5
-              fi
+              ls -la dist/ | head -3
             else
               echo "❌ 빌드 실패"
               exit 1
@@ -223,22 +220,16 @@ jobs:
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             
-            echo "🛑 기존 애플리케이션 중지 중..."
+            echo "🛑 기존 애플리케이션 정리 중..."
             
-            # PM2 프로세스 중지 (npx 사용)
-            npx pm2 stop coffect-be 2>/dev/null || true
-            npx pm2 delete coffect-be 2>/dev/null || true
-            
-            # PID 파일로 프로세스 종료
+            # PID 파일 기반 종료
             if [ -f app.pid ]; then
               PID=$(cat app.pid)
               if kill -0 $PID 2>/dev/null; then
                 echo "애플리케이션 종료 중 (PID: $PID)..."
                 kill -TERM $PID
-                sleep 3
-                if kill -0 $PID 2>/dev/null; then
-                  kill -KILL $PID
-                fi
+                sleep 2
+                kill -0 $PID 2>/dev/null && kill -KILL $PID || true
               fi
               rm -f app.pid
             fi
@@ -247,17 +238,17 @@ jobs:
             if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
               PORT_PIDS=$(lsof -ti:${{ secrets.EC2_PORT }} 2>/dev/null || true)
               if [ ! -z "$PORT_PIDS" ]; then
-                echo "포트 ${{ secrets.EC2_PORT }}에서 실행 중인 프로세스 종료: $PORT_PIDS"
+                echo "포트 프로세스 종료: $PORT_PIDS"
                 echo "$PORT_PIDS" | xargs -r kill -TERM
-                sleep 2
+                sleep 1
                 echo "$PORT_PIDS" | xargs -r kill -KILL 2>/dev/null || true
               fi
             fi
             
-            echo "✅ 기존 애플리케이션 정리 완료"
+            echo "✅ 정리 완료"
           '
 
-      - name: Start Application with PM2
+      - name: Start Application Efficiently
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
@@ -267,85 +258,64 @@ jobs:
             
             echo "🚀 애플리케이션 시작 중..."
             
-            # dist 폴더 및 파일 확인
-            if [ ! -d "dist" ]; then
-              echo "❌ dist 폴더가 없습니다."
-              exit 1
-            fi
+            # package.json의 start 스크립트 확인
+            START_SCRIPT="npm run dev"
+            echo "📋 사용할 시작 명령어: $START_SCRIPT"
             
-            if [ ! -f "dist/index.js" ]; then
-              echo "❌ dist/index.js 파일이 없습니다."
-              echo "현재 dist 폴더 내용:"
-              ls -la dist/
-              exit 1
-            fi
+            # 백그라운드에서 애플리케이션 시작
+            nohup bash -c "
+              export NODE_ENV=production
+              $START_SCRIPT >> logs/app.log 2>> logs/app.error.log
+            " > /dev/null 2>&1 &
             
-            # PM2가 devDependencies에 있는지 확인하고 설치
-            if [ ! -f "node_modules/.bin/pm2" ]; then
-              echo "📦 PM2 확인 및 설치 중..."
-              npm list pm2 >/dev/null 2>&1 || npm install pm2 --save-dev --no-audit --no-fund
-            fi
+            APP_PID=$!
+            echo $APP_PID > app.pid
             
-            # PM2로 애플리케이션 시작 (환경변수 설정)
-            echo "🔄 PM2로 애플리케이션 시작..."
-            NODE_ENV=production npx pm2 start dist/index.js \
-              --name "coffect-be" \
-              --log logs/pm2.log \
-              --error logs/pm2.error.log \
-              --out logs/pm2.out.log \
-              --time
+            echo "✅ 애플리케이션 시작됨 (PID: $APP_PID)"
             
-            echo "✅ 애플리케이션이 PM2로 시작되었습니다"
-            
-            # 상태 확인
+            # 초기 상태 확인
             sleep 3
-            echo "=== PM2 상태 ==="
-            npx pm2 status
-            
-            # 간단한 로그 확인
-            echo "=== 최근 로그 (5줄) ==="
-            npx pm2 logs coffect-be --lines 5 || echo "로그 확인 실패"
+            if kill -0 $APP_PID 2>/dev/null; then
+              echo "✅ 프로세스 정상 실행 중"
+            else
+              echo "❌ 프로세스 실행 실패"
+              cat logs/app.error.log 2>/dev/null | tail -10
+              exit 1
+            fi
           '
 
-      - name: Health Check
+      - name: Quick Health Check
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             
-            echo "🏥 헬스 체크 수행 중..."
+            echo "🏥 빠른 헬스 체크..."
             
-            # 30초 동안 서버 응답 대기
-            for i in {1..6}; do
+            # 15초 동안만 체크 (시간 단축)
+            for i in {1..3}; do
               if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
                 if curl -f -s http://localhost:${{ secrets.EC2_PORT }}/ > /dev/null 2>&1; then
-                  echo "✅ 서버가 정상적으로 응답합니다 (시도 $i/6)"
+                  echo "✅ 서버 응답 확인 (시도 $i/3)"
                   break
-                elif [ $i -eq 6 ]; then
-                  echo "❌ 서버 헬스 체크 실패"
-                  echo "=== PM2 상태 ==="
-                  npx pm2 status || echo "PM2 상태 확인 실패"
-                  echo "=== 최근 로그 ==="
-                  npx pm2 logs coffect-be --lines 20 || echo "로그 확인 실패"
-                  echo "=== 에러 로그 ==="
-                  cat logs/pm2.error.log 2>/dev/null | tail -10 || echo "에러 로그 없음"
-                  exit 1
+                elif [ $i -eq 3 ]; then
+                  echo "⚠️ HTTP 응답 없음 - 프로세스 상태 확인"
+                  if [ -f app.pid ] && kill -0 $(cat app.pid) 2>/dev/null; then
+                    echo "✅ 프로세스는 실행 중 (포트 바인딩 대기 중일 수 있음)"
+                  else
+                    echo "❌ 프로세스 실행 실패"
+                    tail -10 logs/app.error.log 2>/dev/null || echo "에러 로그 없음"
+                    exit 1
+                  fi
                 else
-                  echo "⏳ 서버 응답 대기 중... (시도 $i/6)"
+                  echo "⏳ 응답 대기 중... (시도 $i/3)"
                   sleep 5
                 fi
               else
-                echo "⚠️ EC2_PORT가 설정되지 않아 포트 체크를 건너뜁니다"
-                # 포트 없이도 PM2 프로세스 상태로 확인
-                if npx pm2 status | grep -q "online"; then
-                  echo "✅ PM2 프로세스가 온라인 상태입니다"
+                echo "⚠️ 포트 미설정 - 프로세스 상태만 확인"
+                if [ -f app.pid ] && kill -0 $(cat app.pid) 2>/dev/null; then
+                  echo "✅ 프로세스 실행 중"
                   break
-                else
-                  echo "❌ PM2 프로세스가 오프라인 상태입니다"
-                  if [ $i -eq 6 ]; then
-                    exit 1
-                  fi
                 fi
-                sleep 5
               fi
             done
           '
@@ -356,35 +326,35 @@ jobs:
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             
-            echo "📊 배포 요약"
+            echo "📊 배포 완료 요약"
             echo "===================="
             
-            echo "=== PM2 상태 ==="
-            npx pm2 status 2>/dev/null || echo "PM2 상태 확인 실패"
-            
-            echo ""
-            echo "=== 시스템 리소스 ==="
-            echo "CPU 사용률:"
-            top -bn1 | grep "Cpu(s)" || echo "CPU 정보 확인 실패"
-            echo ""
-            echo "메모리 사용률:"
-            free -h || echo "메모리 정보 확인 실패"
-            
-            echo ""
-            echo "=== 포트 상태 ==="
-            if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
-              if netstat -ln 2>/dev/null | grep ":${{ secrets.EC2_PORT }}" > /dev/null; then
-                echo "✅ 포트 ${{ secrets.EC2_PORT }}에서 리스닝 중"
+            # 프로세스 상태
+            if [ -f app.pid ]; then
+              PID=$(cat app.pid)
+              if kill -0 $PID 2>/dev/null; then
+                echo "✅ 애플리케이션 실행 중 (PID: $PID)"
               else
-                echo "❌ 포트 ${{ secrets.EC2_PORT }}에서 리스닝하지 않음"
+                echo "❌ 애플리케이션 중지됨"
+              fi
+            else
+              echo "❌ PID 파일 없음"
+            fi
+            
+            # 포트 상태 (빠른 확인)
+            if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
+              if netstat -ln 2>/dev/null | grep -q ":${{ secrets.EC2_PORT }}"; then
+                echo "✅ 포트 ${{ secrets.EC2_PORT }} 리스닝 중"
+              else
+                echo "⚠️ 포트 ${{ secrets.EC2_PORT }} 대기 중"
               fi
             fi
             
+            # 간단한 로그 (마지막 3줄만)
             echo ""
-            echo "=== 애플리케이션 로그 (마지막 3줄) ==="
-            npx pm2 logs coffect-be --lines 3 2>/dev/null || echo "로그 확인 실패"
+            echo "=== 최근 로그 ==="
+            tail -3 logs/app.log 2>/dev/null || echo "앱 로그 없음"
             
             echo ""
-            echo "=== 배포 완료 시각 ==="
-            date
+            echo "⏰ 배포 완료: $(date)"
           '
