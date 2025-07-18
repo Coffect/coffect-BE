@@ -409,5 +409,21 @@ export class HomeModel {
 
     return cardDTO;
   };
-}
 
+  public async postSuggestCoffeeChatModel (
+    myUserId : number,
+    otherUserId : number,
+    suggestion : string
+  ):Promise<void> {
+    await prisma.coffeeChat.create({
+      data: {
+        firstUserId: myUserId,   
+        secondUserId: otherUserId,
+        message: suggestion,
+        coffectDate: new Date(),
+        location: '',
+        valid: false
+      }
+    });
+  }
+}

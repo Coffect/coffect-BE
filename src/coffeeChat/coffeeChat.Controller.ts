@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Post, Route, SuccessResponse, Tags, Response, Request, Middlewares } from 'tsoa';
+import { Body, Controller, Get, Post, Route, SuccessResponse, Tags, Response, Request, Middlewares, Query } from 'tsoa';
 import { ITsoaErrorResponse, ITsoaSuccessResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import { Request as ExpressRequest } from 'express';
-import { exceedLimitError, postTodayError } from './coffeeChat.Message';
+import { exceedLimitError, nonPostComment, postTodayError } from './coffeeChat.Message';
 import { HomeService } from './coffeeChat.Service';
 import verify from '../middleware/verifyJWT';
 import { coffectChatCardDTO } from '../middleware/coffectChat.DTO/coffectChat.DTO';
@@ -139,5 +139,59 @@ export class HomeController extends Controller {
     }
 
     return new TsoaSuccessResponse<coffectChatCardDTO>(result);
+  };
+
+
+  /**
+   * Coffect coffeeChat Home API.
+   * 
+   * @summary 커피챗 제안 요청하는 API
+   * @param body
+   * @returns 요청 성공 여부
+   */
+  @Post('postSuggestCoffeeChat')
+  @Middlewares(verify)
+  @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
+  @Response<ITsoaErrorResponse>(
+    400,
+    'Bad Request',
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE402',
+        reason: '내용이 누락되어있습니다.',
+        data: null
+      },
+      success: null
+    })
+  @Response<ITsoaErrorResponse>(
+    500,
+    'Internal Server Error',
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE500',
+        reason: '서버 오류가 발생했습니다.',
+        data: null
+      },
+      success: null
+    })
+  public async postSuggestCoffeeChat(
+    @Request() req: ExpressRequest,
+    @Body() body: { 
+      otherUserid : number;
+      suggestion: string;
+    },
+  ): Promise<ITsoaSuccessResponse<string>> {
+    const myUserId = req.decoded.index; // 내 userId
+    const { otherUserid, suggestion } = body;
+
+    if (!suggestion || suggestion.trim().length === 0) {
+      throw new Error('커피챗 제안 내용이 누락되어있습니다.');
+    }
+
+    await this.homeService.postSuggestCoffeeChatService(myUserId, otherUserid, suggestion);
+
+    return new TsoaSuccessResponse<string>('정상적으로 커피챗 제안을 전송했습니다.');
   };
 }

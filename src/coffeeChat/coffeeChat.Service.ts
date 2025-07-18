@@ -10,7 +10,7 @@ export class HomeService {
     this.homeModel = new HomeModel();
   }
 
-  /**  */
+  /** 하루 관심사 삽입 서비스 로직 */
   public async postTodayInterestService(
     userId : number,
     todayInterest : number
@@ -69,5 +69,14 @@ export class HomeService {
     const showFrontProfile = await this.homeModel.showFrontProfile(recommendUserId);
 
     return showFrontProfile; // 항상 CoffectChatCardDTO 반환
+  }
+
+  /** 커피챗 제안 서비스 */
+  public async postSuggestCoffeeChatService(
+    myUserId : number,
+    otherUserid : number,
+    suggestion : string
+  ):Promise<void> {
+    await this.homeModel.postSuggestCoffeeChatModel(myUserId, otherUserid, suggestion);
   }
 }
