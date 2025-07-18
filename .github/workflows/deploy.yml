@@ -153,7 +153,7 @@ jobs:
             echo "✅ Prisma 클라이언트 생성 완료"
           '
 
-      - name: Fix Source Code Imports
+      - name: Fix Source Code Imports (Safe Version)
         if: steps.analyze.outputs.source-changed != '' || steps.analyze.outputs.deps-install-needed == 'true'
         run: |
           ssh playground-umc-8th '
@@ -161,16 +161,30 @@ jobs:
             
             echo "🔍 Prisma import 경로 수정 중..."
             
-            # 효율적인 파일 수정 (병렬 처리 없이 순차적으로)
+            # 더 안전한 방법으로 파일 수정
             find src/ -name "*.ts" -type f | while read file; do
               if grep -q "generated/prisma" "$file" 2>/dev/null; then
                 echo "수정: $file"
-                sed -i "s|from ['\"].*generated/prisma['\"]|from '\''@prisma/client'\''|g" "$file"
-                sed -i "s|require(['\"].*generated/prisma['\"])|require('\''@prisma/client'\'')|g" "$file"
+                
+                # 1. 큰따옴표 버전 수정
+                sed -i "s|from \".*generated/prisma\"|from \"@prisma/client\"|g" "$file"
+                sed -i "s|require(\".*generated/prisma\")|require(\"@prisma/client\")|g" "$file"
+                
+                # 2. 작은따옴표 버전 수정
+                sed -i "s|from '"'"'.*generated/prisma'"'"'|from '"'"'@prisma/client'"'"'|g" "$file"
+                sed -i "s|require('"'"'.*generated/prisma'"'"')|require('"'"'@prisma/client'"'"')|g" "$file"
               fi
             done
             
             echo "✅ Import 경로 수정 완료"
+            
+            # 수정 결과 확인
+            echo "=== 수정 확인 ==="
+            if grep -r "generated/prisma" src/ 2>/dev/null; then
+              echo "❌ 아직 수정되지 않은 파일이 있습니다"
+            else
+              echo "✅ 모든 파일 수정 완료"
+            fi
           '
 
       - name: Create Environment File
