@@ -1,4 +1,5 @@
 import { coffectChatCardDTO } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { exceedLimitError, postTodayError } from './coffeeChat.Message';
 import { HomeModel } from './coffeeChat.Model';
 
 
@@ -17,41 +18,56 @@ export class HomeService {
     await this.homeModel.postTodayInterestModel(userId, todayInterest);
   }   
 
-  /**  */
+  /** 추천 로직 서비스 */
   public async CardCoffeeChatService(
     userId : number
-  ): Promise<coffectChatCardDTO | number> {
-    let showFrontProfile;
+  ): Promise<coffectChatCardDTO> {
+    // 0. todayInterestArray 값 불러오기
+    let todayInterestArray = await this.homeModel.getTodayInterestArray(userId);
 
-    // 0. todayInterestArray 값 불러오기 -> 존재하면 3번으로 이동
-    const todayInterestArray = await this.homeModel.getTodayInterestArray(userId) as number[];
+    // 1. todayInterestArray가 비어있으면 생성
+    if (!todayInterestArray || todayInterestArray.length === 0) {
+      const getTodayInterestValue = await this.homeModel.getTodayInterestValue(userId);
 
-    // 1. todayInterestArray가 존재하지 않으면 todayInterest 값 불러오기
-    if(todayInterestArray === null) {
-      const getTodayInterestValue = await this.homeModel.getTodayInterestValue(userId) as number;
-
-      // 2. todayinterest값이 존재하지 않으면 0를 출력 - error 처리 0를 return함.    
-      if(getTodayInterestValue === 0) {
-        throw new Error (`Invalid todayInterest value for user ${userId}: ${getTodayInterestValue}`);
+      // 2. todayInterest값이 유효하지 않으면 예외 발생
+      if (!getTodayInterestValue || ![1, 2, 3, 4].includes(getTodayInterestValue)) {
+        throw new postTodayError('주제를 먼저 선정해주세요.');
       }
 
-      // 2-2. todayInterest값이 존재하다면 todayInterestArray값을 채워넣기 (최대 4개 배열)
+      // 2-2. todayInterestArray 생성
       await this.homeModel.postTodayInterestArray(userId, getTodayInterestValue);
+      
+      // 다시 조회해서 제대로 생성되었는지 확인
+      todayInterestArray = await this.homeModel.getTodayInterestArray(userId);
+      
+      if (!todayInterestArray || todayInterestArray.length === 0) {
+        throw new Error('Failed to create todayInterestArray');
+      }
     }
 
-    // 3. coffeeChatCount값 불러오기
+    // 3. coffeeChatCount 값 불러오기
     const coffeeChatCount = await this.homeModel.getCoffeeChatCount(userId);
 
-    // 3-1. coffeeChatCount값이 0이라면 - error 처리
-    if(coffeeChatCount === 0) {
-      throw new Error (`Invalid coffeeChatCount value for user ${userId}: ${coffeeChatCount}`);
-    } 
-    // 3-2. coffeeChatCount값이 1이상 4 미만이라면 todayInterestArray값을 index 기반으로 정보 보여주기
-    else {
-      showFrontProfile = await this.homeModel.showFrontProfile(userId);
+    // 3-1. coffeeChatCount가 0이라면 예외 발생
+    if (coffeeChatCount <= 0) {
+      throw new exceedLimitError('오늘 하루 추천 커피챗 횟수를 초과했습니다.');
     }
 
+    // 3-2. 추천 사용자 선택 (coffeeChatCount를 인덱스로 사용)
+    const recommendIndex = coffeeChatCount - 1; // 1-based를 0-based로 변환
+    
+    if (recommendIndex >= todayInterestArray.length) {
+      throw new Error(`Invalid recommend index: ${recommendIndex}, array length: ${todayInterestArray.length}`);
+    }
 
-    return showFrontProfile;
+    const recommendUserId = todayInterestArray[recommendIndex];
+
+    // 3-3. coffeeChatCount 감소 (추천 후)
+    await this.homeModel.decreaseCoffeeChatCount(userId);
+
+    // 3-4. 추천된 사용자의 프로필 반환
+    const showFrontProfile = await this.homeModel.showFrontProfile(recommendUserId);
+
+    return showFrontProfile; // 항상 CoffectChatCardDTO 반환
   }
 }

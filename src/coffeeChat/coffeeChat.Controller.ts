@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Post, Route, SuccessResponse, Tags, Response, Request, Middlewares } from 'tsoa';
 import { ITsoaErrorResponse, ITsoaSuccessResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import { Request as ExpressRequest } from 'express';
-import { postTodayError } from './coffeeChat.Message';
+import { exceedLimitError, postTodayError } from './coffeeChat.Message';
 import { decodeToken } from '../config/token';
 import { HomeService } from './coffeeChat.Service';
 import { verify } from 'crypto';
@@ -125,6 +125,19 @@ export class HomeController extends Controller {
     const userId = req.decoded.index as number;
 
     const result = await this.homeService.CardCoffeeChatService(userId);
+
+    if (typeof result === 'number') {
+      if (result === 400) {
+        throw new postTodayError('주제 선정해주세요.');
+      }
+      
+      if (result === 401 || result === 0) {
+        throw new exceedLimitError('오늘 하루 추천 커피챗 횟수를 초과 했습니다.');
+      }
+      
+      // 기타 숫자 값들
+      throw new Error('서버 오류가 발생했습니다.');
+    }
 
     return new TsoaSuccessResponse<coffectChatCardDTO>(result);
   };

@@ -40,42 +40,43 @@ export class HomeModel {
   public async getCoffeeChatCount(
     userId: number
   ):Promise<number> {
-
-    const result = await prisma.user.findUnique({
+    const result = await prisma.user.findUniqueOrThrow({
       where : {userId : userId},
       select : { coffeeChatCount : true }
     });
 
-    return result!.coffeeChatCount;
+    return result.coffeeChatCount;
   };
 
   // userId에 해당하는 coffeeChatCount값 감소하기
   public async decreaseCoffeeChatCount(
     userId : number
   ):Promise<void> {
-    let result = await this.getCoffeeChatCount(userId) as number;
-
-    // count 값이 0 이상이라면 1 감소 시키고 반영 시킴.
-    if(result > 0) {
-      result = result -1;
-
-      await prisma.user.update({
-        where : { userId : userId },
-        data : { coffeeChatCount : result }
-      });
+    await prisma.user.update({
+    where: {
+      userId: userId,
+      coffeeChatCount: { gt: 0 } // 0보다 큰 경우만 업데이트
+    },
+    data: {
+      coffeeChatCount: { decrement: 1 } // 1 감소
     }
+  });
   };
 
   // userId에 해당하는 todayInterestArray 배열 가져오기
   public async getTodayInterestArray(
     userId : number
-  ):Promise<number[] | null> {
+  ):Promise<number[]> {
     const result = await prisma.user.findUnique ({
       where : {userId : userId},
       select : { todayInterestArray : true}
     });
+ 
+    if(result?.todayInterestArray === null) {
+      return [];
+    }
 
-    return result?.todayInterestArray as number[] | null;
+    return result!.todayInterestArray as number[];
   };
   
 
@@ -165,6 +166,8 @@ export class HomeModel {
     const copyFiltedArray  = [... filteredArray];
 
     for(let i = 0; i < 4; i++) {
+      if (copyFiltedArray.length === 0) break;
+
       const randomIndex = Math.floor(Math.random() * copyFiltedArray.length);
 
       array.push(copyFiltedArray[randomIndex]);
@@ -243,9 +246,9 @@ export class HomeModel {
       const selectedUser = new Set<number>;
 
       for(const user of score) {
-        if(selectedUser.size > 4) break;
+        if(selectedUser.size >= 4) break;
 
-        if(!selectedUser.has(user.userId)) selectedUser.add(user.userId);
+        selectedUser.add(user.userId);
       }
 
       array = Array.from(selectedUser);
@@ -270,7 +273,7 @@ export class HomeModel {
       select : {mail : true}
     });
 
-    const currentGrade = this.extractGrade(userGrade!.mail);
+    const currentGrade = this.extractGrade(userGrade.mail);
 
     if(currentGrade === null || currentGrade === undefined) {
       throw new Error (`Cannot extract grade from email: ${userGrade.mail}`);
@@ -295,12 +298,20 @@ export class HomeModel {
         }
       }
     }
+
+    await prisma.user.update({
+      where: { userId: userId },
+      data: { todayInterestArray: array }
+    });
   };
   
-  private extractGrade(email: string): string | null {
+  private extractGrade(
+    email: string
+  ):string{
     // 202010836@school.kr에서 앞 4자리(2020) 추출
     const match = email.match(/^(\d{4})/);
-    return match ? match[1] : null; 
+
+    return match![0]; 
   };
 
   // <4> 최근에 글을 쓴 사용자
@@ -336,7 +347,7 @@ export class HomeModel {
     }))
     .sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime())
     .slice(0,4)
-    .map(user => userId);
+    .map(user => user.userId);
 
     array = userFilterThread;
 
@@ -346,13 +357,57 @@ export class HomeModel {
     })
   };
 
-  // public async showFrontProfile(
-  //   userId: number
-  // ):Promise<coffectChatCardDTO> {
-  //   const result : coffectChatCardDTO = ;
+  // 특정 사용자 CardProfile 가져오는 API
+  public async showFrontProfile(
+    userId: number
+  ):Promise<coffectChatCardDTO> {
+    /** 가져와야하는 값
+     *  User Table
+     *    name 
+     *    mail 파싱 후 학번 불러오기
+     *    introduce
+     *    profileImage
+     * 
+     *  CategoryMatch
+     *    categoryId 조인
+     * 
+     *  Category
+     *    categoryName 가져오기
+     */ 
 
+    const result  = await prisma.user.findUniqueOrThrow({
+      where : {userId : userId},
+      select: {
+        name : true,
+        mail : true,
+        introduce : true,
+        profileImage : true,
 
-  //   return result;
-  // };
+        categoryMatch : {
+          select : {
+            category : {
+              select : {
+                categoryName : true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const grade = this.extractGrade(result.mail);
+    const categoryNames = result.categoryMatch.map(match => match.category.categoryName);
+
+    const cardDTO = new coffectChatCardDTO (
+      result.name,
+      grade,
+      result.introduce || "",
+      categoryNames,
+      result.profileImage,
+      result.mail
+    );
+
+    return cardDTO;
+  };
 }
 
