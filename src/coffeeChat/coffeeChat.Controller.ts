@@ -2,9 +2,8 @@ import { Body, Controller, Get, Post, Route, SuccessResponse, Tags, Response, Re
 import { ITsoaErrorResponse, ITsoaSuccessResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import { Request as ExpressRequest } from 'express';
 import { exceedLimitError, postTodayError } from './coffeeChat.Message';
-import { decodeToken } from '../config/token';
 import { HomeService } from './coffeeChat.Service';
-import { verify } from 'crypto';
+import verify from '../middleware/verifyJWT';
 import { coffectChatCardDTO } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 
 @Route('home')
@@ -60,7 +59,7 @@ export class HomeController extends Controller {
   ): Promise<ITsoaSuccessResponse<string>> {
     
     const todayInterestIndex : number = body.todayInterest;
-    const userId = req.decoded.index as number;
+    const userId = req.decoded.index;
     // await decodeToken(token).userId as number;
 
     if(todayInterestIndex === null || todayInterestIndex === undefined) {
@@ -96,17 +95,17 @@ export class HomeController extends Controller {
       success: null
     })
     @Response<ITsoaErrorResponse> (
-    400, 
-    'Bad Request', 
-    {
-      resultType: 'FAIL',
-      error: {
-        errorCode: 'HE401',
-        reason: '오늘 하루 추천 커피챗 횟수를 초과 했습니다.',
-        data: null
-      },
-      success: null
-    })
+      400, 
+      'Bad Request', 
+      {
+        resultType: 'FAIL',
+        error: {
+          errorCode: 'HE401',
+          reason: '오늘 하루 추천 커피챗 횟수를 초과 했습니다.',
+          data: null
+        },
+        success: null
+      })
   @Response<ITsoaErrorResponse>(
     500,
     'Internal Server Error',
@@ -122,7 +121,7 @@ export class HomeController extends Controller {
   public async CardCloseCoffeeChatController (
     @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<coffectChatCardDTO>> { 
-    const userId = req.decoded.index as number;
+    const userId = req.decoded.index;
 
     const result = await this.homeService.CardCoffeeChatService(userId);
 

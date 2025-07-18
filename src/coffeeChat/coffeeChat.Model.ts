@@ -53,14 +53,14 @@ export class HomeModel {
     userId : number
   ):Promise<void> {
     await prisma.user.update({
-    where: {
-      userId: userId,
-      coffeeChatCount: { gt: 0 } // 0보다 큰 경우만 업데이트
-    },
-    data: {
-      coffeeChatCount: { decrement: 1 } // 1 감소
-    }
-  });
+      where: {
+        userId: userId,
+        coffeeChatCount: { gt: 0 } // 0보다 큰 경우만 업데이트
+      },
+      data: {
+        coffeeChatCount: { decrement: 1 } // 1 감소
+      }
+    });
   };
 
   // userId에 해당하는 todayInterestArray 배열 가져오기
@@ -88,24 +88,24 @@ export class HomeModel {
     const filteredArray : number[] = await this.sameSchool(userId);
 
     switch(todayInterest) {
-      case 1 :
-        // 가까운 거리 순 (같은 학교)
-        await this.closeDistance(userId, filteredArray);
+    case 1 :
+      // 가까운 거리 순 (같은 학교)
+      await this.closeDistance(userId, filteredArray);
       break;
 
-      case 2 :
-        // 나와 관심사가 비슷한 categoryMatch (다 대 다)
-        await this.sameInterestCategory(userId, filteredArray);
+    case 2 :
+      // 나와 관심사가 비슷한 categoryMatch (다 대 다)
+      await this.sameInterestCategory(userId, filteredArray);
       break;
 
-      case 3 : 
-        // 같은 학번 
-        await this.sameGrade(userId, filteredArray);
+    case 3 : 
+      // 같은 학번 
+      await this.sameGrade(userId, filteredArray);
       break;
 
-      case 4 : 
-        // 최근에 글을 쓴 사용자
-        await this.recentPostUser(userId, filteredArray);
+    case 4 : 
+      // 최근에 글을 쓴 사용자
+      await this.recentPostUser(userId, filteredArray);
       break;
     }
   };
@@ -161,7 +161,7 @@ export class HomeModel {
     userId : number,
     filteredArray : number[]
   ):Promise<void> {
-    let array : number[] = [];
+    const array : number[] = [];
 
     const copyFiltedArray  = [... filteredArray];
 
@@ -243,22 +243,22 @@ export class HomeModel {
       .sort((a,b) => b.score - a.score);
 
       
-      const selectedUser = new Set<number>;
+    const selectedUser = new Set<number>;
 
-      for(const user of score) {
-        if(selectedUser.size >= 4) break;
+    for(const user of score) {
+      if(selectedUser.size >= 4) break;
 
-        selectedUser.add(user.userId);
+      selectedUser.add(user.userId);
+    }
+
+    array = Array.from(selectedUser);
+
+    await prisma.user.update({
+      where : {userId : userId},
+      data : {
+        todayInterestArray : array
       }
-
-      array = Array.from(selectedUser);
-
-      await prisma.user.update({
-        where : {userId : userId},
-        data : {
-          todayInterestArray : array
-        }
-      });
+    });
   };
 
   // <3> 같은 학번
@@ -266,7 +266,7 @@ export class HomeModel {
     userId : number,
     filteredArray : number[]
   ):Promise<void> {
-    let array : number[] = [];
+    const array : number[] = [];
 
     const userGrade = await prisma.user.findUniqueOrThrow({
       where : {userId : userId},
@@ -319,7 +319,7 @@ export class HomeModel {
     userId : number,
     filteredArray : number[]
   ):Promise<void> {
-    let array : number[] = []
+    let array : number[] = [];
 
     // 사용자별 최근 게시물 조회
     const userRecentThread = await prisma.user.findMany({
@@ -340,21 +340,21 @@ export class HomeModel {
 
     // 최근 게시물이 존재하는 user별로 정렬 진행
     const userFilterThread = userRecentThread
-    .filter( user => user.threads.length > 0) // 게시글이 존재하는 사용자만
-    .map( user => ({
-      userId: user.userId,
-      createdAt : user.threads[0].createdAt
-    }))
-    .sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0,4)
-    .map(user => user.userId);
+      .filter( user => user.threads.length > 0) // 게시글이 존재하는 사용자만
+      .map( user => ({
+        userId: user.userId,
+        createdAt : user.threads[0].createdAt
+      }))
+      .sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0,4)
+      .map(user => user.userId);
 
     array = userFilterThread;
 
     await prisma.user.update({
       where : {userId : userId},
       data : { todayInterestArray : array }
-    })
+    });
   };
 
   // 특정 사용자 CardProfile 가져오는 API
@@ -401,7 +401,7 @@ export class HomeModel {
     const cardDTO = new coffectChatCardDTO (
       result.name,
       grade,
-      result.introduce || "",
+      result.introduce || '',
       categoryNames,
       result.profileImage,
       result.mail
