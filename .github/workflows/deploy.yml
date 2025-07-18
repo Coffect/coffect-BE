@@ -260,26 +260,41 @@ jobs:
             
             echo "🚀 애플리케이션 시작 중..."
             
-            # PM2를 로컬에 설치 (권한 문제 해결)
-            if ! npx pm2 --version >/dev/null 2>&1; then
+            # dist 폴더 확인
+            if [ ! -d "dist" ]; then
+              echo "❌ dist 폴더가 없습니다. 빌드가 제대로 되지 않았을 수 있습니다."
+              exit 1
+            fi
+            
+            if [ ! -f "dist/index.js" ]; then
+              echo "❌ dist/index.js 파일이 없습니다."
+              echo "현재 dist 폴더 내용:"
+              ls -la dist/
+              exit 1
+            fi
+            
+            # PM2가 이미 설치되어 있는지 확인
+            if [ ! -f "node_modules/.bin/pm2" ]; then
               echo "📦 PM2 로컬 설치 중..."
+              # PM2를 이미 package.json에 추가했으므로 npm install로 설치됨
               npm install pm2 --save-dev
             fi
             
             # 기존 PM2 프로세스 정리
             npx pm2 delete coffect-be 2>/dev/null || true
             
-            # PM2로 애플리케이션 시작
+            # PM2로 직접 JavaScript 파일 시작 (npm을 거치지 않음)
             echo "🔄 PM2로 애플리케이션 시작..."
-            npx pm2 start npm --name "coffect-be" -- run start
+            npx pm2 start dist/index.js --name "coffect-be" --log logs/pm2.log --error logs/pm2.error.log
             
             echo "✅ 애플리케이션이 PM2로 시작되었습니다"
             
             # 잠시 대기 후 상태 확인
             sleep 3
+            echo "=== PM2 상태 ==="
             npx pm2 status
             
-            # 로그 확인 (에러가 있는지 체크)
+            # 간단한 로그 확인
             echo "=== 최근 로그 ==="
             npx pm2 logs coffect-be --lines 5 || echo "로그 확인 실패"
           '
