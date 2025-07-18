@@ -72,7 +72,7 @@ jobs:
           REMOTE_DEPS_EXISTS=$(ssh playground-umc-8th "test -d /home/ubuntu/coffect-BE/node_modules && echo 'true' || echo 'false'")
           echo "remote-deps-exists=${REMOTE_DEPS_EXISTS}" >> $GITHUB_OUTPUT
           
-          # package-lock.json 해시 비교 (더 안전한 방식)
+          # package-lock.json 해시 비교
           if [ "$REMOTE_DEPS_EXISTS" = "true" ] && [ -z "${{ steps.changes.outputs.package-changed }}" ]; then
             REMOTE_LOCK_HASH=$(ssh playground-umc-8th "test -f /home/ubuntu/coffect-BE/package-lock.json && md5sum /home/ubuntu/coffect-BE/package-lock.json | cut -d' ' -f1 || echo 'none'")
             LOCAL_LOCK_HASH=$(md5sum package-lock.json | cut -d' ' -f1)
@@ -84,9 +84,6 @@ jobs:
           else
             echo "deps-sync=false" >> $GITHUB_OUTPUT
           fi
-          
-          echo "원격 dependencies 존재: ${REMOTE_DEPS_EXISTS}"
-          echo "Dependencies 동기화 상태: $([ "${REMOTE_DEPS_EXISTS}" = "true" ] && echo "확인됨" || echo "재설치 필요")"
 
       - name: Backup and Sync Files
         run: |
@@ -103,10 +100,9 @@ jobs:
             mkdir -p /home/ubuntu/coffect-BE
           '
           
-          # 변경된 파일만 동기화 (더 효율적인 방식)
+          # 변경된 파일만 동기화
           if [ ! -z "${{ steps.changes.outputs.changed-files }}" ]; then
             echo "변경된 파일들을 동기화 중..."
-            # rsync를 사용한 효율적인 파일 동기화
             rsync -avz --delete \
               --exclude 'node_modules' \
               --exclude '.git' \
@@ -133,33 +129,40 @@ jobs:
             # 기존 node_modules가 있고 package.json만 변경된 경우
             if [ -d node_modules ] && [ -f package-lock.json ]; then
               echo "🔄 기존 dependencies 업데이트 중..."
-              # npm ci 대신 npm install로 증분 업데이트
               npm install --production=false --no-audit --no-fund
             else
               echo "🆕 Dependencies 새로 설치 중..."
-              # 클린 설치
               rm -rf node_modules package-lock.json 2>/dev/null || true
               npm install --production=false --no-audit --no-fund
             fi
             
             echo "✅ Dependencies 설치 완료"
-            
-            # 설치된 패키지 수 확인
-            PACKAGE_COUNT=$(ls node_modules | wc -l)
-            echo "📊 설치된 패키지 수: $PACKAGE_COUNT"
           '
 
-      - name: Generate Prisma Client
-        if: steps.changes.outputs.prisma-changed != '' || steps.remote-deps.outputs.deps-sync == 'false'
+      - name: Fix Prisma Imports and Generate Client
+        if: steps.changes.outputs.prisma-changed != '' || steps.remote-deps.outputs.deps-sync == 'false' || steps.changes.outputs.source-changed != ''
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             
-            echo "🔧 Prisma 클라이언트 생성 중..."
+            echo "🔧 Prisma import 경로 수정 및 클라이언트 생성 중..."
             export NODE_OPTIONS="--max-old-space-size=512"
             
+            # 잘못된 Prisma import 경로 수정
+            echo "🔍 잘못된 Prisma import 수정 중..."
+            find src/ -name "*.ts" -type f -exec sed -i "s|from ['\"].*generated/prisma['\"]|from '\''@prisma/client'\''|g" {} + 2>/dev/null || true
+            find src/ -name "*.js" -type f -exec sed -i "s|from ['\"].*generated/prisma['\"]|from '\''@prisma/client'\''|g" {} + 2>/dev/null || true
+            find src/ -name "*.ts" -type f -exec sed -i "s|require(['\"].*generated/prisma['\"])|require('\''@prisma/client'\'')|g" {} + 2>/dev/null || true
+            
+            # Prisma 클라이언트 생성
+            echo "🔄 Prisma 클라이언트 생성 중..."
             npx prisma generate --schema=prisma/schema.prisma
-            echo "✅ Prisma 클라이언트 생성 완료"
+            
+            echo "✅ Prisma 설정 완료"
+            
+            # 수정 결과 확인
+            echo "=== Prisma import 확인 ==="
+            grep -r "@prisma/client" src/ 2>/dev/null | head -3 || echo "Prisma import 확인됨"
           '
 
       - name: Create Environment File
@@ -191,7 +194,7 @@ jobs:
             # 기존 빌드 파일 정리
             rm -rf dist 2>/dev/null || true
             
-            # 빌드 실행
+            # 빌드 실행 (Prisma generate가 build 스크립트에 포함됨)
             if npm run build; then
               echo "✅ 빌드 성공"
               
@@ -213,11 +216,9 @@ jobs:
             
             echo "🛑 기존 애플리케이션 중지 중..."
             
-            # PM2 프로세스 중지 (로컬 설치된 PM2 사용)
-            if [ -f node_modules/.bin/pm2 ] || npx pm2 --version >/dev/null 2>&1; then
-              npx pm2 stop coffect-be 2>/dev/null || true
-              npx pm2 delete coffect-be 2>/dev/null || true
-            fi
+            # PM2 프로세스 중지 (npx 사용)
+            npx pm2 stop coffect-be 2>/dev/null || true
+            npx pm2 delete coffect-be 2>/dev/null || true
             
             # PID 파일로 프로세스 종료
             if [ -f app.pid ]; then
@@ -226,10 +227,7 @@ jobs:
                 echo "애플리케이션 종료 중 (PID: $PID)..."
                 kill -TERM $PID
                 sleep 3
-                
-                # 강제 종료가 필요한 경우
                 if kill -0 $PID 2>/dev/null; then
-                  echo "강제 종료 실행..."
                   kill -KILL $PID
                 fi
               fi
@@ -250,7 +248,7 @@ jobs:
             echo "✅ 기존 애플리케이션 정리 완료"
           '
 
-      - name: Install PM2 Locally and Start Application
+      - name: Start Application with PM2
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
@@ -260,9 +258,9 @@ jobs:
             
             echo "🚀 애플리케이션 시작 중..."
             
-            # dist 폴더 확인
+            # dist 폴더 및 파일 확인
             if [ ! -d "dist" ]; then
-              echo "❌ dist 폴더가 없습니다. 빌드가 제대로 되지 않았을 수 있습니다."
+              echo "❌ dist 폴더가 없습니다."
               exit 1
             fi
             
@@ -273,29 +271,30 @@ jobs:
               exit 1
             fi
             
-            # PM2가 이미 설치되어 있는지 확인
+            # PM2가 devDependencies에 있는지 확인하고 설치
             if [ ! -f "node_modules/.bin/pm2" ]; then
-              echo "📦 PM2 로컬 설치 중..."
-              # PM2를 이미 package.json에 추가했으므로 npm install로 설치됨
-              npm install pm2 --save-dev
+              echo "📦 PM2 확인 및 설치 중..."
+              npm list pm2 >/dev/null 2>&1 || npm install pm2 --save-dev --no-audit --no-fund
             fi
             
-            # 기존 PM2 프로세스 정리
-            npx pm2 delete coffect-be 2>/dev/null || true
-            
-            # PM2로 직접 JavaScript 파일 시작 (npm을 거치지 않음)
+            # PM2로 애플리케이션 시작 (환경변수 설정)
             echo "🔄 PM2로 애플리케이션 시작..."
-            npx pm2 start dist/index.js --name "coffect-be" --log logs/pm2.log --error logs/pm2.error.log
+            NODE_ENV=production npx pm2 start dist/index.js \
+              --name "coffect-be" \
+              --log logs/pm2.log \
+              --error logs/pm2.error.log \
+              --out logs/pm2.out.log \
+              --time
             
             echo "✅ 애플리케이션이 PM2로 시작되었습니다"
             
-            # 잠시 대기 후 상태 확인
+            # 상태 확인
             sleep 3
             echo "=== PM2 상태 ==="
             npx pm2 status
             
             # 간단한 로그 확인
-            echo "=== 최근 로그 ==="
+            echo "=== 최근 로그 (5줄) ==="
             npx pm2 logs coffect-be --lines 5 || echo "로그 확인 실패"
           '
 
@@ -309,7 +308,7 @@ jobs:
             # 30초 동안 서버 응답 대기
             for i in {1..6}; do
               if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
-                if curl -f -s http://localhost:${{ secrets.EC2_PORT }}/health > /dev/null 2>&1; then
+                if curl -f -s http://localhost:${{ secrets.EC2_PORT }}/ > /dev/null 2>&1; then
                   echo "✅ 서버가 정상적으로 응답합니다 (시도 $i/6)"
                   break
                 elif [ $i -eq 6 ]; then
@@ -318,6 +317,8 @@ jobs:
                   npx pm2 status || echo "PM2 상태 확인 실패"
                   echo "=== 최근 로그 ==="
                   npx pm2 logs coffect-be --lines 20 || echo "로그 확인 실패"
+                  echo "=== 에러 로그 ==="
+                  cat logs/pm2.error.log 2>/dev/null | tail -10 || echo "에러 로그 없음"
                   exit 1
                 else
                   echo "⏳ 서버 응답 대기 중... (시도 $i/6)"
@@ -325,7 +326,17 @@ jobs:
                 fi
               else
                 echo "⚠️ EC2_PORT가 설정되지 않아 포트 체크를 건너뜁니다"
-                break
+                # 포트 없이도 PM2 프로세스 상태로 확인
+                if npx pm2 status | grep -q "online"; then
+                  echo "✅ PM2 프로세스가 온라인 상태입니다"
+                  break
+                else
+                  echo "❌ PM2 프로세스가 오프라인 상태입니다"
+                  if [ $i -eq 6 ]; then
+                    exit 1
+                  fi
+                fi
+                sleep 5
               fi
             done
           '
@@ -359,6 +370,10 @@ jobs:
                 echo "❌ 포트 ${{ secrets.EC2_PORT }}에서 리스닝하지 않음"
               fi
             fi
+            
+            echo ""
+            echo "=== 애플리케이션 로그 (마지막 3줄) ==="
+            npx pm2 logs coffect-be --lines 3 2>/dev/null || echo "로그 확인 실패"
             
             echo ""
             echo "=== 배포 완료 시각 ==="
