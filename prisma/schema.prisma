@@ -34,13 +34,11 @@ model User {
   threads            Thread[]
   threadLikes        ThreadLike[]
   threadScraps       ThreadScrap[]
-  userTimetable      UserTimetable?
 }
 
 model UserTimetable {
   userId    Int     @id
   timetable String?
-  user      User    @relation(fields: [userId], references: [userId])
 }
 
 model Follow {
@@ -198,7 +196,7 @@ model RefeshToken {
 }
 
 model CoffeeChat {
-  coffectId    Int      @id
+  coffectId    Int      @id @default(autoincrement())
   firstUserId  Int
   secondUserId Int
   coffectDate  DateTime

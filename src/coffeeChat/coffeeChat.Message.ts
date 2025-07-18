@@ -21,3 +21,14 @@ export class exceedLimitError extends BasicError {
     );
   }
 }
+
+export class nonPostComment extends BasicError {
+  constructor(description: string) {
+    super (
+      400,
+      'HE402',
+      '내용이 누락되어있습니다.',
+      description
+    );
+  }
+}
