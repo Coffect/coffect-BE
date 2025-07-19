@@ -7,10 +7,14 @@ import {
   Request,
   Body,
   Response,
-  Middlewares,
-  Get
+  // Middlewares,
+  Get,
+  Middlewares
 } from 'tsoa';
-import { Request as ExpressRequest } from 'express';
+import {
+  Request as ExpressRequest
+  // Response as ExpressResponse
+} from 'express';
 
 import {
   ITsoaErrorResponse,
@@ -20,13 +24,22 @@ import {
 import { UserService } from './user.Service';
 import {
   UserLoginRequest,
-  UserLoginResponse
+  UserLoginResponse,
+  UserSignUpRequest,
+  UserSignUpResponse
 } from '../middleware/user.DTO/user.DTO';
-import { decodeToken } from '../config/token';
+import { uploadSingle } from '../middleware/upload';
+// import { decodeToken } from '../config/token';
+// import verify from '../middleware/verifyJWT';
 
 @Route('user')
 @Tags('User Controller')
 export class UserController extends Controller {
+  private userService: UserService;
+  constructor() {
+    super();
+    this.userService = new UserService();
+  }
   // /**
   //  * Coffect API 테스트 중입니다.
   //  *
@@ -100,7 +113,7 @@ export class UserController extends Controller {
   public async login(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       userPassword: string;
       userId: string;
     }
@@ -109,14 +122,14 @@ export class UserController extends Controller {
     const userPassword = body.userPassword;
     const userLogin = new UserLoginRequest(userid, userPassword, req);
 
-    const loginResult = await UserService.loginService(userLogin);
+    const loginResult = await this.userService.loginService(userLogin);
     return new TsoaSuccessResponse(loginResult);
   }
 
   /**
-   * 토큰검증
+   *  데이터베이스에 토큰이 존재하는지 검증하고, 유효할 경우 새로운 토큰을 발급해준다.
    *
-   * @summary 데이터베이스에 토큰이 존재하는지 검증하고, 유효할 경우 새로운 토큰을 발급해준다.
+   * @summary 토큰검증
    * @returns accessToken, refreshToken
    */
   @Get('refresh')
@@ -180,7 +193,81 @@ export class UserController extends Controller {
   public async refresh(
     @Request() req: ExpressRequest
   ): Promise<ITsoaSuccessResponse<UserLoginResponse>> {
-    const tokenCheck = await UserService.refreshService(req);
+    const tokenCheck = await this.userService.refreshService(req);
     return new TsoaSuccessResponse(tokenCheck);
+  }
+
+  /**
+   * 회원가입
+   *
+   * @summary 회원가입
+   */
+  @Post('signup')
+  @Middlewares(uploadSingle)
+  @SuccessResponse(200, '회원가입 성공')
+  @Response<ITsoaErrorResponse>(500, '데이터베이스 삽입 실패', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC500',
+      reason: '서버 오류가 발생했습니다.',
+      data: '데이터베이스 삽입에 실패했습니다.'
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(409, '중복된 아이디', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC409',
+      reason: '이미 중복된 아이디입니다.',
+      data: '아이디가 중복됨'
+    },
+    success: null
+  })
+  public async signup(
+    @Request() req: ExpressRequest,
+    @Body()
+    body: {
+      userInfo: {
+        password: string;
+        id: string;
+        univ: string;
+        major: string;
+        studentId: number;
+        email: string;
+        name: string;
+        profile: string;
+        interest: number[];
+      };
+    }
+  ): Promise<ITsoaSuccessResponse<UserSignUpResponse>> {
+    console.log(typeof req.body.userInfo);
+    // 개선중
+    // const singUpInfo = new UserSignUpRequest(req);
+    // await this.userService.signUpService(singUpInfo);
+    return new TsoaSuccessResponse('회원가입 성공');
+  }
+
+  /**
+   * 데이터베이스를 조회해 해당 아이디가 겹치는지 아닌지 확인한다.
+   *
+   * @summary 아이디 중복 체크
+   */
+  @Post('idcheck')
+  @SuccessResponse(200, '존재하지 않는 아이디')
+  @Response<ITsoaErrorResponse>(409, '중복된 아이디', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC409',
+      reason: '이미 중복된 아이디입니다.',
+      data: '아이디가 중복됨'
+    },
+    success: null
+  })
+  public async idcheck(
+    @Request() req: ExpressRequest,
+    @Body() body: { id: string }
+  ): Promise<ITsoaSuccessResponse<string>> {
+    await this.userService.idCheckService(body.id);
+    return new TsoaSuccessResponse('Ok');
   }
 }

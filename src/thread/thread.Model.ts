@@ -1,18 +1,19 @@
-export class BodyToAddThread{
+export class BodyToAddThread {
   type: ThreadType;
   threadTitle: string;
   threadBody: string;
   threadSubject: number;
   userId: number;
 
-  constructor(body: {
-    type: ThreadType;
-    threadTitle: string;
-    threadBody: string;
-    threadSubject: number;
-  },
-  userId: number
-  ){
+  constructor(
+    body: {
+      type: ThreadType;
+      threadTitle: string;
+      threadBody: string;
+      threadSubject: number;
+    },
+    userId: number
+  ) {
     this.userId = userId;
     this.type = body.type;
     this.threadTitle = body.threadTitle;

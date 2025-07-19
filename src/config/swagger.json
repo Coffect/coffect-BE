@@ -83,6 +83,35 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"UserSignUpResponse": {
+				"properties": {},
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_UserSignUpResponse_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"$ref": "#/components/schemas/UserSignUpResponse"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"ITsoaSuccessResponse_string_": {
 				"properties": {
 					"resultType": {
@@ -398,13 +427,244 @@
 						}
 					}
 				},
-				"description": "토큰검증",
-				"summary": "데이터베이스에 토큰이 존재하는지 검증하고, 유효할 경우 새로운 토큰을 발급해준다.",
+				"description": "데이터베이스에 토큰이 존재하는지 검증하고, 유효할 경우 새로운 토큰을 발급해준다.",
+				"summary": "토큰검증",
 				"tags": [
 					"User Controller"
 				],
 				"security": [],
 				"parameters": []
+			}
+		},
+		"/user/signup": {
+			"post": {
+				"operationId": "Signup",
+				"responses": {
+					"200": {
+						"description": "회원가입 성공",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_UserSignUpResponse_"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "중복된 아이디",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "EC409",
+												"reason": "이미 중복된 아이디입니다.",
+												"data": "아이디가 중복됨"
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "데이터베이스 삽입 실패",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "EC500",
+												"reason": "서버 오류가 발생했습니다.",
+												"data": "데이터베이스 삽입에 실패했습니다."
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "회원가입",
+				"summary": "회원가입",
+				"tags": [
+					"User Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"userInfo": {
+										"properties": {
+											"interest": {
+												"items": {
+													"type": "number",
+													"format": "double"
+												},
+												"type": "array"
+											},
+											"profile": {
+												"type": "string"
+											},
+											"name": {
+												"type": "string"
+											},
+											"email": {
+												"type": "string"
+											},
+											"studentId": {
+												"type": "number",
+												"format": "double"
+											},
+											"major": {
+												"type": "string"
+											},
+											"univ": {
+												"type": "string"
+											},
+											"id": {
+												"type": "string"
+											},
+											"password": {
+												"type": "string"
+											}
+										},
+										"required": [
+											"interest",
+											"profile",
+											"name",
+											"email",
+											"studentId",
+											"major",
+											"univ",
+											"id",
+											"password"
+										],
+										"type": "object"
+									}
+								},
+								"required": [
+									"userInfo"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/user/idcheck": {
+			"post": {
+				"operationId": "Idcheck",
+				"responses": {
+					"200": {
+						"description": "존재하지 않는 아이디",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+								}
+							}
+						}
+					},
+					"409": {
+						"description": "중복된 아이디",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "EC409",
+												"reason": "이미 중복된 아이디입니다.",
+												"data": "아이디가 중복됨"
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "데이터베이스를 조회해 해당 아이디가 겹치는지 아닌지 확인한다.",
+				"summary": "아이디 중복 체크",
+				"tags": [
+					"User Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"id": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"id"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/univ/cerfify": {
+			"post": {
+				"operationId": "Certify",
+				"responses": {
+					"204": {
+						"description": "No content"
+					}
+				},
+				"tags": [
+					"Univ Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"univMail": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"univMail"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
 			}
 		},
 		"/thread/add": {
@@ -479,7 +739,7 @@
 						}
 					}
 				},
-				"description": "\r\n게시글 업로드 API",
+				"description": "\n게시글 업로드 API",
 				"summary": "게시글 업로드",
 				"tags": [
 					"Thread Controller"

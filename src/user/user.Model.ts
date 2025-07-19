@@ -1,20 +1,21 @@
 import { CustomJwt } from '../../@types/jwt';
 import { prisma } from '../config/prisma.config';
+import { UserSignUpRequest } from '../middleware/user.DTO/user.DTO';
 
 export class UserModel {
-  static async selectUserInfo(userId: string) {
+  public async selectUserInfo(userId: string) {
     const q = await prisma.user.findMany({
       where: {
         id: userId
       }
     });
-    if (q) {
+    if (q.length !== 0) {
       return q[0];
     }
     return null;
   }
 
-  static async insertRefreshToken(
+  public async insertRefreshToken(
     token: CustomJwt,
     rToken: string,
     userAgent: string
@@ -37,7 +38,7 @@ export class UserModel {
       }
     });
   }
-  static async selectRefreshToken(userIndex: number) {
+  public async selectRefreshToken(userIndex: number) {
     const q = await prisma.refeshToken.findMany({
       where: { userId: userIndex }
     });
@@ -46,5 +47,20 @@ export class UserModel {
     } else {
       return null;
     }
+  }
+
+  public async insertUser(info: UserSignUpRequest) {
+    const q = await prisma.user.create({
+      data: {
+        userId: 2, // 자동 생성으로 굳이 insert 문에 작성하지 않도록 만들어야함
+        id: info.id,
+        password: info.hashed,
+        mail: info.email,
+        name: info.name,
+        salt: info.salt,
+        profileImage: info.profile
+      }
+    });
+    console.log(q);
   }
 }

@@ -217,6 +217,22 @@ model SpecifyInfo {
   user   User  @relation(fields: [userId], references: [userId])
 }
 
+model UnivCert {
+  id        Int      @id @default(autoincrement())
+  email     String   @db.VarChar(50)
+  certCode  Int
+  createdAt DateTime @db.DateTime(0) @default(now())
+  expiredAt DateTime @db.DateTime(0)
+}
+
+model UnivList {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(50)
+  created_at  DateTime? @db.DateTime(0)
+  updataed_at DateTime? @db.DateTime(0)
+  domain      String?   @db.VarChar(30)
+}
+
 enum ThreadType {
   아티클
   팀원모집

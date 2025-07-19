@@ -9,7 +9,8 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-cron.schedule('0 0 * * *', async () => { // 00시(다음 날)가(이) 되면 coffeeChatCount와 todayInterest 칼럼을 초기화 시킨다.
+cron.schedule('0 0 * * *', async () => {
+  // 00시(다음 날)가(이) 되면 coffeeChatCount와 todayInterest 칼럼을 초기화 시킨다.
   try {
     await prisma.user.updateMany({
       data: {

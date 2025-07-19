@@ -1,17 +1,17 @@
 export interface ITsoaErrorResponse {
   resultType: string;
   error: {
-    errorCode?: string,
-    reason?: string | null,
-    data?: any | null
+    errorCode?: string;
+    reason?: string | null;
+    data?: any | null;
   };
   success: null;
-};
+}
 
 export interface ITsoaSuccessResponse<T> {
-    resultType: string;
-    error: null;
-    success: T;
+  resultType: string;
+  error: null;
+  success: T;
 }
 
 export class TsoaSuccessResponse<T> {
