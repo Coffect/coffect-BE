@@ -241,6 +241,7 @@ export class UserController extends Controller {
     }
   ): Promise<ITsoaSuccessResponse<UserSignUpResponse>> {
     console.log(typeof req.body.userInfo);
+    // 개선중
     // const singUpInfo = new UserSignUpRequest(req);
     // await this.userService.signUpService(singUpInfo);
     return new TsoaSuccessResponse('회원가입 성공');
