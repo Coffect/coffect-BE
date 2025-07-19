@@ -7,11 +7,14 @@ const uploadSingle = async (
   res: Response,
   next: NextFunction
 ) => {
-  await upload.single('img')(req, res, (err: any) => {
+  await upload.single('img')(req, res, async (err: any) => {
+    req.body.userInfo = await JSON.parse(req.body.userInfo);
+    // req.body.userInfo.profile
+    console.log(req.file);
     if (err) {
-      throw new MulterUploadError('사진을 올리는 중 오류가 발생했습니다');
+      next(new MulterUploadError('사진을 올리는 중 오류가 발생했습니다'));
     } else {
-      return next();
+      next();
     }
   });
 };

@@ -23,7 +23,7 @@ const upload = multer({
       cb(null, { fileName: file.filename });
     },
     key: function (req, file, cb) {
-      const uniqueName = `${uuidv4()}-${file.originalname}`; // 함수를 실행 안시켰음
+      const uniqueName = `${uuidv4()}-${file.originalname}`;
       cb(null, uniqueName);
     }
   })

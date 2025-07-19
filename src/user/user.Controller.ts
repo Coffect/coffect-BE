@@ -227,19 +227,22 @@ export class UserController extends Controller {
     @Request() req: ExpressRequest,
     @Body()
     body: {
-      password: string;
-      id: string;
-      univ: string;
-      major: string;
-      studentId: number;
-      email: string;
-      name: string;
-      profile: string;
-      interest: number[];
+      userInfo: {
+        password: string;
+        id: string;
+        univ: string;
+        major: string;
+        studentId: number;
+        email: string;
+        name: string;
+        profile: string;
+        interest: number[];
+      };
     }
   ): Promise<ITsoaSuccessResponse<UserSignUpResponse>> {
-    const singUpInfo = new UserSignUpRequest(req);
-    await this.userService.signUpService(singUpInfo);
+    console.log(typeof req.body.userInfo);
+    // const singUpInfo = new UserSignUpRequest(req);
+    // await this.userService.signUpService(singUpInfo);
     return new TsoaSuccessResponse('회원가입 성공');
   }
 

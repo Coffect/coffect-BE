@@ -15,7 +15,8 @@ cron.schedule('0 0 * * *', async () => {
     await prisma.user.updateMany({
       data: {
         coffeeChatCount: 4,
-        todayInterest: null
+        todayInterest: null,
+        todayInterestArray: null
       }
     });
     console.log('user coffeeChatCount and todayInterest reset complete');

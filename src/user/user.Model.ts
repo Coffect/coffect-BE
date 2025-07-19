@@ -52,7 +52,7 @@ export class UserModel {
   public async insertUser(info: UserSignUpRequest) {
     const q = await prisma.user.create({
       data: {
-        userId: 2,
+        userId: 2, // 자동 생성으로 굳이 insert 문에 작성하지 않도록 만들어야함
         id: info.id,
         password: info.hashed,
         mail: info.email,

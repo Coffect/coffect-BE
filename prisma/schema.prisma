@@ -5,44 +5,40 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_HOST")
+  url      = env("DATABASE_LOCAL")
 }
 
 model User {
-  userId        Int           @id
-  id            String        @unique
-  password      String
-  mail          String
-  name          String
-  introduce     String?
-  salt          String
-  createdAt     DateTime      @default(now())
-  profileImage  String
-  questionIndex Json? // mySQL은 int[] 같은 Primitive 타입 배열을 직접 지원하지 않음. 즉 JSON형태로 저장해야함.
-  
-   // 새로운 필드
-  coffeeChatCount Int      @default(4)    // 매일 4로 초기화
-  todayInterest   Int?                   // 0~3 중 하나의 추천 주제, 매일 null로 초기화
-
-  userTimetable UserTimetable?
-  specifyInfo   SpecifyInfo?
-  threads       Thread[]
-  threadLikes   ThreadLike[]
-  threadScraps  ThreadScrap[]
-  messages      Message[]
-  chatJoins     ChatJoin[]
-  comments      Comment[]
-  follows       Follow[]
-  coffeeChats1  CoffeeChat[]  @relation("FirstUser")
-  coffeeChats2  CoffeeChat[]  @relation("SecondUser")
-  refreshTokens RefeshToken[]
-  categoryMatch CategoryMatch[]
+  userId             Int             @id
+  id                 String          @unique
+  password           String
+  mail               String
+  name               String
+  introduce          String?
+  salt               String
+  createdAt          DateTime        @default(now())
+  profileImage       String
+  questionIndex      Json?
+  coffeeChatCount    Int             @default(4)
+  todayInterest      Int?            @default(0)
+  todayInterestArray Json?
+  categoryMatch      CategoryMatch[]
+  chatJoins          ChatJoin[]
+  coffeeChats1       CoffeeChat[]    @relation("FirstUser")
+  coffeeChats2       CoffeeChat[]    @relation("SecondUser")
+  comments           Comment[]
+  follows            Follow?
+  messages           Message[]
+  refreshTokens      RefeshToken?
+  specifyInfo        SpecifyInfo?
+  threads            Thread[]
+  threadLikes        ThreadLike[]
+  threadScraps       ThreadScrap[]
 }
 
 model UserTimetable {
   userId    Int     @id
   timetable String?
-  user      User    @relation(fields: [userId], references: [userId])
 }
 
 model Follow {
@@ -197,12 +193,10 @@ model RefeshToken {
   expiredAt         DateTime
   userAgent         String?
   user              User     @relation(fields: [userId], references: [userId])
-
-  @@index([userId], map: "RefeshToken_userId_fkey")
 }
 
 model CoffeeChat {
-  coffectId    Int      @id
+  coffectId    Int      @id @default(autoincrement())
   firstUserId  Int
   secondUserId Int
   coffectDate  DateTime
