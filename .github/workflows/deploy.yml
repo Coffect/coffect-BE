@@ -42,23 +42,29 @@ jobs:
       - name: Analyze Changes and Dependencies
         id: analyze
         run: |
-          # 변경된 파일들 분석
-          CHANGED_FILES=$(git diff HEAD^1 --name-only)
-          echo "changed-files<<EOF" >> $GITHUB_OUTPUT
-          echo "$CHANGED_FILES" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          # 변경된 파일들 분석 (안전한 방식)
+          CHANGED_FILES=$(git diff HEAD^1 --name-only | tr '\n' ' ')
+          echo "changed-files=${CHANGED_FILES}" >> $GITHUB_OUTPUT
           
           # package.json/package-lock.json 변경 확인
-          PACKAGE_CHANGED=$(echo "$CHANGED_FILES" | grep -E "(package\.json|package-lock\.json)" || echo "")
+          PACKAGE_CHANGED=$(git diff HEAD^1 --name-only | grep -E "(package\.json|package-lock\.json)" || echo "")
           echo "package-changed=${PACKAGE_CHANGED}" >> $GITHUB_OUTPUT
           
           # 소스 코드 변경 확인
-          SOURCE_CHANGED=$(echo "$CHANGED_FILES" | grep -E "\.(ts|js)$" || echo "")
-          echo "source-changed=${SOURCE_CHANGED}" >> $GITHUB_OUTPUT
+          SOURCE_CHANGED=$(git diff HEAD^1 --name-only | grep -E "\.(ts|js)$" || echo "")
+          if [ ! -z "$SOURCE_CHANGED" ]; then
+            echo "source-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "source-changed=false" >> $GITHUB_OUTPUT
+          fi
           
           # Prisma 스키마 변경 확인
-          PRISMA_CHANGED=$(echo "$CHANGED_FILES" | grep "prisma/" || echo "")
-          echo "prisma-changed=${PRISMA_CHANGED}" >> $GITHUB_OUTPUT
+          PRISMA_CHANGED=$(git diff HEAD^1 --name-only | grep "prisma/" || echo "")
+          if [ ! -z "$PRISMA_CHANGED" ]; then
+            echo "prisma-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "prisma-changed=false" >> $GITHUB_OUTPUT
+          fi
           
           # 원격 dependencies 상태 확인
           REMOTE_DEPS_EXISTS=$(ssh playground-umc-8th "test -d /home/ubuntu/coffect-BE/node_modules && echo 'true' || echo 'false'")
@@ -80,8 +86,8 @@ jobs:
           echo "=== 변경 분석 결과 ==="
           echo "Dependencies 설치 필요: ${DEPS_INSTALL_NEEDED}"
           echo "Package 변경: ${PACKAGE_CHANGED:-없음}"
-          echo "소스 변경: ${SOURCE_CHANGED:-없음}"
-          echo "Prisma 변경: ${PRISMA_CHANGED:-없음}"
+          echo "소스 변경: $([ ! -z "$SOURCE_CHANGED" ] && echo '있음' || echo '없음')"
+          echo "Prisma 변경: $([ ! -z "$PRISMA_CHANGED" ] && echo '있음' || echo '없음')"
 
       - name: Efficient File Sync
         run: |
@@ -96,9 +102,10 @@ jobs:
             fi
           '
           
-          # 변경된 파일만 동기화 (최적화)
-          if [ ! -z "${{ steps.analyze.outputs.changed-files }}" ]; then
-            echo "📁 변경된 파일들을 효율적으로 동기화 중..."
+          # 변경된 파일이 있는지 확인
+          CHANGED_COUNT=$(git diff HEAD^1 --name-only | wc -l)
+          if [ "$CHANGED_COUNT" -gt 0 ]; then
+            echo "📁 변경된 파일들을 효율적으로 동기화 중... (${CHANGED_COUNT}개 파일)"
             rsync -avz --progress \
               --exclude 'node_modules' \
               --exclude '.git' \
@@ -153,7 +160,7 @@ jobs:
             echo "✅ Prisma 클라이언트 생성 완료"
           '
 
-      - name: Fix Source Code Imports (Safe Version)
+      - name: Fix Source Code Imports
         if: steps.analyze.outputs.source-changed != '' || steps.analyze.outputs.deps-install-needed == 'true'
         run: |
           ssh playground-umc-8th '
@@ -161,30 +168,18 @@ jobs:
             
             echo "🔍 Prisma import 경로 수정 중..."
             
-            # 더 안전한 방법으로 파일 수정
+            # 효율적인 파일 수정 (안전한 sed 패턴 사용)
             find src/ -name "*.ts" -type f | while read file; do
               if grep -q "generated/prisma" "$file" 2>/dev/null; then
                 echo "수정: $file"
-                
-                # 1. 큰따옴표 버전 수정
-                sed -i "s|from \".*generated/prisma\"|from \"@prisma/client\"|g" "$file"
-                sed -i "s|require(\".*generated/prisma\")|require(\"@prisma/client\")|g" "$file"
-                
-                # 2. 작은따옴표 버전 수정
-                sed -i "s|from '"'"'.*generated/prisma'"'"'|from '"'"'@prisma/client'"'"'|g" "$file"
-                sed -i "s|require('"'"'.*generated/prisma'"'"')|require('"'"'@prisma/client'"'"')|g" "$file"
+                # from import 수정
+                sed -i "s|from [\"'\''].*generated/prisma[\"'\'']|from '\''@prisma/client'\''|g" "$file"
+                # require 수정 (안전한 패턴)
+                sed -i "s|require([\"'\''].*generated/prisma[\"'\''])|require('\''@prisma/client'\'')|g" "$file"
               fi
             done
             
             echo "✅ Import 경로 수정 완료"
-            
-            # 수정 결과 확인
-            echo "=== 수정 확인 ==="
-            if grep -r "generated/prisma" src/ 2>/dev/null; then
-              echo "❌ 아직 수정되지 않은 파일이 있습니다"
-            else
-              echo "✅ 모든 파일 수정 완료"
-            fi
           '
 
       - name: Create Environment File
@@ -205,7 +200,7 @@ jobs:
           EOF"
 
       - name: Smart Build Process
-        if: steps.analyze.outputs.source-changed != '' || steps.analyze.outputs.deps-install-needed == 'true'
+        if: steps.analyze.outputs.source-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
