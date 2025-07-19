@@ -497,7 +497,7 @@
 						}
 					}
 				},
-				"description": "회원가입",
+				"description": "회원가입 form-data로 img, userInfo두가지를 따로 보낸다. 이때 userInfo는 json을 직렬화해 보내야하며 img에는 파일을 그대로 첨부해 보낸다.",
 				"summary": "회원가입",
 				"tags": [
 					"User Controller"
@@ -510,6 +510,9 @@
 						"application/json": {
 							"schema": {
 								"properties": {
+									"profile": {
+										"type": "string"
+									},
 									"userInfo": {
 										"properties": {
 											"interest": {
@@ -518,9 +521,6 @@
 													"format": "double"
 												},
 												"type": "array"
-											},
-											"profile": {
-												"type": "string"
 											},
 											"name": {
 												"type": "string"
@@ -547,7 +547,6 @@
 										},
 										"required": [
 											"interest",
-											"profile",
 											"name",
 											"email",
 											"studentId",
@@ -560,6 +559,7 @@
 									}
 								},
 								"required": [
+									"profile",
 									"userInfo"
 								],
 								"type": "object"
