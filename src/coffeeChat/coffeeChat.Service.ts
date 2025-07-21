@@ -1,4 +1,4 @@
-import { coffectChatCardDTO } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { coffectChatCardDTO, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 import { exceedLimitError, postTodayError } from './coffeeChat.Message';
 import { HomeModel } from './coffeeChat.Model';
 
@@ -78,5 +78,13 @@ export class HomeService {
     suggestion : string
   ):Promise<void> {
     await this.homeModel.postSuggestCoffeeChatModel(myUserId, otherUserid, suggestion);
+  }
+
+  public async GetCoffeeChatScheduleService(
+    userId : number
+  ):Promise<CoffeeChatSchedule> {
+      const result = await this.homeModel
+
+      return result;
   }
 }

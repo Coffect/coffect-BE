@@ -32,3 +32,15 @@ export class nonPostComment extends BasicError {
     );
   }
 }
+
+
+export class nonData extends BasicError {
+  constructor(description: string) {
+    super (
+      400,
+      'HE404',
+      '존재하지 않는 Data입니다.',
+      description
+    );
+  }
+}

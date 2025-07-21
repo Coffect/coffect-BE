@@ -1,5 +1,5 @@
 import { PrismaClient } from '../../generated/prisma';
-import { coffectChatCardDTO } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { coffectChatCardDTO, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 
 const prisma = new PrismaClient();
 
@@ -69,14 +69,14 @@ export class HomeModel {
   ):Promise<number[]> {
     const result = await prisma.user.findUnique ({
       where : {userId : userId},
-      select : { todayInterestArray : true}
+      select : { todayInterestArray : true} as any // any로 타입 우회
     });
  
     if(result?.todayInterestArray === null) {
       return [];
     }
 
-    return result!.todayInterestArray as number[];
+    return (result!.todayInterestArray as unknown) as number[];
   };
   
 
@@ -153,7 +153,7 @@ export class HomeModel {
       take: 20
     });
 
-    return users.map(user => user.userId);
+    return users.map((user: any) => user.userId);
   };
 
   // <1> 가까운 거리 순 (같은 학교)
@@ -172,14 +172,14 @@ export class HomeModel {
 
       array.push(copyFiltedArray[randomIndex]);
 
-      copyFiltedArray.slice(randomIndex, 1);
+      copyFiltedArray.splice(randomIndex, 1);
     }
 
     await prisma.user.update({
       where : {userId : userId},
       data : {
         todayInterestArray : array
-      }
+      } as any // any로 타입 우회
     });
   };
 
@@ -206,9 +206,8 @@ export class HomeModel {
     });
 
     const myCategory = currentUserCategory.categoryMatch.map(
-      match => match.category.categoryName
+      (match: any) => match.category.categoryName
     );
-
 
     const ArrayuserCategory = await prisma.user.findMany({
       where : {userId : {in: filteredArray}},
@@ -226,24 +225,23 @@ export class HomeModel {
       }
     });
 
-    const score = ArrayuserCategory.map(
-      user => {
+    const score = ArrayuserCategory.map((user: any) => {
         const userCategory = user.categoryMatch.map(
-          match => match.category.categoryName);
+          (match: any) => match.category.categoryName);
 
         const sameCategory = userCategory.filter(
-          category => myCategory.includes(category));
+          (category: any) => myCategory.includes(category));
 
         return {
           userId : user.userId,
           sameCategory : sameCategory,
-          score : sameCategory.length // 공통 카테고리 갯수.
+          score : sameCategory.length
         };
-      }).filter(user => user.score > 0) // 공통 카테고리가 존재하는 사용자만
-      .sort((a,b) => b.score - a.score);
+      }).filter((user: any) => user.score > 0)
+      .sort((a: any, b: any) => b.score - a.score);
 
       
-    const selectedUser = new Set<number>;
+    const selectedUser = new Set<number>();
 
     for(const user of score) {
       if(selectedUser.size >= 4) break;
@@ -257,7 +255,7 @@ export class HomeModel {
       where : {userId : userId},
       data : {
         todayInterestArray : array
-      }
+      } as any // any로 타입 우회
     });
   };
 
@@ -281,7 +279,7 @@ export class HomeModel {
 
     // filteredArray를 순회하면서 조건에 맞는 사용자를 탐색
     for(const targetUserId of filteredArray) {
-      if(array.length > 4) {
+      if(array.length >= 4) {
         break;
       }
 
@@ -301,7 +299,7 @@ export class HomeModel {
 
     await prisma.user.update({
       where: { userId: userId },
-      data: { todayInterestArray: array }
+      data: { todayInterestArray: array } as any // any로 타입 우회
     });
   };
   
@@ -328,9 +326,9 @@ export class HomeModel {
         userId : true, 
         threads : {
           orderBy : {
-            createdAt : 'desc' // 내림차순
+            createdAt : 'desc'
           },
-          take : 1, // 가장 최근 게시물 1개만 조회
+          take : 1,
           select : {
             createdAt : true
           }
@@ -340,20 +338,20 @@ export class HomeModel {
 
     // 최근 게시물이 존재하는 user별로 정렬 진행
     const userFilterThread = userRecentThread
-      .filter( user => user.threads.length > 0) // 게시글이 존재하는 사용자만
-      .map( user => ({
+      .filter((user: any) => user.threads.length > 0)
+      .map((user: any) => ({
         userId: user.userId,
         createdAt : user.threads[0].createdAt
       }))
-      .sort((a,b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .sort((a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0,4)
-      .map(user => user.userId);
+      .map((user: any) => user.userId);
 
     array = userFilterThread;
 
     await prisma.user.update({
       where : {userId : userId},
-      data : { todayInterestArray : array }
+      data : { todayInterestArray : array } as any // any로 타입 우회
     });
   };
 
@@ -361,20 +359,6 @@ export class HomeModel {
   public async showFrontProfile(
     userId: number
   ):Promise<coffectChatCardDTO> {
-    /** 가져와야하는 값
-     *  User Table
-     *    name 
-     *    mail 파싱 후 학번 불러오기
-     *    introduce
-     *    profileImage
-     * 
-     *  CategoryMatch
-     *    categoryId 조인
-     * 
-     *  Category
-     *    categoryName 가져오기
-     */ 
-
     const result  = await prisma.user.findUniqueOrThrow({
       where : {userId : userId},
       select: {
@@ -396,7 +380,9 @@ export class HomeModel {
     });
 
     const grade = this.extractGrade(result.mail);
-    const categoryNames = result.categoryMatch.map(match => match.category.categoryName);
+    const categoryNames = result.categoryMatch.map(
+      (match: any) => match.category.categoryName
+    );
 
     const cardDTO = new coffectChatCardDTO (
       result.name,
@@ -426,4 +412,16 @@ export class HomeModel {
       }
     });
   }
+}
+
+
+  /** 커피챗 일정 가져오는 Model */
+  public async GetCoffeeChatScheduleModel (
+    userId : number
+  ):Promise<CoffeeChatSchedule> {
+    const result = await prisma.coffeeChat.findMany({
+      where : { firstUserId : userId || secondUserId : userId}
+    });
+  };
+
 }
