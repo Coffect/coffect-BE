@@ -242,31 +242,31 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsUnivController_certify: Record<string, TsoaRoute.ParameterSchema> = {
+        const argsUnivController_cert: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"univMail":{"dataType":"string","required":true}}},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"email":{"dataType":"string","required":true},"certCode":{"dataType":"double","required":true}}},
         };
-        app.post('/univ/cerfify',
+        app.post('/univ/cert',
             ...(fetchMiddlewares<RequestHandler>(UnivController)),
-            ...(fetchMiddlewares<RequestHandler>(UnivController.prototype.certify)),
+            ...(fetchMiddlewares<RequestHandler>(UnivController.prototype.cert)),
 
-            async function UnivController_certify(request: ExRequest, response: ExResponse, next: any) {
+            async function UnivController_cert(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsUnivController_certify, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsUnivController_cert, request, response });
 
                 const controller = new UnivController();
 
               await templateService.apiHandler({
-                methodName: 'certify',
+                methodName: 'cert',
                 controller,
                 response,
                 next,
                 validatedArgs,
-                successStatus: undefined,
+                successStatus: 200,
               });
             } catch (err) {
                 return next(err);

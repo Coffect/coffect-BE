@@ -7,3 +7,12 @@ export class UnivCertRespone {
     this.rToken = rToken;
   }
 }
+export class UnivCertRequest {
+  certCode: number;
+  email: string;
+
+  constructor(certCode: number, email: string) {
+    this.certCode = certCode;
+    this.email = email;
+  }
+}

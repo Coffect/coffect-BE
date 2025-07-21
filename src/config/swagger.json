@@ -491,6 +491,17 @@
 											},
 											"success": null
 										}
+									},
+									"Example 2": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "ERR2",
+												"reason": "서버에 사진을 올리는중 오류가 발생했습니다.",
+												"data": "사진을 올리는 중 오류가 발생했습니다"
+											},
+											"success": null
+										}
 									}
 								}
 							}
@@ -634,14 +645,68 @@
 				}
 			}
 		},
-		"/univ/cerfify": {
+		"/univ/cert": {
 			"post": {
-				"operationId": "Certify",
+				"operationId": "Cert",
 				"responses": {
-					"204": {
-						"description": "No content"
+					"200": {
+						"description": "인증에 성공했습니다",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "인증코드가 만료되었습니다.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "EC1",
+												"reason": "인증코드가 일치하지 않습니다.",
+												"data": "인증코드가 일치하지 않습니다."
+											},
+											"success": null
+										}
+									},
+									"Example 2": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "EC2",
+												"reason": "인증코드가 유효하지 않습니다.",
+												"data": "인증코드가 유효하지 않습니다."
+											},
+											"success": null
+										}
+									},
+									"Example 3": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "EC3",
+												"reason": "인증코드가 만료되었습니다,",
+												"data": "인증코드가 만료되었습니다."
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
 					}
 				},
+				"description": "메일 인증번호가 일치하는지 확인한다",
+				"summary": "이메일 인증번호 확인",
 				"tags": [
 					"Univ Controller"
 				],
@@ -653,12 +718,17 @@
 						"application/json": {
 							"schema": {
 								"properties": {
-									"univMail": {
+									"email": {
 										"type": "string"
+									},
+									"certCode": {
+										"type": "number",
+										"format": "double"
 									}
 								},
 								"required": [
-									"univMail"
+									"email",
+									"certCode"
 								],
 								"type": "object"
 							}
