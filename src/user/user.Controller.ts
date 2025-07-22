@@ -69,7 +69,7 @@ export class UserController extends Controller {
   public async login(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       userPassword: string;
       userId: string;
     }
@@ -191,7 +191,7 @@ export class UserController extends Controller {
   public async signup(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       userInfo: {
         password: string;
         id: string;
@@ -206,7 +206,6 @@ export class UserController extends Controller {
     }
   ): Promise<ITsoaSuccessResponse<UserSignUpResponse>> {
     const singUpInfo = new UserSignUpRequest(req);
-    console.log(singUpInfo);
     await this.userService.signUpService(singUpInfo);
     return new TsoaSuccessResponse('회원가입 성공');
   }
