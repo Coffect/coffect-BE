@@ -21,7 +21,8 @@ export class UnivModel {
           name_initial: { startsWith: initial }
         },
         select: {
-          name: true
+          name: true,
+          location: true
         }
       });
       return result;
@@ -34,7 +35,8 @@ export class UnivModel {
           ]
         },
         select: {
-          name: true
+          name: true,
+          location: true
         }
       });
       return result;

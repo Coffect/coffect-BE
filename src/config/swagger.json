@@ -138,11 +138,16 @@
 			},
 			"UnivList": {
 				"properties": {
+					"location": {
+						"type": "string",
+						"nullable": true
+					},
 					"name": {
 						"type": "string"
 					}
 				},
 				"required": [
+					"location",
 					"name"
 				],
 				"type": "object"
@@ -690,12 +695,56 @@
 				}
 			}
 		},
+		"/univ/dept": {
+			"post": {
+				"operationId": "Dept",
+				"responses": {
+					"200": {
+						"description": "Ok",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+								}
+							}
+						}
+					}
+				},
+				"tags": [
+					"Univ Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"search": {
+										"type": "string"
+									},
+									"univName": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"search",
+									"univName"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
 		"/univ/search": {
 			"post": {
 				"operationId": "Search",
 				"responses": {
 					"200": {
-						"description": "대학교 검색",
+						"description": "검색 성공",
 						"content": {
 							"application/json": {
 								"schema": {

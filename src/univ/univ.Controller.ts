@@ -40,6 +40,14 @@ export class UnivController extends Controller {
     this.univService = new UnivService();
   }
 
+  @Post('dept')
+  public async dept(
+    @Request() req: ExpressRequest,
+    @Body() body: { univName: string; search: string }
+  ): Promise<ITsoaSuccessResponse<string>> {
+    return new TsoaSuccessResponse('ok');
+  }
+
   /**
    * 대학교를 검색한다
    *
@@ -101,7 +109,7 @@ export class UnivController extends Controller {
   public async cert(
     @Request() req: ExpressRequest,
     @Body()
-    body: {
+      body: {
       certCode: number;
       email: string;
     }

@@ -232,6 +232,7 @@ model UnivList {
   created_at   DateTime? @default(now()) @db.DateTime(0)
   updated_at   DateTime? @default(now()) @db.DateTime(0)
   name_initial String?   @db.VarChar(50)
+  location     String?   @db.VarChar(100)
 }
 
 model UnivDept {

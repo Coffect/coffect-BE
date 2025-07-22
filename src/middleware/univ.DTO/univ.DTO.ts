@@ -18,6 +18,7 @@ export class UnivCertRequest {
 }
 type UnivList = {
   name: string;
+  location: string | null;
 };
 
 export class UnivSearchResponse {
