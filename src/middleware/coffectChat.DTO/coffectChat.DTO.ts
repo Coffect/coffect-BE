@@ -17,3 +17,29 @@ export class coffectChatCardDTO {
         this.mail = mail;
     }
 }
+
+
+export class CoffeeChatSchedule {
+   opponentId: string;
+   coffeeDate: Date;
+   location: string;
+   restDate: Date;
+   firstUserImage: string;
+   secondUserImage: string;
+
+   constructor(
+       opponentId: string,
+       coffeeDate: Date,
+       location: string,
+       restDate: Date,
+       firstUserImage: string,
+       secondUserImage: string
+   ) {
+       this.opponentId = opponentId;
+       this.coffeeDate = coffeeDate;
+       this.location = location;
+       this.restDate = restDate;
+       this.firstUserImage = firstUserImage;
+       this.secondUserImage = secondUserImage;
+   }
+}

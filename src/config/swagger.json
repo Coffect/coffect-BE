@@ -252,6 +252,67 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"CoffeeChatSchedule": {
+				"properties": {
+					"opponentId": {
+						"type": "string"
+					},
+					"coffeeDate": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"location": {
+						"type": "string"
+					},
+					"restDate": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"firstUserImage": {
+						"type": "string"
+					},
+					"secondUserImage": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"opponentId",
+					"coffeeDate",
+					"location",
+					"restDate",
+					"firstUserImage",
+					"secondUserImage"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_CoffeeChatSchedule-Array_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"items": {
+							"$ref": "#/components/schemas/CoffeeChatSchedule"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -968,7 +1029,7 @@
 						}
 					}
 				},
-				"description": "\n게시글 업로드 API",
+				"description": "\r\n게시글 업로드 API",
 				"summary": "게시글 업로드",
 				"tags": [
 					"Thread Controller"
@@ -1282,6 +1343,76 @@
 						}
 					}
 				}
+			}
+		},
+		"/home/getCoffeeChatSchedule": {
+			"get": {
+				"operationId": "GetCoffeeChatSchedule",
+				"responses": {
+					"200": {
+						"description": "성공적으로 Data를 넣었습니다.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_CoffeeChatSchedule-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE404",
+												"reason": "에정된 커피챗 일정이 없습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE500",
+												"reason": "서버 오류가 발생했습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "Coffect coffeeChat Home API.",
+				"summary": "커피챗 일정 가져오는 API",
+				"tags": [
+					"Home Controller"
+				],
+				"security": [],
+				"parameters": []
 			}
 		}
 	},

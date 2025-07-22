@@ -22,3 +22,14 @@ export class nonPostComment extends BasicError {
     super(400, 'HE402', '내용이 누락되어있습니다.', description);
   }
 }
+
+export class nonData extends BasicError {
+  constructor(description: string) {
+    super (
+      400,
+      'HE404',
+      '존재하지 않는 Data입니다.',
+      description
+    );
+  }
+}

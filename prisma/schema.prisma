@@ -32,7 +32,7 @@ model User {
   coffeeChats1       CoffeeChat[]    @relation("FirstUser")
   coffeeChats2       CoffeeChat[]    @relation("SecondUser")
   comments           Comment[]
-  follows            Follow?
+  Follow             Follow?
   messages           Message[]
   refreshTokens      RefeshToken?
   specifyInfo        SpecifyInfo?
@@ -50,7 +50,7 @@ model Follow {
   userId      Int  @id
   followingId Int
   followerId  Int
-  user        User @relation(fields: [userId], references: [userId])
+  User        User @relation(fields: [userId], references: [userId])
 }
 
 model ChatRoom {

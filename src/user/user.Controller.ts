@@ -69,7 +69,7 @@ export class UserController extends Controller {
   public async login(
     @Request() req: ExpressRequest,
     @Body()
-    body: {
+      body: {
       userPassword: string;
       userId: string;
     }
@@ -191,7 +191,7 @@ export class UserController extends Controller {
   public async signup(
     @Request() req: ExpressRequest,
     @Body()
-    body: {
+      body: {
       userInfo: {
         password: string;
         id: string;
