@@ -2,11 +2,16 @@ generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "../ERD.svg"
+}
 
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_HOST")
 }
+
 
 model User {
   userId             Int             @id @default(autoincrement())
