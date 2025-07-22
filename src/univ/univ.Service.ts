@@ -1,10 +1,14 @@
-import { UnivCertRequest } from '../middleware/univ.DTO/univ.DTO';
+import {
+  UnivCertRequest,
+  UnivSearchResponse
+} from '../middleware/univ.DTO/univ.DTO';
 import {
   CertCodeExpired,
   CertCodeInvaild,
   CertCodeNotMatch
 } from './univ.Message';
 import { UnivModel } from './univ.Model';
+import { getChoseong } from 'es-hangul';
 
 export class UnivService {
   private univModel: UnivModel;
@@ -28,6 +32,26 @@ export class UnivService {
     if (certInfo.expiredAt < utc) {
       throw new CertCodeExpired('인증코드가 만료되었습니다.');
     }
-    console.log('here');
+  }
+
+  public async searchService(univName: string) {
+    const inital = getChoseong(univName);
+    let isInitial = false;
+    let index = 0;
+    let pure = '';
+    for (const word of univName) {
+      if (word === inital[index]) {
+        break;
+      }
+      pure += word;
+      index++;
+    }
+
+    const last = inital.substring(index);
+    if (index === 0) isInitial = true; //초성검색을 따로 분류
+
+    const result = await this.univModel.searchUnivName(pure, last, isInitial);
+
+    return new UnivSearchResponse(result);
   }
 }

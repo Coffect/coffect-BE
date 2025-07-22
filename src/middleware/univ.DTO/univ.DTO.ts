@@ -16,3 +16,14 @@ export class UnivCertRequest {
     this.email = email;
   }
 }
+type UnivList = {
+  name: string;
+};
+
+export class UnivSearchResponse {
+  univList: UnivList[];
+
+  constructor(univList: UnivList[]) {
+    this.univList = univList;
+  }
+}

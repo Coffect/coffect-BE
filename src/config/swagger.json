@@ -136,6 +136,51 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"UnivList": {
+				"properties": {
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"name"
+				],
+				"type": "object"
+			},
+			"UnivSearchResponse": {
+				"properties": {
+					"univList": {
+						"items": {
+							"$ref": "#/components/schemas/UnivList"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"univList"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"TsoaSuccessResponse_UnivSearchResponse_": {
+				"properties": {
+					"resultType": {
+						"type": "string",
+						"default": "SUCCESS"
+					},
+					"error": {
+						"default": null
+					},
+					"success": {
+						"$ref": "#/components/schemas/UnivSearchResponse"
+					}
+				},
+				"required": [
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"ThreadType": {
 				"enum": [
 					"아티클",
@@ -637,6 +682,71 @@
 								},
 								"required": [
 									"id"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/univ/search": {
+			"post": {
+				"operationId": "Search",
+				"responses": {
+					"200": {
+						"description": "대학교 검색",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TsoaSuccessResponse_UnivSearchResponse_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "서버에러",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "ERR-0",
+												"reason": "Unknown server error.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "대학교를 검색한다",
+				"summary": "대학교 검색",
+				"tags": [
+					"Univ Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"univName": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"univName"
 								],
 								"type": "object"
 							}

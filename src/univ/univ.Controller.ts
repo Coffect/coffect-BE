@@ -6,9 +6,7 @@ import {
   SuccessResponse,
   Request,
   Body,
-  Response,
-  Middlewares,
-  Get
+  Response
 } from 'tsoa';
 import {
   Request as ExpressRequest,
@@ -28,7 +26,10 @@ import {
 import { decodeToken } from '../config/token';
 import verify from '../middleware/verifyJWT';
 import { UnivService } from './univ.Service';
-import { UnivCertRequest } from '../middleware/univ.DTO/univ.DTO';
+import {
+  UnivCertRequest,
+  UnivSearchResponse
+} from '../middleware/univ.DTO/univ.DTO';
 
 @Route('univ')
 @Tags('Univ Controller')
@@ -38,7 +39,30 @@ export class UnivController extends Controller {
     super();
     this.univService = new UnivService();
   }
-  public async search() {}
+
+  /**
+   * 대학교를 검색한다
+   *
+   * @summary 대학교 검색
+   */
+  @Post('search')
+  @SuccessResponse(200, '검색 성공')
+  @Response<ITsoaErrorResponse>(500, '서버에러', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-0',
+      reason: 'Unknown server error.',
+      data: null
+    },
+    success: null
+  })
+  public async search(
+    @Request() req: ExpressRequest,
+    @Body() body: { univName: string }
+  ): Promise<TsoaSuccessResponse<UnivSearchResponse>> {
+    const data = await this.univService.searchService(body.univName);
+    return new TsoaSuccessResponse(data);
+  }
 
   /**
    * 메일 인증번호가 일치하는지 확인한다
@@ -77,12 +101,12 @@ export class UnivController extends Controller {
   public async cert(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       certCode: number;
       email: string;
     }
   ): Promise<ITsoaSuccessResponse<string>> {
-    const info = new UnivCertRequest(req.body.certCode, req.body.email);
+    const info = new UnivCertRequest(body.certCode, body.email);
     await this.univService.certService(info);
     return new TsoaSuccessResponse('인증에 성공했습니다.');
   }

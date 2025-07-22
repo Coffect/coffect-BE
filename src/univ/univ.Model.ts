@@ -1,3 +1,4 @@
+import { getChoseong } from 'es-hangul';
 import { prisma } from '../config/prisma.config';
 import { UnivCertRequest } from '../middleware/univ.DTO/univ.DTO';
 
@@ -7,5 +8,36 @@ export class UnivModel {
       where: { email: info.email }
     });
     return q;
+  }
+
+  public async searchUnivName(
+    univName: string,
+    initial: string,
+    isInitial: boolean
+  ) {
+    if (isInitial) {
+      const result = await prisma.univList.findMany({
+        where: {
+          name_initial: { startsWith: initial }
+        },
+        select: {
+          name: true
+        }
+      });
+      return result;
+    } else {
+      const result = await prisma.univList.findMany({
+        where: {
+          AND: [
+            { name: { startsWith: univName } },
+            { name_initial: { startsWith: getChoseong(univName) } }
+          ]
+        },
+        select: {
+          name: true
+        }
+      });
+      return result;
+    }
   }
 }

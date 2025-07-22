@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE `User` (
-    `userId` INTEGER NOT NULL,
+    `userId` INTEGER NOT NULL AUTO_INCREMENT,
     `id` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
     `mail` VARCHAR(191) NOT NULL,
@@ -10,6 +10,9 @@ CREATE TABLE `User` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `profileImage` VARCHAR(191) NOT NULL,
     `questionIndex` JSON NULL,
+    `coffeeChatCount` INTEGER NOT NULL DEFAULT 4,
+    `todayInterest` INTEGER NULL DEFAULT 0,
+    `todayInterestArray` JSON NULL,
 
     UNIQUE INDEX `User_id_key`(`id`),
     PRIMARY KEY (`userId`)
@@ -34,7 +37,7 @@ CREATE TABLE `Follow` (
 
 -- CreateTable
 CREATE TABLE `ChatRoom` (
-    `chatRoomId` INTEGER NOT NULL,
+    `chatRoomId` INTEGER NOT NULL AUTO_INCREMENT,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `createdTime` DATETIME(3) NOT NULL,
 
@@ -46,18 +49,21 @@ CREATE TABLE `ChatJoin` (
     `userId` INTEGER NOT NULL,
     `chatRoomId` INTEGER NOT NULL,
 
+    INDEX `ChatJoin_chatRoomId_fkey`(`chatRoomId`),
     PRIMARY KEY (`userId`, `chatRoomId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `Message` (
-    `messageId` INTEGER NOT NULL,
+    `messageId` INTEGER NOT NULL AUTO_INCREMENT,
     `chatRoomId` INTEGER NOT NULL,
     `userId` INTEGER NOT NULL,
     `messageBody` VARCHAR(191) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL,
     `check` BOOLEAN NOT NULL DEFAULT false,
 
+    INDEX `Message_chatRoomId_fkey`(`chatRoomId`),
+    INDEX `Message_userId_fkey`(`userId`),
     PRIMARY KEY (`messageId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -71,6 +77,7 @@ CREATE TABLE `Thread` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `threadShare` INTEGER NOT NULL,
 
+    INDEX `Thread_userId_fkey`(`userId`),
     PRIMARY KEY (`threadId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -79,6 +86,7 @@ CREATE TABLE `ThreadImage` (
     `imageId` VARCHAR(191) NOT NULL,
     `threadId` VARCHAR(191) NOT NULL,
 
+    INDEX `ThreadImage_threadId_fkey`(`threadId`),
     PRIMARY KEY (`imageId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -87,6 +95,7 @@ CREATE TABLE `ThreadLike` (
     `threadId` VARCHAR(191) NOT NULL,
     `userId` INTEGER NOT NULL,
 
+    INDEX `ThreadLike_userId_fkey`(`userId`),
     PRIMARY KEY (`threadId`, `userId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -96,6 +105,7 @@ CREATE TABLE `ThreadScrap` (
     `userId` INTEGER NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    INDEX `ThreadScrap_userId_fkey`(`userId`),
     PRIMARY KEY (`scrapId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -104,18 +114,21 @@ CREATE TABLE `ScrapMatch` (
     `threadId` VARCHAR(191) NOT NULL,
     `scrapId` VARCHAR(191) NOT NULL,
 
+    INDEX `ScrapMatch_scrapId_fkey`(`scrapId`),
     PRIMARY KEY (`threadId`, `scrapId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `Comment` (
-    `commentId` INTEGER NOT NULL,
+    `commentId` INTEGER NOT NULL AUTO_INCREMENT,
     `userId` INTEGER NOT NULL,
     `threadId` VARCHAR(191) NOT NULL,
     `commentBody` VARCHAR(191) NOT NULL,
     `quote` INTEGER NULL,
     `createdAtD` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    INDEX `Comment_threadId_fkey`(`threadId`),
+    INDEX `Comment_userId_fkey`(`userId`),
     PRIMARY KEY (`commentId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -132,6 +145,7 @@ CREATE TABLE `SubjectMatch` (
     `threadId` VARCHAR(191) NOT NULL,
     `subjectId` INTEGER NOT NULL,
 
+    INDEX `SubjectMatch_subjectId_fkey`(`subjectId`),
     PRIMARY KEY (`threadId`, `subjectId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -150,25 +164,27 @@ CREATE TABLE `CategoryMatch` (
     `categotyId` INTEGER NOT NULL,
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
 
+    INDEX `CategoryMatch_categotyId_fkey`(`categotyId`),
     PRIMARY KEY (`userId`, `categotyId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `RefeshToken` (
-    `Key` VARCHAR(191) NOT NULL,
+    `refreshTokenIndex` INTEGER NOT NULL AUTO_INCREMENT,
     `userId` INTEGER NOT NULL,
-    `tokenHashed` VARCHAR(191) NOT NULL,
+    `userName` VARCHAR(25) NOT NULL,
+    `tokenHashed` VARCHAR(256) NOT NULL,
     `createdAt` DATETIME(3) NOT NULL,
     `expiredAt` DATETIME(3) NOT NULL,
     `userAgent` VARCHAR(191) NULL,
-    `ipAddress` VARCHAR(191) NULL,
 
-    PRIMARY KEY (`Key`)
+    UNIQUE INDEX `RefeshToken_userId_key`(`userId`),
+    PRIMARY KEY (`refreshTokenIndex`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `CoffeeChat` (
-    `coffectId` INTEGER NOT NULL,
+    `coffectId` INTEGER NOT NULL AUTO_INCREMENT,
     `firstUserId` INTEGER NOT NULL,
     `secondUserId` INTEGER NOT NULL,
     `coffectDate` DATETIME(3) NOT NULL,
@@ -177,6 +193,8 @@ CREATE TABLE `CoffeeChat` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `valid` BOOLEAN NOT NULL DEFAULT false,
 
+    INDEX `CoffeeChat_firstUserId_fkey`(`firstUserId`),
+    INDEX `CoffeeChat_secondUserId_fkey`(`secondUserId`),
     PRIMARY KEY (`coffectId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -188,17 +206,39 @@ CREATE TABLE `SpecifyInfo` (
     PRIMARY KEY (`userId`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
--- AddForeignKey
-ALTER TABLE `UserTimetable` ADD CONSTRAINT `UserTimetable_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+-- CreateTable
+CREATE TABLE `UnivCert` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `email` VARCHAR(50) NOT NULL,
+    `certCode` INTEGER NOT NULL,
+    `createdAt` DATETIME(0) NOT NULL,
+    `expiredAt` DATETIME(0) NOT NULL,
+    `valid` BOOLEAN NOT NULL,
+
+    UNIQUE INDEX `email`(`email`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `UnivList` (
+    `id` INTEGER NOT NULL AUTO_INCREMENT,
+    `name` VARCHAR(100) NOT NULL,
+    `created_at` DATETIME(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `updated_at` DATETIME(0) NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `name_initial` VARCHAR(50) NOT NULL,
+
+    UNIQUE INDEX `name`(`name`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
 ALTER TABLE `Follow` ADD CONSTRAINT `Follow_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ChatJoin` ADD CONSTRAINT `ChatJoin_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ChatJoin` ADD CONSTRAINT `ChatJoin_chatRoomId_fkey` FOREIGN KEY (`chatRoomId`) REFERENCES `ChatRoom`(`chatRoomId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ChatJoin` ADD CONSTRAINT `ChatJoin_chatRoomId_fkey` FOREIGN KEY (`chatRoomId`) REFERENCES `ChatRoom`(`chatRoomId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ChatJoin` ADD CONSTRAINT `ChatJoin_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Message` ADD CONSTRAINT `Message_chatRoomId_fkey` FOREIGN KEY (`chatRoomId`) REFERENCES `ChatRoom`(`chatRoomId`) ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -222,28 +262,28 @@ ALTER TABLE `ThreadLike` ADD CONSTRAINT `ThreadLike_userId_fkey` FOREIGN KEY (`u
 ALTER TABLE `ThreadScrap` ADD CONSTRAINT `ThreadScrap_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `ScrapMatch` ADD CONSTRAINT `ScrapMatch_threadId_fkey` FOREIGN KEY (`threadId`) REFERENCES `Thread`(`threadId`) ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE `ScrapMatch` ADD CONSTRAINT `ScrapMatch_scrapId_fkey` FOREIGN KEY (`scrapId`) REFERENCES `ThreadScrap`(`scrapId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Comment` ADD CONSTRAINT `Comment_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ScrapMatch` ADD CONSTRAINT `ScrapMatch_threadId_fkey` FOREIGN KEY (`threadId`) REFERENCES `Thread`(`threadId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Comment` ADD CONSTRAINT `Comment_threadId_fkey` FOREIGN KEY (`threadId`) REFERENCES `Thread`(`threadId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `SubjectMatch` ADD CONSTRAINT `SubjectMatch_threadId_fkey` FOREIGN KEY (`threadId`) REFERENCES `Thread`(`threadId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `Comment` ADD CONSTRAINT `Comment_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `SubjectMatch` ADD CONSTRAINT `SubjectMatch_subjectId_fkey` FOREIGN KEY (`subjectId`) REFERENCES `ThreadSubject`(`subjectId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `CategoryMatch` ADD CONSTRAINT `CategoryMatch_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `SubjectMatch` ADD CONSTRAINT `SubjectMatch_threadId_fkey` FOREIGN KEY (`threadId`) REFERENCES `Thread`(`threadId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `CategoryMatch` ADD CONSTRAINT `CategoryMatch_categotyId_fkey` FOREIGN KEY (`categotyId`) REFERENCES `Category`(`categotyId`) ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `CategoryMatch` ADD CONSTRAINT `CategoryMatch_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `RefeshToken` ADD CONSTRAINT `RefeshToken_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`userId`) ON DELETE RESTRICT ON UPDATE CASCADE;
