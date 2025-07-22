@@ -232,6 +232,16 @@ model UnivList {
   created_at   DateTime? @default(now()) @db.DateTime(0)
   updated_at   DateTime? @default(now()) @db.DateTime(0)
   name_initial String?   @db.VarChar(50)
+  location     String?   @db.VarChar(100)
+}
+
+model UnivDept {
+  id       Int    @id @default(autoincrement())
+  location String @db.VarChar(20)
+  univ     String @db.VarChar(20)
+  college  String @db.VarChar(20)
+  dept     String @db.VarChar(30)
+  isMain   String @db.VarChar(5)
 }
 
 enum ThreadType {
