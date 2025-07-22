@@ -9,7 +9,7 @@ datasource db {
 }
 
 model User {
-  userId             Int             @id
+  userId             Int             @id @default(autoincrement())
   id                 String          @unique
   password           String
   mail               String
@@ -27,7 +27,7 @@ model User {
   coffeeChats1       CoffeeChat[]    @relation("FirstUser")
   coffeeChats2       CoffeeChat[]    @relation("SecondUser")
   comments           Comment[]
-  follows            Follow?
+  Follow             Follow?
   messages           Message[]
   refreshTokens      RefeshToken?
   specifyInfo        SpecifyInfo?
@@ -45,11 +45,11 @@ model Follow {
   userId      Int  @id
   followingId Int
   followerId  Int
-  user        User @relation(fields: [userId], references: [userId])
+  User        User @relation(fields: [userId], references: [userId])
 }
 
 model ChatRoom {
-  chatRoomId  Int        @id
+  chatRoomId  Int        @id @default(autoincrement())
   createdAt   DateTime   @default(now())
   createdTime DateTime
   chatJoins   ChatJoin[]
@@ -67,7 +67,7 @@ model ChatJoin {
 }
 
 model Message {
-  messageId   Int      @id
+  messageId   Int      @id @default(autoincrement())
   chatRoomId  Int
   userId      Int
   messageBody String
@@ -137,7 +137,7 @@ model ScrapMatch {
 }
 
 model Comment {
-  commentId   Int      @id
+  commentId   Int      @id @default(autoincrement())
   userId      Int
   threadId    String
   commentBody String
@@ -219,18 +219,29 @@ model SpecifyInfo {
 
 model UnivCert {
   id        Int      @id @default(autoincrement())
-  email     String   @db.VarChar(50)
+  email     String   @unique(map: "email") @db.VarChar(50)
   certCode  Int
-  createdAt DateTime @db.DateTime(0) @default(now())
+  createdAt DateTime @db.DateTime(0)
   expiredAt DateTime @db.DateTime(0)
+  valid     Boolean
 }
 
 model UnivList {
-  id          Int       @id @default(autoincrement())
-  name        String    @db.VarChar(50)
-  created_at  DateTime? @db.DateTime(0)
-  updataed_at DateTime? @db.DateTime(0)
-  domain      String?   @db.VarChar(30)
+  id           Int       @id @default(autoincrement())
+  name         String    @unique(map: "name") @db.VarChar(100)
+  created_at   DateTime? @default(now()) @db.DateTime(0)
+  updated_at   DateTime? @default(now()) @db.DateTime(0)
+  name_initial String?   @db.VarChar(50)
+  location     String?   @db.VarChar(100)
+}
+
+model UnivDept {
+  id       Int    @id @default(autoincrement())
+  location String @db.VarChar(20)
+  univ     String @db.VarChar(20)
+  college  String @db.VarChar(20)
+  dept     String @db.VarChar(30)
+  isMain   String @db.VarChar(5)
 }
 
 enum ThreadType {
