@@ -16,7 +16,7 @@ cron.schedule('0 0 * * *', async () => {
       data: {
         coffeeChatCount: 4,
         todayInterest: null,
-        todayInterestArray: null
+        todayInterestArray: []
       }
     });
     console.log('user coffeeChatCount and todayInterest reset complete');
