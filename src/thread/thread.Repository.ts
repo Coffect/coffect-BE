@@ -6,7 +6,7 @@ export const addThreadRepository = async (
   newThread: BodyToAddThread
 ): Promise<string> => {
   const result = await prisma
-    .$transaction(async (prisma) => {
+    .$transaction(async (prisma: any) => {
       const thread = await prisma.thread.create({
         data: {
           type: newThread.type,
@@ -25,7 +25,7 @@ export const addThreadRepository = async (
       });
       return thread;
     })
-    .catch((error) => {
+    .catch((error: any) => {
       throw new ThreadTransactionError(
         error.message +
           `type: ${newThread.type}, title: ${newThread.threadTitle}`
