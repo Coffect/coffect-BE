@@ -22,18 +22,11 @@ import {
 
 import verify from '../middleware/verifyJWT';
 
-import {
-  BodyToAddThread,
-  ThreadType
-} from './thread.Model';
+import { BodyToAddThread, ThreadType } from './thread.Model';
 
-import { 
-  UserUnauthorizedError 
-} from '../user/user.Message';
+import { UserUnauthorizedError } from '../user/user.Message';
 
-import {
-  addThreadService
-} from './thread.Service';
+import { addThreadService } from './thread.Service';
 
 @Route('thread')
 @Tags('Thread Controller')
@@ -52,42 +45,36 @@ export class ThreadController extends Controller {
   @Post('add')
   //@Middlewares(verify)
   @SuccessResponse('201', '게시글 업로드 성공')
-  @Response<ITsoaErrorResponse>('400', '유저 인증 정보가 없습니다.',
-    {
-      resultType: 'FAIL',
-      error: {
-        errorCode: 'ERR-1',
-        reason: '유저 인증 정보가 없습니다.',
-        data: null
-      },
-      success: null
-    }
-  )
-  @Response<ITsoaErrorResponse>('500', '게시글 업로드에 실패했습니다.',
-    {
-      resultType: 'FAIL',
-      error: {
-        errorCode: 'THR-02',
-        reason: '게시글 업로드에 실패했습니다.',
-        data: null
-      },
-      success: null
-    }
-  )
-  @Response<ITsoaErrorResponse>('500', '게시글 트랜잭션 처리에 실패했습니다.',
-    {
-      resultType: 'FAIL',
-      error: {
-        errorCode: 'THR-03',
-        reason: '게시글 트랜잭션 처리에 실패했습니다.',
-        data: null
-      },
-      success: null
-    }
-  )
+  @Response<ITsoaErrorResponse>('400', '유저 인증 정보가 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-1',
+      reason: '유저 인증 정보가 없습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('500', '게시글 업로드에 실패했습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-02',
+      reason: '게시글 업로드에 실패했습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('500', '게시글 트랜잭션 처리에 실패했습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-03',
+      reason: '게시글 트랜잭션 처리에 실패했습니다.',
+      data: null
+    },
+    success: null
+  })
   public async addThread(
     @Request() req: ExpressRequest,
-    @Body() 
+    @Body()
       body: {
       userId?: number;
       type: ThreadType;
@@ -100,7 +87,7 @@ export class ThreadController extends Controller {
     //   throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
     // }
 
-    if(body.userId === undefined || body.userId === null) {
+    if (body.userId === undefined || body.userId === null) {
       throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
     }
 
@@ -113,4 +100,4 @@ export class ThreadController extends Controller {
 
     return new TsoaSuccessResponse<string>(`게시글 업로드 성공: id ${result}`);
   }
-};
+}

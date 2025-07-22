@@ -2,7 +2,7 @@ import { BasicError } from '../middleware/error';
 
 export class ThreadNotFoundError extends BasicError {
   constructor(message: string) {
-    super(404,'THR-01','게시물을 찾을 수 없습니다.', message);
+    super(404, 'THR-01', '게시물을 찾을 수 없습니다.', message);
   }
 }
 
