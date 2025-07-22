@@ -197,7 +197,7 @@ export class HomeController extends Controller {
 
 
 
-   /**
+  /**
    * Coffect coffeeChat Home API.
    * 
    * @summary 커피챗 일정 가져오는 API
@@ -233,12 +233,12 @@ export class HomeController extends Controller {
     })
   public async GetCoffeeChatSchedule (
     @Request() req: ExpressRequest
-  ):Promise<ITsoaSuccessResponse<CoffeeChatSchedule>> { 
+  ):Promise<ITsoaSuccessResponse<CoffeeChatSchedule[]>> { 
     const userId = req.decoded.index;
 
     const result = await this.homeService.GetCoffeeChatScheduleService(userId);
 
-    return new TsoaSuccessResponse<CoffeeChatSchedule>(result);
+    return new TsoaSuccessResponse<CoffeeChatSchedule[]>(result);
   };
 
 }

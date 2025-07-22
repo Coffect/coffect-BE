@@ -226,18 +226,18 @@ export class HomeModel {
     });
 
     const score = ArrayuserCategory.map((user: any) => {
-        const userCategory = user.categoryMatch.map(
-          (match: any) => match.category.categoryName);
+      const userCategory = user.categoryMatch.map(
+        (match: any) => match.category.categoryName);
 
-        const sameCategory = userCategory.filter(
-          (category: any) => myCategory.includes(category));
+      const sameCategory = userCategory.filter(
+        (category: any) => myCategory.includes(category));
 
-        return {
-          userId : user.userId,
-          sameCategory : sameCategory,
-          score : sameCategory.length
-        };
-      }).filter((user: any) => user.score > 0)
+      return {
+        userId : user.userId,
+        sameCategory : sameCategory,
+        score : sameCategory.length
+      };
+    }).filter((user: any) => user.score > 0)
       .sort((a: any, b: any) => b.score - a.score);
 
       
@@ -412,16 +412,64 @@ export class HomeModel {
       }
     });
   }
-}
-
 
   /** 커피챗 일정 가져오는 Model */
   public async GetCoffeeChatScheduleModel (
     userId : number
-  ):Promise<CoffeeChatSchedule> {
+  ):Promise<CoffeeChatSchedule[]> {
+
+    const currentDate = new Date();
+
     const result = await prisma.coffeeChat.findMany({
-      where : { firstUserId : userId || secondUserId : userId}
+      where : { 
+        OR: [
+          { firstUserId: userId },
+          { secondUserId: userId }
+        ],
+        valid: true,
+        coffectDate: {
+          gte: currentDate
+        }
+      },
+      include: {
+        firstUser: {
+          select: {
+            profileImage: true
+          }
+        },
+        secondUser: {
+          select: {
+            profileImage: true
+          }
+        }
+      },
+      orderBy: {
+        coffectDate: 'asc'
+      }
     });
-  };
+
+    const schedules: CoffeeChatSchedule[] = result.map((coffeeChat) => {
+      const opponentId = coffeeChat.firstUserId === userId 
+        ? coffeeChat.secondUserId.toString() 
+        : coffeeChat.firstUserId.toString();
+      
+      const firstUserImage = coffeeChat.firstUser?.profileImage || '';
+      const secondUserImage = coffeeChat.secondUser?.profileImage || '';
+      
+      // 남은 일수 계산 (밀리초를 일수로 변환)
+      const restDate = new Date(coffeeChat.coffectDate.getTime() - currentDate.getTime());
+      
+      return new CoffeeChatSchedule(
+        opponentId,
+        coffeeChat.coffectDate,
+        coffeeChat.location,
+        restDate,
+        firstUserImage,
+        secondUserImage
+      );
+    });
+
+    return schedules;
+  }
 
 }

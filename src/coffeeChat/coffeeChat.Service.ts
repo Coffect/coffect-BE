@@ -82,9 +82,10 @@ export class HomeService {
 
   public async GetCoffeeChatScheduleService(
     userId : number
-  ):Promise<CoffeeChatSchedule> {
-      const result = await this.homeModel
+  ):Promise<CoffeeChatSchedule[]> {
+    
+    const result = await this.homeModel.GetCoffeeChatScheduleModel(userId);
 
-      return result;
+    return result;
   }
 }
