@@ -1,7 +1,5 @@
-import { PrismaClient } from '../../generated/prisma';
+import { prisma } from '../config/prisma.config';
 import { coffectChatCardDTO, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
-
-const prisma = new PrismaClient();
 
 export class HomeModel {
 
