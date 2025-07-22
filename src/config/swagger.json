@@ -800,7 +800,7 @@
 						}
 					}
 				},
-				"description": "\n게시글 업로드 API",
+				"description": "\r\n게시글 업로드 API",
 				"summary": "게시글 업로드",
 				"tags": [
 					"Thread Controller"

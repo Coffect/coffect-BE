@@ -448,7 +448,7 @@ export class HomeModel {
       }
     });
 
-    const schedules: CoffeeChatSchedule[] = result.map((coffeeChat) => {
+    const schedules: CoffeeChatSchedule[] = result.map((coffeeChat: any) => {
       const opponentId = coffeeChat.firstUserId === userId 
         ? coffeeChat.secondUserId.toString() 
         : coffeeChat.firstUserId.toString();
