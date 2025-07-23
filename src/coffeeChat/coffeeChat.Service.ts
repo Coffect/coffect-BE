@@ -1,4 +1,4 @@
-import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatRecordDetail, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 import { exceedLimitError, postTodayError } from './coffeeChat.Message';
 import { HomeModel } from './coffeeChat.Model';
 
@@ -7,7 +7,7 @@ export class HomeService {
 
   constructor() {
     this.homeModel = new HomeModel();
-  }
+  };
 
   /** 하루 관심사 삽입 서비스 로직 */
   public async postTodayInterestService(
@@ -15,7 +15,7 @@ export class HomeService {
     todayInterest: number
   ): Promise<void> {
     await this.homeModel.postTodayInterestModel(userId, todayInterest);
-  }
+  };
 
   /** 추천 로직 서비스 */
   public async CardCoffeeChatService(
@@ -78,7 +78,7 @@ export class HomeService {
       await this.homeModel.showFrontProfile(recommendUserId);
 
     return showFrontProfile; // 항상 CoffectChatCardDTO 반환
-  }
+  };
 
   /** 커피챗 제안 서비스 */
   public async postSuggestCoffeeChatService(
@@ -91,7 +91,7 @@ export class HomeService {
       otherUserid,
       suggestion
     );
-  }
+  };
 
   public async GetCoffeeChatScheduleService(
     userId : number
@@ -100,7 +100,7 @@ export class HomeService {
     const result = await this.homeModel.GetCoffeeChatScheduleModel(userId);
 
     return result;
-  }
+  };
 
   public async getPastCoffeeChatService(
     userId : number
@@ -109,7 +109,13 @@ export class HomeService {
     const result = await this.homeModel.getPastCoffeeChatModel(userId);
 
     return result;
+  };
+
+  public async getSpecifyCoffeeChatService(
+    userId : number
+  ):Promise<CoffeeChatRecordDetail> {
+    const result = await this.homeModel.getSpecifyCoffeeChatModel(userId);
+
+    return result;
   }
-
-
 }

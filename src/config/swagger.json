@@ -315,6 +315,67 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"CoffeeChatRecordDetail": {
+				"properties": {
+					"opponentName": {
+						"type": "string"
+					},
+					"color1": {
+						"type": "string"
+					},
+					"color2": {
+						"type": "string"
+					},
+					"coffeeDate": {
+						"type": "string",
+						"format": "date-time"
+					},
+					"location": {
+						"type": "string"
+					},
+					"firstUserImage": {
+						"type": "string"
+					},
+					"secondUserImage": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"opponentName",
+					"color1",
+					"color2",
+					"coffeeDate",
+					"location",
+					"firstUserImage",
+					"secondUserImage"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_CoffeeChatRecordDetail_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"$ref": "#/components/schemas/CoffeeChatRecordDetail"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -976,15 +1037,10 @@
 									"todayInterest": {
 										"type": "number",
 										"format": "double"
-									},
-									"userId": {
-										"type": "number",
-										"format": "double"
 									}
 								},
 								"required": [
-									"todayInterest",
-									"userId"
+									"todayInterest"
 								],
 								"type": "object",
 								"description": "유저 Token & 하루 관심사 정보 수정"
@@ -1301,6 +1357,76 @@
 				},
 				"description": "Coffect coffeeChat Home API.",
 				"summary": "나의 커피챗 기록 API",
+				"tags": [
+					"Home Controller"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/home/getSpecifyCoffeeChat": {
+			"get": {
+				"operationId": "GetSpecifyCoffeeChat",
+				"responses": {
+					"200": {
+						"description": "성공적으로 Data를 넣었습니다.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_CoffeeChatRecordDetail_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE404",
+												"reason": "커피챗 기록이 존재하지 않습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE500",
+												"reason": "서버 오류가 발생했습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "Coffect coffeeChat Home API.",
+				"summary": "커피챗 기록에서 커피챗 상세 보기 API",
 				"tags": [
 					"Home Controller"
 				],
