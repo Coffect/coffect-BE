@@ -197,7 +197,6 @@ export class UserController extends Controller {
         id: string;
         univ: string;
         major: string;
-        studentId: number;
         email: string;
         name: string;
         interest: number[];

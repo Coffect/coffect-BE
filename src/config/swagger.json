@@ -712,10 +712,6 @@
 											"email": {
 												"type": "string"
 											},
-											"studentId": {
-												"type": "number",
-												"format": "double"
-											},
 											"major": {
 												"type": "string"
 											},
@@ -733,7 +729,6 @@
 											"interest",
 											"name",
 											"email",
-											"studentId",
 											"major",
 											"univ",
 											"id",

@@ -28,7 +28,6 @@ export class UserSignUpRequest {
   id: string;
   univ: string;
   major: string;
-  studentId: number;
   email: string;
   name: string;
   profile: string;
@@ -41,7 +40,6 @@ export class UserSignUpRequest {
     this.id = req.body.userInfo.id;
     this.univ = req.body.userInfo.univ;
     this.major = req.body.userInfo.major;
-    this.studentId = req.body.userInfo.studentId;
     this.email = req.body.userInfo.email;
     this.name = req.body.userInfo.name;
     this.interest = req.body.userInfo.interest;
