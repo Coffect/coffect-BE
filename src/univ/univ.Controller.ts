@@ -27,6 +27,7 @@ import { decodeToken } from '../config/token';
 import verify from '../middleware/verifyJWT';
 import { UnivService } from './univ.Service';
 import {
+  DeptSearchResponse,
   UnivCertRequest,
   UnivSearchResponse
 } from '../middleware/univ.DTO/univ.DTO';
@@ -41,11 +42,13 @@ export class UnivController extends Controller {
   }
 
   @Post('dept')
+  @SuccessResponse(200, '검색 성공')
   public async dept(
     @Request() req: ExpressRequest,
     @Body() body: { univName: string; search: string }
-  ): Promise<ITsoaSuccessResponse<string>> {
-    return new TsoaSuccessResponse('ok');
+  ): Promise<ITsoaSuccessResponse<DeptSearchResponse>> {
+    const data = await this.univService.deptService(body.search, body.univName);
+    return new TsoaSuccessResponse(data);
   }
 
   /**

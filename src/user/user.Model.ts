@@ -50,7 +50,6 @@ export class UserModel {
   }
 
   public async insertUser(info: UserSignUpRequest) {
-    // 생성된 유저의 자동 생성된 id 값을 받아오기 위해 변수에 저장
     const createdUser = await prisma.user.create({
       data: {
         id: info.id,
@@ -61,7 +60,7 @@ export class UserModel {
         profileImage: info.profile
       }
     });
-    const userId = createdUser.userId; // 자동 생성된 id 값
+    const userId = createdUser.userId;
     for (const index of info.interest) {
       await prisma.categoryMatch.create({
         data: { userId: userId, categotyId: index }

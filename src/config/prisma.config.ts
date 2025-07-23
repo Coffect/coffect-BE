@@ -1,5 +1,4 @@
 import { PrismaClient } from '../../generated/prisma';
-// const { PrismaClient } = pkg;
 
 const prisma = new PrismaClient({});
 

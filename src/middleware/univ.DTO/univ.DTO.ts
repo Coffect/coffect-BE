@@ -28,3 +28,17 @@ export class UnivSearchResponse {
     this.univList = univList;
   }
 }
+
+type DeptList = {
+  location: string;
+  univ: string;
+  college: string;
+  dept: string;
+};
+export class DeptSearchResponse {
+  deptList: DeptList[];
+
+  constructor(deptList: DeptList[]) {
+    this.deptList = deptList;
+  }
+}

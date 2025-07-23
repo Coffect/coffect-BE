@@ -136,6 +136,68 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"DeptList": {
+				"properties": {
+					"dept": {
+						"type": "string"
+					},
+					"college": {
+						"type": "string"
+					},
+					"univ": {
+						"type": "string"
+					},
+					"location": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"dept",
+					"college",
+					"univ",
+					"location"
+				],
+				"type": "object"
+			},
+			"DeptSearchResponse": {
+				"properties": {
+					"deptList": {
+						"items": {
+							"$ref": "#/components/schemas/DeptList"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"deptList"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_DeptSearchResponse_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"$ref": "#/components/schemas/DeptSearchResponse"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"UnivList": {
 				"properties": {
 					"location": {
@@ -761,11 +823,11 @@
 				"operationId": "Dept",
 				"responses": {
 					"200": {
-						"description": "Ok",
+						"description": "검색 성공",
 						"content": {
 							"application/json": {
 								"schema": {
-									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_DeptSearchResponse_"
 								}
 							}
 						}
@@ -1029,7 +1091,7 @@
 						}
 					}
 				},
-				"description": "\r\n게시글 업로드 API",
+				"description": "\n게시글 업로드 API",
 				"summary": "게시글 업로드",
 				"tags": [
 					"Thread Controller"

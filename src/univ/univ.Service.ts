@@ -1,4 +1,5 @@
 import {
+  DeptSearchResponse,
   UnivCertRequest,
   UnivSearchResponse
 } from '../middleware/univ.DTO/univ.DTO';
@@ -53,5 +54,10 @@ export class UnivService {
     const result = await this.univModel.searchUnivName(pure, last, isInitial);
 
     return new UnivSearchResponse(result);
+  }
+
+  public async deptService(search: string, univName: string) {
+    const result = await this.univModel.searchDept(search, univName);
+    return new DeptSearchResponse(result);
   }
 }

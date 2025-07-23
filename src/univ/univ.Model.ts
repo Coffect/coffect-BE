@@ -9,6 +9,12 @@ export class UnivModel {
     });
     return q;
   }
+  public async searchDept(search: string, univName: string) {
+    return await prisma.univDept.findMany({
+      where: { univ: univName, dept: { contains: search } },
+      select: { location: true, univ: true, college: true, dept: true }
+    });
+  }
 
   public async searchUnivName(
     univName: string,
