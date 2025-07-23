@@ -4,7 +4,7 @@ import { Request as ExpressRequest } from 'express';
 import { exceedLimitError, nonPostComment, postTodayError } from './coffeeChat.Message';
 import { HomeService } from './coffeeChat.Service';
 import verify from '../middleware/verifyJWT';
-import { coffectChatCardDTO, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 
 @Route('home')
 @Tags('Home Controller')
@@ -53,7 +53,6 @@ export class HomeController extends Controller {
   public async postTodayInterestController(
     @Request() req: ExpressRequest,
     @Body() body: { 
-      userId : number;
       todayInterest: number;
     },
   ): Promise<ITsoaSuccessResponse<string>> {
@@ -239,6 +238,51 @@ export class HomeController extends Controller {
     const result = await this.homeService.GetCoffeeChatScheduleService(userId);
 
     return new TsoaSuccessResponse<CoffeeChatSchedule[]>(result);
+  };
+
+
+  /**
+   * Coffect coffeeChat Home API.
+   * 
+   * @summary 나의 커피챗 기록 API
+   * @param body 유저 Token
+   * @returns 요청 성공 여부
+   */
+  @Get('getPastCoffeeChat')
+  @Middlewares(verify)
+  @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
+  @Response<ITsoaErrorResponse> (
+    400, 
+    'Bad Request', 
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE404',
+        reason: '커피챗 기록이 존재하지 않습니다.',
+        data: null
+      },
+      success: null
+    })
+  @Response<ITsoaErrorResponse>(
+    500,
+    'Internal Server Error',
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE500',
+        reason: '서버 오류가 발생했습니다.',
+        data: null
+      },
+      success: null
+    })
+  public async getPastCoffeeChat (
+    @Request() req: ExpressRequest
+  ):Promise<ITsoaSuccessResponse<CoffeeChatRecord[]>> { 
+    const userId = req.decoded.index;
+
+    const result = await this.homeService.getPastCoffeeChatService(userId);
+
+    return new TsoaSuccessResponse<CoffeeChatRecord[]>(result);
   };
 
 }

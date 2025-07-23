@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma.config';
-import { coffectChatCardDTO, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 
 export class HomeModel {
 
@@ -470,4 +470,77 @@ export class HomeModel {
     return schedules;
   }
 
+  /** 과거 커피챗 기록 가져오는 Model */
+  public async getPastCoffeeChatModel(
+    userId: number
+  ): Promise<CoffeeChatRecord[]> {
+    // 과거 커피챗 기록 조회
+    const result = await prisma.coffeeChat.findMany({
+      where: {
+        OR: [{ firstUserId: userId }, { secondUserId: userId }],
+        valid: true
+      },
+      orderBy: {
+        coffectDate: 'desc'
+      },
+      include: {
+        firstUser: {
+          select: {
+            userId: true,
+            name: true,
+            categoryMatch: {
+              orderBy: { createdAt: 'desc' },
+              take: 2,
+              select: {
+                category: {
+                  select: {
+                    categoryColor: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        secondUser: {
+          select: {
+            userId: true,
+            name: true,
+            categoryMatch: {
+              orderBy: { createdAt: 'desc' },
+              take: 2,
+              select: {
+                category: {
+                  select: {
+                    categoryColor: true
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const records: CoffeeChatRecord[] = result.map((chat: any) => {
+      // 상대방 정보 추출
+      let opponent; let opponentCategoryMatch;
+      if (chat.firstUserId === userId) {
+        opponent = chat.secondUser;
+      } else {
+        opponent = chat.firstUser;
+      }
+      // 이름
+      const opponentName = opponent?.name || '';
+      // 최신 2개 카테고리 컬러
+      const colors = (opponent?.categoryMatch || [])
+        .map((cm: any) => cm.category.categoryColor)
+        .slice(0, 2);
+      const color1 = colors[0] || '';
+      const color2 = colors[1] || '';
+      // 날짜
+      const coffeeDate = chat.coffectDate;
+      return new CoffeeChatRecord(opponentName, color1, color2, coffeeDate);
+    });
+    return records;
+  }
 }

@@ -1,4 +1,4 @@
-import { coffectChatCardDTO, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 import { exceedLimitError, postTodayError } from './coffeeChat.Message';
 import { HomeModel } from './coffeeChat.Model';
 
@@ -101,4 +101,15 @@ export class HomeService {
 
     return result;
   }
+
+  public async getPastCoffeeChatService(
+    userId : number
+  ):Promise<CoffeeChatRecord[]> {
+
+    const result = await this.homeModel.getPastCoffeeChatModel(userId);
+
+    return result;
+  }
+
+
 }

@@ -263,6 +263,58 @@
 				],
 				"type": "object",
 				"additionalProperties": false
+			},
+			"CoffeeChatRecord": {
+				"properties": {
+					"opponentName": {
+						"type": "string"
+					},
+					"color1": {
+						"type": "string"
+					},
+					"color2": {
+						"type": "string"
+					},
+					"coffeeDate": {
+						"type": "string",
+						"format": "date-time"
+					}
+				},
+				"required": [
+					"opponentName",
+					"color1",
+					"color2",
+					"coffeeDate"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_CoffeeChatRecord-Array_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"items": {
+							"$ref": "#/components/schemas/CoffeeChatRecord"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
 			}
 		},
 		"securitySchemes": {}
@@ -1179,6 +1231,76 @@
 				},
 				"description": "Coffect coffeeChat Home API.",
 				"summary": "커피챗 일정 가져오는 API",
+				"tags": [
+					"Home Controller"
+				],
+				"security": [],
+				"parameters": []
+			}
+		},
+		"/home/getPastCoffeeChat": {
+			"get": {
+				"operationId": "GetPastCoffeeChat",
+				"responses": {
+					"200": {
+						"description": "성공적으로 Data를 넣었습니다.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_CoffeeChatRecord-Array_"
+								}
+							}
+						}
+					},
+					"400": {
+						"description": "Bad Request",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE404",
+												"reason": "커피챗 기록이 존재하지 않습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "HE500",
+												"reason": "서버 오류가 발생했습니다.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "Coffect coffeeChat Home API.",
+				"summary": "나의 커피챗 기록 API",
 				"tags": [
 					"Home Controller"
 				],

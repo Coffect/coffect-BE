@@ -16,8 +16,7 @@ export class coffectChatCardDTO {
         this.profileImage = profileImage;
         this.mail = mail;
     }
-}
-
+};
 
 export class CoffeeChatSchedule {
    opponentId: string;
@@ -42,4 +41,24 @@ export class CoffeeChatSchedule {
        this.firstUserImage = firstUserImage;
        this.secondUserImage = secondUserImage;
    }
-}
+};
+
+
+export class CoffeeChatRecord {
+    opponentName : string;
+    color1 : string;
+    color2 : string;
+    coffeeDate : Date;
+
+    constructor (
+        opponentName : string,
+        color1 : string,
+        color2 : string,
+        coffeeDate : Date
+    ) {
+        this.opponentName = opponentName;
+        this.color1 = color1;
+        this.color2 = color2;
+        this.coffeeDate = coffeeDate;
+    }
+};
