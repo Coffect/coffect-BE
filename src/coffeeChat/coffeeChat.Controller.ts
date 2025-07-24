@@ -1,10 +1,10 @@
 import { Body, Controller, Get, Post, Route, SuccessResponse, Tags, Response, Request, Middlewares, Query } from 'tsoa';
 import { ITsoaErrorResponse, ITsoaSuccessResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import { Request as ExpressRequest } from 'express';
-import { exceedLimitError, nonPostComment, postTodayError } from './coffeeChat.Message';
+import { exceedLimitError, nonData, nonPostComment, postTodayError } from './coffeeChat.Message';
 import { HomeService } from './coffeeChat.Service';
 import verify from '../middleware/verifyJWT';
-import { coffectChatCardDTO, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatRecordDetail, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 
 @Route('home')
 @Tags('Home Controller')
@@ -53,7 +53,6 @@ export class HomeController extends Controller {
   public async postTodayInterestController(
     @Request() req: ExpressRequest,
     @Body() body: { 
-      userId : number;
       todayInterest: number;
     },
   ): Promise<ITsoaSuccessResponse<string>> {
@@ -239,6 +238,104 @@ export class HomeController extends Controller {
     const result = await this.homeService.GetCoffeeChatScheduleService(userId);
 
     return new TsoaSuccessResponse<CoffeeChatSchedule[]>(result);
+  };
+
+
+  /**
+   * Coffect coffeeChat Home API.
+   * 
+   * @summary 나의 커피챗 기록 API
+   * @param body 유저 Token
+   * @returns 요청 성공 여부
+   */
+  @Get('getPastCoffeeChat')
+  @Middlewares(verify)
+  @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
+  @Response<ITsoaErrorResponse> (
+    400, 
+    'Bad Request', 
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE404',
+        reason: '커피챗 기록이 존재하지 않습니다.',
+        data: null
+      },
+      success: null
+    })
+  @Response<ITsoaErrorResponse>(
+    500,
+    'Internal Server Error',
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE500',
+        reason: '서버 오류가 발생했습니다.',
+        data: null
+      },
+      success: null
+    })
+  public async getPastCoffeeChat (
+    @Request() req: ExpressRequest
+  ):Promise<ITsoaSuccessResponse<CoffeeChatRecord[]>> { 
+    const userId = req.decoded.index;
+
+    const result = await this.homeService.getPastCoffeeChatService(userId);
+
+    if(result.length === 0) {
+      throw new nonData('커피챗 기록이 존재하지 않습니다.');
+    }
+
+    return new TsoaSuccessResponse<CoffeeChatRecord[]>(result);
+  };
+
+
+  /**
+   * Coffect coffeeChat Home API.
+   * 
+   * @summary 커피챗 기록에서 커피챗 상세 보기 API
+   * @param body 유저 Token
+   * @returns 요청 성공 여부
+   */
+  @Get('getSpecifyCoffeeChat')
+  @Middlewares(verify)
+  @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
+  @Response<ITsoaErrorResponse> (
+    400, 
+    'Bad Request', 
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE404',
+        reason: '커피챗 기록이 존재하지 않습니다.',
+        data: null
+      },
+      success: null
+    })
+  @Response<ITsoaErrorResponse>(
+    500,
+    'Internal Server Error',
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE500',
+        reason: '서버 오류가 발생했습니다.',
+        data: null
+      },
+      success: null
+    })
+  public async getSpecifyCoffeeChat (
+    @Request() req: ExpressRequest
+  ):Promise<ITsoaSuccessResponse<CoffeeChatRecordDetail>> { 
+    const userId = req.decoded.index;
+
+    const result = await this.homeService.getSpecifyCoffeeChatService(userId);
+
+    if(result === null) {
+      throw new nonData('커피챗 기록이 존재하지 않습니다.');
+    }
+
+    return new TsoaSuccessResponse<CoffeeChatRecordDetail>(result);
   };
 
 }

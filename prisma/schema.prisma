@@ -10,7 +10,7 @@ generator erd {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_Endpoint") // 개발환경일때는 HOST, 배포환경에서는 ENDPOINT? 
+  url      = env("DATABASE_HOST")
 }
 
 model User {
