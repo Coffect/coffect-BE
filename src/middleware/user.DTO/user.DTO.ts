@@ -1,4 +1,4 @@
-import e, { Request } from 'express';
+import { Request } from 'express';
 
 export class UserLoginResponse {
   aToken: string;

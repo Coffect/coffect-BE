@@ -5,9 +5,7 @@
  */
 
 import cron from 'node-cron';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from './prisma.config';
 
 cron.schedule('0 0 * * *', async () => {
   // 00시(다음 날)가(이) 되면 coffeeChatCount와 todayInterest 칼럼을 초기화 시킨다.
@@ -16,7 +14,7 @@ cron.schedule('0 0 * * *', async () => {
       data: {
         coffeeChatCount: 4,
         todayInterest: null,
-        todayInterestArray: null
+        todayInterestArray: []
       }
     });
     console.log('user coffeeChatCount and todayInterest reset complete');
