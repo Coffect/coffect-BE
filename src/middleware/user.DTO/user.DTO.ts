@@ -1,4 +1,4 @@
-import e, { Request } from 'express';
+import { Request } from 'express';
 
 export class UserLoginResponse {
   aToken: string;
@@ -28,7 +28,6 @@ export class UserSignUpRequest {
   id: string;
   univ: string;
   major: string;
-  studentId: number;
   email: string;
   name: string;
   profile: string;
@@ -37,15 +36,14 @@ export class UserSignUpRequest {
   salt: string;
 
   constructor(req: Request) {
-    this.password = req.body.password;
-    this.id = req.body.id;
-    this.univ = req.body.univ;
-    this.major = req.body.major;
-    this.studentId = req.body.studentId;
-    this.email = req.body.email;
-    this.name = req.body.name;
+    this.password = req.body.userInfo.password;
+    this.id = req.body.userInfo.id;
+    this.univ = req.body.userInfo.univ;
+    this.major = req.body.userInfo.major;
+    this.email = req.body.userInfo.email;
+    this.name = req.body.userInfo.name;
+    this.interest = req.body.userInfo.interest;
     this.profile = req.body.profile;
-    this.interest = req.body.interest;
     this.hashed = '';
     this.salt = '';
   }

@@ -7,7 +7,6 @@ import {
   Request,
   Body,
   Response,
-  // Middlewares,
   Get,
   Middlewares
 } from 'tsoa';
@@ -28,7 +27,7 @@ import {
   UserSignUpRequest,
   UserSignUpResponse
 } from '../middleware/user.DTO/user.DTO';
-import { uploadSingle } from '../middleware/upload';
+import { uploadProfile } from '../middleware/upload';
 // import { decodeToken } from '../config/token';
 // import verify from '../middleware/verifyJWT';
 
@@ -40,49 +39,6 @@ export class UserController extends Controller {
     super();
     this.userService = new UserService();
   }
-  // /**
-  //  * Coffect API 테스트 중입니다.
-  //  *
-  //  * @summary Coffect BE Test
-  //  * @param body 유저 정보
-  //  * @returns 요청 성공 여부
-  //  */
-  // @Post('userInfo')
-  // @SuccessResponse('200', 'API 테스트 성공.')
-  // @Response<ITsoaErrorResponse>(400, 'Bad Request', {
-  //   resultType: 'FAIL',
-  //   error: {
-  //     errorCode: 'EC400',
-  //     reason: '회원 정보를 입력하지 않은 유저입니다.',
-  //     data: null
-  //   },
-  //   success: null
-  // })
-  // @Response<ITsoaErrorResponse>(500, 'Internal Server Error', {
-  //   resultType: 'FAIL',
-  //   error: {
-  //     errorCode: 'EC500',
-  //     reason: '서버 오류가 발생했습니다.',
-  //     data: null
-  //   },
-  //   success: null
-  // })
-  // public async testuserInfo(
-  //   @Request() req: ExpressRequest,
-  //   @Body()
-  //   body: {
-  //     userName: string;
-  //   }
-  // ): Promise<ITsoaSuccessResponse<string>> {
-  //   const user: string = body.userName;
-
-  //   if (user === null || user === '') {
-  //     throw new UserNotSignUpError('유저 정보가 없습니다.');
-  //   }
-
-  //   return new TsoaSuccessResponse<string>('API 테스트 중입니다.');
-  // }
-
   /**
    * 로그인
    *
@@ -198,12 +154,12 @@ export class UserController extends Controller {
   }
 
   /**
-   * 회원가입
+   * 회원가입 form-data로 img, userInfo두가지를 따로 보낸다. 이때 userInfo는 json을 직렬화해 보내야하며 img에는 파일을 그대로 첨부해 보낸다.
    *
    * @summary 회원가입
    */
   @Post('signup')
-  @Middlewares(uploadSingle)
+  @Middlewares(uploadProfile)
   @SuccessResponse(200, '회원가입 성공')
   @Response<ITsoaErrorResponse>(500, '데이터베이스 삽입 실패', {
     resultType: 'FAIL',
@@ -211,6 +167,15 @@ export class UserController extends Controller {
       errorCode: 'EC500',
       reason: '서버 오류가 발생했습니다.',
       data: '데이터베이스 삽입에 실패했습니다.'
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(500, '데이터베이스 삽입 실패', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR2',
+      reason: '서버에 사진을 올리는중 오류가 발생했습니다.',
+      data: '사진을 올리는 중 오류가 발생했습니다'
     },
     success: null
   })
@@ -232,18 +197,15 @@ export class UserController extends Controller {
         id: string;
         univ: string;
         major: string;
-        studentId: number;
         email: string;
         name: string;
-        profile: string;
         interest: number[];
       };
+      profile: string;
     }
   ): Promise<ITsoaSuccessResponse<UserSignUpResponse>> {
-    console.log(typeof req.body.userInfo);
-    // 개선중
-    // const singUpInfo = new UserSignUpRequest(req);
-    // await this.userService.signUpService(singUpInfo);
+    const singUpInfo = new UserSignUpRequest(req);
+    await this.userService.signUpService(singUpInfo);
     return new TsoaSuccessResponse('회원가입 성공');
   }
 

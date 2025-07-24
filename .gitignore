@@ -11,3 +11,5 @@
 # tsoa generated files
 ./src/config/swagger.json
 ./src/routes/tsoaRoutes.ts
+
+/ERD.svg

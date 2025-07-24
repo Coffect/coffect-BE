@@ -74,6 +74,52 @@ const models: TsoaRoute.Models = {
         "additionalProperties": false,
     },
     // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DeptList": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"dept":{"dataType":"string","required":true},"college":{"dataType":"string","required":true},"univ":{"dataType":"string","required":true},"location":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "DeptSearchResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "deptList": {"dataType":"array","array":{"dataType":"refAlias","ref":"DeptList"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "ITsoaSuccessResponse_DeptSearchResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "resultType": {"dataType":"string","required":true},
+            "error": {"dataType":"enum","enums":[null],"required":true},
+            "success": {"ref":"DeptSearchResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UnivList": {
+        "dataType": "refAlias",
+        "type": {"dataType":"nestedObjectLiteral","nestedProperties":{"location":{"dataType":"union","subSchemas":[{"dataType":"string"},{"dataType":"enum","enums":[null]}],"required":true},"name":{"dataType":"string","required":true}},"validators":{}},
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "UnivSearchResponse": {
+        "dataType": "refObject",
+        "properties": {
+            "univList": {"dataType":"array","array":{"dataType":"refAlias","ref":"UnivList"},"required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+    "TsoaSuccessResponse_UnivSearchResponse_": {
+        "dataType": "refObject",
+        "properties": {
+            "resultType": {"dataType":"string","default":"SUCCESS"},
+            "error": {"dataType":"any","default":null},
+            "success": {"ref":"UnivSearchResponse","required":true},
+        },
+        "additionalProperties": false,
+    },
+    // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
     "ThreadType": {
         "dataType": "refEnum",
         "enums": ["아티클","팀원모집","질문"],
@@ -250,7 +296,7 @@ export function RegisterRoutes(app: Router) {
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
         const argsUserController_signup: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"userInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"interest":{"dataType":"array","array":{"dataType":"double"},"required":true},"profile":{"dataType":"string","required":true},"name":{"dataType":"string","required":true},"email":{"dataType":"string","required":true},"studentId":{"dataType":"double","required":true},"major":{"dataType":"string","required":true},"univ":{"dataType":"string","required":true},"id":{"dataType":"string","required":true},"password":{"dataType":"string","required":true}},"required":true}}},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"profile":{"dataType":"string","required":true},"userInfo":{"dataType":"nestedObjectLiteral","nestedProperties":{"interest":{"dataType":"array","array":{"dataType":"double"},"required":true},"name":{"dataType":"string","required":true},"email":{"dataType":"string","required":true},"major":{"dataType":"string","required":true},"univ":{"dataType":"string","required":true},"id":{"dataType":"string","required":true},"password":{"dataType":"string","required":true}},"required":true}}},
         };
         app.post('/user/signup',
             ...(fetchMiddlewares<RequestHandler>(UserController)),
@@ -310,31 +356,93 @@ export function RegisterRoutes(app: Router) {
             }
         });
         // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
-        const argsUnivController_certify: Record<string, TsoaRoute.ParameterSchema> = {
+        const argsUnivController_dept: Record<string, TsoaRoute.ParameterSchema> = {
                 req: {"in":"request","name":"req","required":true,"dataType":"object"},
-                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"univMail":{"dataType":"string","required":true}}},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"search":{"dataType":"string","required":true},"univName":{"dataType":"string","required":true}}},
         };
-        app.post('/univ/cerfify',
+        app.post('/univ/dept',
             ...(fetchMiddlewares<RequestHandler>(UnivController)),
-            ...(fetchMiddlewares<RequestHandler>(UnivController.prototype.certify)),
+            ...(fetchMiddlewares<RequestHandler>(UnivController.prototype.dept)),
 
-            async function UnivController_certify(request: ExRequest, response: ExResponse, next: any) {
+            async function UnivController_dept(request: ExRequest, response: ExResponse, next: any) {
 
             // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
 
             let validatedArgs: any[] = [];
             try {
-                validatedArgs = templateService.getValidatedArgs({ args: argsUnivController_certify, request, response });
+                validatedArgs = templateService.getValidatedArgs({ args: argsUnivController_dept, request, response });
 
                 const controller = new UnivController();
 
               await templateService.apiHandler({
-                methodName: 'certify',
+                methodName: 'dept',
                 controller,
                 response,
                 next,
                 validatedArgs,
-                successStatus: undefined,
+                successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsUnivController_search: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"univName":{"dataType":"string","required":true}}},
+        };
+        app.post('/univ/search',
+            ...(fetchMiddlewares<RequestHandler>(UnivController)),
+            ...(fetchMiddlewares<RequestHandler>(UnivController.prototype.search)),
+
+            async function UnivController_search(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsUnivController_search, request, response });
+
+                const controller = new UnivController();
+
+              await templateService.apiHandler({
+                methodName: 'search',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 200,
+              });
+            } catch (err) {
+                return next(err);
+            }
+        });
+        // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+        const argsUnivController_cert: Record<string, TsoaRoute.ParameterSchema> = {
+                req: {"in":"request","name":"req","required":true,"dataType":"object"},
+                body: {"in":"body","name":"body","required":true,"dataType":"nestedObjectLiteral","nestedProperties":{"email":{"dataType":"string","required":true},"certCode":{"dataType":"double","required":true}}},
+        };
+        app.post('/univ/cert',
+            ...(fetchMiddlewares<RequestHandler>(UnivController)),
+            ...(fetchMiddlewares<RequestHandler>(UnivController.prototype.cert)),
+
+            async function UnivController_cert(request: ExRequest, response: ExResponse, next: any) {
+
+            // WARNING: This file was auto-generated with tsoa. Please do not modify it. Re-run tsoa to re-generate this file: https://github.com/lukeautry/tsoa
+
+            let validatedArgs: any[] = [];
+            try {
+                validatedArgs = templateService.getValidatedArgs({ args: argsUnivController_cert, request, response });
+
+                const controller = new UnivController();
+
+              await templateService.apiHandler({
+                methodName: 'cert',
+                controller,
+                response,
+                next,
+                validatedArgs,
+                successStatus: 200,
               });
             } catch (err) {
                 return next(err);

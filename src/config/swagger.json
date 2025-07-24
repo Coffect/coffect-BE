@@ -136,6 +136,118 @@
 				"type": "object",
 				"additionalProperties": false
 			},
+			"DeptList": {
+				"properties": {
+					"dept": {
+						"type": "string"
+					},
+					"college": {
+						"type": "string"
+					},
+					"univ": {
+						"type": "string"
+					},
+					"location": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"dept",
+					"college",
+					"univ",
+					"location"
+				],
+				"type": "object"
+			},
+			"DeptSearchResponse": {
+				"properties": {
+					"deptList": {
+						"items": {
+							"$ref": "#/components/schemas/DeptList"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"deptList"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"ITsoaSuccessResponse_DeptSearchResponse_": {
+				"properties": {
+					"resultType": {
+						"type": "string"
+					},
+					"error": {
+						"type": "number",
+						"enum": [
+							null
+						],
+						"nullable": true
+					},
+					"success": {
+						"$ref": "#/components/schemas/DeptSearchResponse"
+					}
+				},
+				"required": [
+					"resultType",
+					"error",
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"UnivList": {
+				"properties": {
+					"location": {
+						"type": "string",
+						"nullable": true
+					},
+					"name": {
+						"type": "string"
+					}
+				},
+				"required": [
+					"location",
+					"name"
+				],
+				"type": "object"
+			},
+			"UnivSearchResponse": {
+				"properties": {
+					"univList": {
+						"items": {
+							"$ref": "#/components/schemas/UnivList"
+						},
+						"type": "array"
+					}
+				},
+				"required": [
+					"univList"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
+			"TsoaSuccessResponse_UnivSearchResponse_": {
+				"properties": {
+					"resultType": {
+						"type": "string",
+						"default": "SUCCESS"
+					},
+					"error": {
+						"default": null
+					},
+					"success": {
+						"$ref": "#/components/schemas/UnivSearchResponse"
+					}
+				},
+				"required": [
+					"success"
+				],
+				"type": "object",
+				"additionalProperties": false
+			},
 			"ThreadType": {
 				"enum": [
 					"아티클",
@@ -665,13 +777,24 @@
 											},
 											"success": null
 										}
+									},
+									"Example 2": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "ERR2",
+												"reason": "서버에 사진을 올리는중 오류가 발생했습니다.",
+												"data": "사진을 올리는 중 오류가 발생했습니다"
+											},
+											"success": null
+										}
 									}
 								}
 							}
 						}
 					}
 				},
-				"description": "회원가입",
+				"description": "회원가입 form-data로 img, userInfo두가지를 따로 보낸다. 이때 userInfo는 json을 직렬화해 보내야하며 img에는 파일을 그대로 첨부해 보낸다.",
 				"summary": "회원가입",
 				"tags": [
 					"User Controller"
@@ -684,6 +807,9 @@
 						"application/json": {
 							"schema": {
 								"properties": {
+									"profile": {
+										"type": "string"
+									},
 									"userInfo": {
 										"properties": {
 											"interest": {
@@ -693,18 +819,11 @@
 												},
 												"type": "array"
 											},
-											"profile": {
-												"type": "string"
-											},
 											"name": {
 												"type": "string"
 											},
 											"email": {
 												"type": "string"
-											},
-											"studentId": {
-												"type": "number",
-												"format": "double"
 											},
 											"major": {
 												"type": "string"
@@ -721,10 +840,8 @@
 										},
 										"required": [
 											"interest",
-											"profile",
 											"name",
 											"email",
-											"studentId",
 											"major",
 											"univ",
 											"id",
@@ -734,6 +851,7 @@
 									}
 								},
 								"required": [
+									"profile",
 									"userInfo"
 								],
 								"type": "object"
@@ -808,12 +926,19 @@
 				}
 			}
 		},
-		"/univ/cerfify": {
+		"/univ/dept": {
 			"post": {
-				"operationId": "Certify",
+				"operationId": "Dept",
 				"responses": {
-					"204": {
-						"description": "No content"
+					"200": {
+						"description": "검색 성공",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_DeptSearchResponse_"
+								}
+							}
+						}
 					}
 				},
 				"tags": [
@@ -827,12 +952,173 @@
 						"application/json": {
 							"schema": {
 								"properties": {
-									"univMail": {
+									"search": {
+										"type": "string"
+									},
+									"univName": {
 										"type": "string"
 									}
 								},
 								"required": [
-									"univMail"
+									"search",
+									"univName"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/univ/search": {
+			"post": {
+				"operationId": "Search",
+				"responses": {
+					"200": {
+						"description": "검색 성공",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/TsoaSuccessResponse_UnivSearchResponse_"
+								}
+							}
+						}
+					},
+					"500": {
+						"description": "서버에러",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "ERR-0",
+												"reason": "Unknown server error.",
+												"data": null
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "대학교를 검색한다",
+				"summary": "대학교 검색",
+				"tags": [
+					"Univ Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"univName": {
+										"type": "string"
+									}
+								},
+								"required": [
+									"univName"
+								],
+								"type": "object"
+							}
+						}
+					}
+				}
+			}
+		},
+		"/univ/cert": {
+			"post": {
+				"operationId": "Cert",
+				"responses": {
+					"200": {
+						"description": "인증에 성공했습니다",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaSuccessResponse_string_"
+								}
+							}
+						}
+					},
+					"401": {
+						"description": "인증코드가 만료되었습니다.",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/ITsoaErrorResponse"
+								},
+								"examples": {
+									"Example 1": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "EC1",
+												"reason": "인증코드가 일치하지 않습니다.",
+												"data": "인증코드가 일치하지 않습니다."
+											},
+											"success": null
+										}
+									},
+									"Example 2": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "EC2",
+												"reason": "인증코드가 유효하지 않습니다.",
+												"data": "인증코드가 유효하지 않습니다."
+											},
+											"success": null
+										}
+									},
+									"Example 3": {
+										"value": {
+											"resultType": "FAIL",
+											"error": {
+												"errorCode": "EC3",
+												"reason": "인증코드가 만료되었습니다,",
+												"data": "인증코드가 만료되었습니다."
+											},
+											"success": null
+										}
+									}
+								}
+							}
+						}
+					}
+				},
+				"description": "메일 인증번호가 일치하는지 확인한다",
+				"summary": "이메일 인증번호 확인",
+				"tags": [
+					"Univ Controller"
+				],
+				"security": [],
+				"parameters": [],
+				"requestBody": {
+					"required": true,
+					"content": {
+						"application/json": {
+							"schema": {
+								"properties": {
+									"email": {
+										"type": "string"
+									},
+									"certCode": {
+										"type": "number",
+										"format": "double"
+									}
+								},
+								"required": [
+									"email",
+									"certCode"
 								],
 								"type": "object"
 							}
@@ -913,7 +1199,7 @@
 						}
 					}
 				},
-				"description": "\r\n게시글 업로드 API",
+				"description": "\n게시글 업로드 API",
 				"summary": "게시글 업로드",
 				"tags": [
 					"Thread Controller"
