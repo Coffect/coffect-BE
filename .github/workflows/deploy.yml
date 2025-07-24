@@ -45,11 +45,11 @@ jobs:
           # 변경된 파일들 분석 (안전한 방식)
           CHANGED_FILES=$(git diff HEAD^1 --name-only | tr '\n' ' ')
           echo "changed-files=${CHANGED_FILES}" >> $GITHUB_OUTPUT
-          
+
           # package.json/package-lock.json 변경 확인
           PACKAGE_CHANGED=$(git diff HEAD^1 --name-only | grep -E "(package\.json|package-lock\.json)" || echo "")
           echo "package-changed=${PACKAGE_CHANGED}" >> $GITHUB_OUTPUT
-          
+
           # 소스 코드 변경 확인
           SOURCE_CHANGED=$(git diff HEAD^1 --name-only | grep -E "\.(ts|js)$" || echo "")
           if [ ! -z "$SOURCE_CHANGED" ]; then
@@ -57,7 +57,7 @@ jobs:
           else
             echo "source-changed=false" >> $GITHUB_OUTPUT
           fi
-          
+
           # Prisma 스키마 변경 확인
           PRISMA_CHANGED=$(git diff HEAD^1 --name-only | grep "prisma/" || echo "")
           if [ ! -z "$PRISMA_CHANGED" ]; then
@@ -65,11 +65,11 @@ jobs:
           else
             echo "prisma-changed=false" >> $GITHUB_OUTPUT
           fi
-          
+
           # 원격 dependencies 상태 확인
           REMOTE_DEPS_EXISTS=$(ssh playground-umc-8th "test -d /home/ubuntu/coffect-BE/node_modules && echo 'true' || echo 'false'")
           echo "remote-deps-exists=${REMOTE_DEPS_EXISTS}" >> $GITHUB_OUTPUT
-          
+
           # package-lock.json 해시 비교
           DEPS_INSTALL_NEEDED="false"
           if [ "$REMOTE_DEPS_EXISTS" = "false" ] || [ ! -z "$PACKAGE_CHANGED" ]; then
@@ -82,7 +82,7 @@ jobs:
             fi
           fi
           echo "deps-install-needed=${DEPS_INSTALL_NEEDED}" >> $GITHUB_OUTPUT
-          
+
           echo "=== 변경 분석 결과 ==="
           echo "Dependencies 설치 필요: ${DEPS_INSTALL_NEEDED}"
           echo "Package 변경: ${PACKAGE_CHANGED:-없음}"
@@ -101,7 +101,7 @@ jobs:
               cp /home/ubuntu/coffect-BE/package-lock.json /home/ubuntu/coffect-BE-backup/ 2>/dev/null || true
             fi
           '
-          
+
           # 변경된 파일이 있는지 확인
           CHANGED_COUNT=$(git diff HEAD^1 --name-only | wc -l)
           if [ "$CHANGED_COUNT" -gt 0 ]; then
@@ -268,7 +268,7 @@ jobs:
             echo "🚀 애플리케이션 시작 중..."
             
             # package.json의 start 스크립트 확인
-            START_SCRIPT="npm run dev"
+            START_SCRIPT="npm run start"
             echo "📋 사용할 시작 명령어: $START_SCRIPT"
             
             # 백그라운드에서 애플리케이션 시작
