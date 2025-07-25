@@ -11,7 +11,12 @@
         "name": "Authorization",
         "in": "header"
       }
-    }
+    },
+    "security": [
+      {
+        "jwt_token": []
+      }
+    ]
   },
   "routes": {
     "routesDir": "src/routes",
