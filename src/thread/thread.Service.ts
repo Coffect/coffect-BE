@@ -3,6 +3,9 @@ import { BodyToAddThread } from './thread.Model';
 
 import { addThreadRepository } from './thread.Repository';
 
+export class ThreadService {
+  constructor() {}
+}
 export const addThreadService = async (
   newThread: BodyToAddThread
 ): Promise<string> => {
