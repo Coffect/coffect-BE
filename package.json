@@ -4,11 +4,11 @@
   "description": "Coffect BackEnd Repository",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "npm run lint && tsoa spec-and-routes && tsc",
-    "start": "node src/index.js",
+    "build": "tsoa spec-and-routes && tsc",
+    "start": "npx prisma generate && npm run build && node ./dist/index.js",
     "lint": "eslint src/**/*.ts --fix --ext .ts",
     "prisma": "npx prisma generate --schema=prisma/schema.prisma",
-    "dev": "npx prisma generate && npm run build && nodemon --watch '*.ts' --exec ts-node src/index.ts"
+    "dev": "npx prisma generate && npm run lint && npm run build && nodemon --watch '*.ts' --exec ts-node src/index.ts"
   },
   "author": "",
   "license": "ISC",
