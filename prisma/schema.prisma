@@ -3,10 +3,10 @@ generator client {
   output   = "../node_modules/.prisma/client"
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-  output   = "../ERD.svg"
-}
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "../ERD.svg"
+// }
 
 datasource db {
   provider = "mysql"
