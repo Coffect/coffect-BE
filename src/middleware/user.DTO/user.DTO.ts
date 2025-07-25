@@ -36,15 +36,22 @@ export class UserSignUpRequest {
   salt: string;
 
   constructor(req: Request) {
-    this.password = req.body.userInfo.password;
-    this.id = req.body.userInfo.id;
-    this.univ = req.body.userInfo.univ;
-    this.major = req.body.userInfo.major;
-    this.email = req.body.userInfo.email;
-    this.name = req.body.userInfo.name;
-    this.interest = req.body.userInfo.interest;
-    this.profile = req.body.profile;
+    this.password = req.body.password;
+    this.id = req.body.id;
+    this.univ = req.body.univ;
+    this.major = req.body.major;
+    this.email = req.body.email;
+    this.name = req.body.name;
+    this.profile = '';
     this.hashed = '';
     this.salt = '';
+
+    if (req.body.interest === '') {
+      this.interest = [];
+    } else {
+      this.interest = req.body.interest
+        .split(',')
+        .map((s: any) => Number(s.trim()));
+    }
   }
 }

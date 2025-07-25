@@ -8,12 +8,10 @@ import {
   Body,
   Response,
   Get,
-  Middlewares
+  FormField,
+  UploadedFile
 } from 'tsoa';
-import {
-  Request as ExpressRequest
-  // Response as ExpressResponse
-} from 'express';
+import { Request as ExpressRequest } from 'express';
 
 import {
   ITsoaErrorResponse,
@@ -27,9 +25,6 @@ import {
   UserSignUpRequest,
   UserSignUpResponse
 } from '../middleware/user.DTO/user.DTO';
-import { uploadProfile } from '../middleware/upload';
-// import { decodeToken } from '../config/token';
-// import verify from '../middleware/verifyJWT';
 
 @Route('user')
 @Tags('User Controller')
@@ -69,7 +64,7 @@ export class UserController extends Controller {
   public async login(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       userPassword: string;
       userId: string;
     }
@@ -159,7 +154,6 @@ export class UserController extends Controller {
    * @summary 회원가입
    */
   @Post('signup')
-  @Middlewares(uploadProfile)
   @SuccessResponse(200, '회원가입 성공')
   @Response<ITsoaErrorResponse>(500, '데이터베이스 삽입 실패', {
     resultType: 'FAIL',
@@ -190,22 +184,17 @@ export class UserController extends Controller {
   })
   public async signup(
     @Request() req: ExpressRequest,
-    @Body()
-      body: {
-      userInfo: {
-        password: string;
-        id: string;
-        univ: string;
-        major: string;
-        email: string;
-        name: string;
-        interest: number[];
-      };
-      profile: string;
-    }
+    @FormField() id: string,
+    @FormField() password: string,
+    @FormField() univ: string,
+    @FormField() major: string,
+    @FormField() email: string,
+    @FormField() name: string,
+    @FormField() interest: number[],
+    @UploadedFile() img: Express.Multer.File
   ): Promise<ITsoaSuccessResponse<UserSignUpResponse>> {
     const singUpInfo = new UserSignUpRequest(req);
-    await this.userService.signUpService(singUpInfo);
+    await this.userService.signUpService(singUpInfo, img);
     return new TsoaSuccessResponse('회원가입 성공');
   }
 

@@ -20,6 +20,7 @@ import { UserModel } from './user.Model';
 import { createHashedPassword, verifyPassword } from '../config/crypto';
 import { JwtTokenInvaild } from '../middleware/error';
 import { Request } from 'express';
+import { uploadToS3 } from '../config/s3';
 
 export class UserService {
   private userModel: UserModel;
@@ -70,22 +71,27 @@ export class UserService {
       );
       return new UserLoginResponse(newAccessToken, newRefreshToken);
     }
-
     throw new JwtTokenInvaild(
       'DB에 사용자 로그인 정보가 존재하지 않습니다. 다시 로그인해주세요'
     );
   }
 
-  public async signUpService(info: UserSignUpRequest) {
+  public async signUpService(
+    info: UserSignUpRequest,
+    img: Express.Multer.File
+  ) {
     await this.idCheckService(info.id);
     const { hashedPassword, userSalt } = await createHashedPassword(
       info.password
     );
     info.hashed = hashedPassword;
     info.salt = userSalt;
+    info.profile = await uploadToS3(img); //TODO:프로필 사진을 업로드 하지 않으면 어떻게 처리할지 고민
+
     try {
       await this.userModel.insertUser(info);
     } catch (err) {
+      console.log(err);
       throw new UserServerError('데이터베이스 삽입에 실패했습니다.');
     }
   }
