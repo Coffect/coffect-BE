@@ -60,11 +60,13 @@ export class UserModel {
         profileImage: info.profile
       }
     });
-    const userId = createdUser.userId;
-    for (const index of info.interest) {
-      await prisma.categoryMatch.create({
-        data: { userId: userId, categotyId: index }
-      });
+    if (info.interest.length !== 0) {
+      const userId = createdUser.userId;
+      for (const index of info.interest) {
+        await prisma.categoryMatch.create({
+          data: { userId: userId, categotyId: index }
+        });
+      }
     }
   }
 }
