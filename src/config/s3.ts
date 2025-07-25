@@ -18,7 +18,8 @@ const upload = multer({
   storage: multerS3({
     s3: settingS3,
     bucket: process.env.S3_NAME || '',
-    // acl: 'public-read', // 공개적으로 읽을 수 있게 설정
+    acl: 'private',
+    contentType: multerS3.AUTO_CONTENT_TYPE,
     metadata: function (req, file, cb) {
       cb(null, { fileName: file.filename });
     },
