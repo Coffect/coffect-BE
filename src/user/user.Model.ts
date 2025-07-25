@@ -50,9 +50,8 @@ export class UserModel {
   }
 
   public async insertUser(info: UserSignUpRequest) {
-    const q = await prisma.user.create({
+    const createdUser = await prisma.user.create({
       data: {
-        userId: 2, // 자동 생성으로 굳이 insert 문에 작성하지 않도록 만들어야함
         id: info.id,
         password: info.hashed,
         mail: info.email,
@@ -61,6 +60,11 @@ export class UserModel {
         profileImage: info.profile
       }
     });
-    console.log(q);
+    const userId = createdUser.userId;
+    for (const index of info.interest) {
+      await prisma.categoryMatch.create({
+        data: { userId: userId, categotyId: index }
+      });
+    }
   }
 }

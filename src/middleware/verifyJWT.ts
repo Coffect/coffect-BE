@@ -17,7 +17,7 @@ const verify = async (
 ): Promise<any> => {
   try {
     const auth = req.headers.authorization || '';
-    const decoded = await verifyToken(auth, true);
+    const decoded = await verifyToken(auth);
     req.decoded = decoded;
     return next();
   } catch (err: any) {
