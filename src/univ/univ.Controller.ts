@@ -40,9 +40,22 @@ export class UnivController extends Controller {
     super();
     this.univService = new UnivService();
   }
-
+  /**
+   * 대학교 학과를 검색한다
+   *
+   * @summary 대학교 학과 검색
+   */
   @Post('dept')
   @SuccessResponse(200, '검색 성공')
+  @Response<ITsoaErrorResponse>(500, '서버에러', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-0',
+      reason: 'Unknown server error.',
+      data: null
+    },
+    success: null
+  })
   public async dept(
     @Request() req: ExpressRequest,
     @Body() body: { univName: string; search: string }
@@ -106,6 +119,15 @@ export class UnivController extends Controller {
       errorCode: 'EC3',
       reason: '인증코드가 만료되었습니다,',
       data: '인증코드가 만료되었습니다.'
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(500, '서버에러', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-0',
+      reason: 'Unknown server error.',
+      data: null
     },
     success: null
   })
