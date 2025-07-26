@@ -2,12 +2,12 @@ import { Body, Controller, Get, Middlewares, Post, Request, Response, Route, Suc
 import { ITsoaErrorResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import verify from '../middleware/verifyJWT';
 import { Request as ExpressRequest } from 'express';
-import { nonUser } from './profile.Message';
-import { FollowService } from './profile.Service';
+import { nonProfile, nonUser } from './profile.Message';
+import { FollowService, specifyProfileService } from './profile.Service';
+import { specifyFeedDTO, specifyProfileDTO } from '../middleware/profile.DTO/profile.DTO';
 
 @Route('follow')
 @Tags('Follow Controller')
-
 export class FollowController extends Controller {
   private FollowService : FollowService;
 
@@ -117,4 +117,104 @@ export class FollowController extends Controller {
 
    return new TsoaSuccessResponse<number[]>(result);
  };
+}
+
+@Route('specifyProfile')
+@Tags('specifyProfile Controller')
+export class specifyProfileController extends Controller {
+  private specifyProfileService : specifyProfileService;
+
+  constructor() {
+    super();
+    this.specifyProfileService = new specifyProfileService();
+  }
+
+  @Get('showProfile')
+  @Middlewares(verify)
+  @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
+  @Response<ITsoaErrorResponse> (
+    400,
+    'Bad Request',
+    {
+      resultType : 'FAIL',
+      error : {
+        errorCode : 'PE400',
+        reason : '프로필 조회에 실패하였습니다.',
+        data : null
+      },
+      success: null
+    })
+  @Response<ITsoaErrorResponse>(
+    500,
+    'Internal Server Error',
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE500',
+        reason: '서버 오류가 발생했습니다.',
+        data: null
+      },
+      success: null
+    })
+    public async showProfile(
+      @Request() req : ExpressRequest,
+      @Body() body : {
+        userId : number;
+      }
+    ):Promise<TsoaSuccessResponse<specifyProfileDTO>> {
+      const {userId} = body;
+
+      if(userId == undefined || !userId) {
+        throw new nonProfile('상대방 Id가 존재하지 않거나 누락되었습니다.');
+      }
+
+      const result = await this.specifyProfileService.showProfileService(userId);
+
+      return new TsoaSuccessResponse<specifyProfileDTO>(result);
+    };
+
+    @Get('showAllFeed')
+    @Middlewares(verify)
+    @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
+    @Response<ITsoaErrorResponse>(
+      400,
+      'Bad Request',
+      {
+        resultType : 'FAIL',
+        error : {
+          errorCode : 'PE400',
+          reason : '프로필 조회에 실패하였습니다.',
+          data : null
+        },
+        success : null
+      })
+    @Response<ITsoaErrorResponse>(
+      500,
+      'Internal Server Error',
+      {
+        resultType: 'FAIL',
+        error: {
+          errorCode: 'HE500',
+          reason: '서버 오류가 발생했습니다.',
+          data: null
+        },
+        success: null
+      })
+      public async showAllFeed(
+        @Request() req : ExpressRequest,
+        @Body() body : {
+          userId : number;
+        }
+      ):Promise<TsoaSuccessResponse<specifyFeedDTO[]>> {
+        const {userId} = body;
+
+        if(userId == undefined || !userId) {
+          throw new nonUser('상대방 Id가 존재하지 않거나 누락되었습니다.');
+        }
+
+        const result = await this.specifyProfileService.showAllFeedService(userId);
+
+        return new TsoaSuccessResponse<specifyFeedDTO[]>(result);
+      };
+  
 }

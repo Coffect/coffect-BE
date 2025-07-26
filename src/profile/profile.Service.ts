@@ -1,4 +1,5 @@
-import { FollowModel } from './follow.Model';
+import { specifyFeedDTO, specifyProfileDTO } from '../middleware/profile.DTO/profile.DTO';
+import { FollowModel, specifyProfileModel } from './profile.Model';
 
 export class FollowService {
   private FollowModel: FollowModel;
@@ -6,7 +7,6 @@ export class FollowService {
   constructor() {
     this.FollowModel = new FollowModel();
   }
-
 
   public async FollowRequestService(
     userId: number,
@@ -22,5 +22,32 @@ export class FollowService {
     
     return result;
   };
+};
 
+export class specifyProfileService {
+  private specifyProfileModel : specifyProfileModel;
+
+  constructor() {
+    this.specifyProfileModel = new specifyProfileModel();
+  }
+
+  public async showProfileService(
+    userId : number
+  ):Promise<specifyProfileDTO> {
+    const result = await this.specifyProfileModel.showProfileModel(userId);
+
+    return result;
+  };
+
+
+  public async showAllFeedService(
+    userId : number
+  ):Promise<specifyFeedDTO[]> {
+    // 프로필 먼저 조회
+    const profile = await this.specifyProfileModel.showProfileModel(userId);
+    // feed 조회
+    const result = await this.specifyProfileModel.showAllFeedModel(profile ,userId);
+
+    return result;
+  }
 }

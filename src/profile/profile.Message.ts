@@ -6,3 +6,8 @@ export class nonUser extends BasicError {
   }
 };
 
+export class nonProfile extends BasicError {
+  constructor(description: string) {
+    super(400, 'PE400', '프로필 조회에 실패하였습니다.', description);
+  }
+};
