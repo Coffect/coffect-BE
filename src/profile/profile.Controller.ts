@@ -129,6 +129,13 @@ export class specifyProfileController extends Controller {
     this.specifyProfileService = new specifyProfileService();
   }
 
+  /**
+   * Coffect coffeeChat Profile API.
+   * 
+   * @summary 프로필 조회 API
+   * @param body 유저 Token & 해당 UserId
+   * @returns 요청 성공 여부
+   */
   @Get('showProfile')
   @Middlewares(verify)
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
@@ -173,6 +180,13 @@ export class specifyProfileController extends Controller {
       return new TsoaSuccessResponse<specifyProfileDTO>(result);
     };
 
+    /**
+   * Coffect coffeeChat Profile API.
+   * 
+   * @summary 전체적인 피드 조회 API
+   * @param body 유저 Token & 해당 UserId
+   * @returns 요청 성공 여부
+   */
     @Get('showAllFeed')
     @Middlewares(verify)
     @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
@@ -183,7 +197,7 @@ export class specifyProfileController extends Controller {
         resultType : 'FAIL',
         error : {
           errorCode : 'PE400',
-          reason : '프로필 조회에 실패하였습니다.',
+          reason : '없는 유저입니다.',
           data : null
         },
         success : null
@@ -215,6 +229,58 @@ export class specifyProfileController extends Controller {
         const result = await this.specifyProfileService.showAllFeedService(userId);
 
         return new TsoaSuccessResponse<specifyFeedDTO[]>(result);
+      };
+
+
+    /**
+   * Coffect coffeeChat Profile API.
+   * 
+   * @summary 피드 갯수 세는 API
+   * @param body 유저 Token & 해당 UserId
+   * @returns 요청 성공 여부
+   */
+    @Get('showFeedCount')
+    @Middlewares(verify)
+    @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
+    @Response<ITsoaErrorResponse>(
+      400,
+      'Bad Request',
+      {
+        resultType : 'FAIL',
+        error : {
+          errorCode : 'PE400',
+          reason : '없는 유저입니다.',
+          data : null
+        },
+        success : null
+      })
+    @Response<ITsoaErrorResponse>(
+      500,
+      'Internal Server Error',
+      {
+        resultType: 'FAIL',
+        error: {
+          errorCode: 'HE500',
+          reason: '서버 오류가 발생했습니다.',
+          data: null
+        },
+        success: null
+      })
+      public async ShowFeedCount(
+        @Request() req : ExpressRequest,
+        @Body() body : {
+          userId : number;
+        }
+      ):Promise<TsoaSuccessResponse<number>> {
+        const {userId} = body;
+
+        if(userId == undefined || !userId) {
+          throw new nonUser('상대방 Id가 존재하지 않거나 누락되었습니다.');
+        }
+
+        const result = await this.specifyProfileService.ShowFeedCountService(userId);
+
+        return new TsoaSuccessResponse<number>(result);
       };
   
 }

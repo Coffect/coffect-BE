@@ -86,7 +86,7 @@ export class specifyProfileModel {
       result.introduce = '';
     }
     return new specifyProfileDTO(result.name, result.introduce, result.profileImage);
-  }
+  };
 
   /** feed 조회 */
   public async showAllFeedModel(
@@ -107,6 +107,18 @@ export class specifyProfileModel {
     });
 
     return feed;
-  }
+  };
+
+
+  /** feed 갯수 세는 API */
+  public async ShowFeedCountModel(
+    userId : number
+  ):Promise<number> {
+    const result = await prisma.thread.count({
+      where : { userId : userId },
+    });
+
+    return result;
+  };
 
 };

@@ -49,5 +49,13 @@ export class specifyProfileService {
     const result = await this.specifyProfileModel.showAllFeedModel(profile ,userId);
 
     return result;
+  };
+
+  public async ShowFeedCountService (
+    userId : number
+  ):Promise<number> {
+    const result = await this.specifyProfileModel.ShowFeedCountModel(userId);
+
+    return result;
   }
 }
