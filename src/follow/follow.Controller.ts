@@ -2,8 +2,8 @@ import { Body, Controller, Get, Middlewares, Post, Request, Response, Route, Suc
 import { ITsoaErrorResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import verify from '../middleware/verifyJWT';
 import { Request as ExpressRequest } from 'express';
-import { nonProfile, nonUser } from './profile.Message';
-import { FollowService, specifyProfileService } from './profile.Service';
+import { nonProfile, nonUser } from './follow.Message';
+import { FollowService, specifyProfileService } from './follow.Service';
 import { specifyFeedDTO, specifyProfileDTO } from '../middleware/profile.DTO/profile.DTO';
 
 @Route('follow')
@@ -76,7 +76,7 @@ export class FollowController extends Controller {
    * @param body 유저 Token
    * @returns 요청 성공 여부
    */
-   @Get('showUpFollowCount')
+   @Get('showUpFollowCount/{userId}')
    @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
    @Response<ITsoaErrorResponse> (
      400,
@@ -102,21 +102,17 @@ export class FollowController extends Controller {
        },
        success: null
      })
- public async ShowUpFollowCount(
-       @Body() body :{
-          userId : number;
-       }
- ):Promise<TsoaSuccessResponse<number[]>> {
-   const {userId} = body;
+    public async ShowUpFollowCount(
+      userId: number
+    ):Promise<TsoaSuccessResponse<number[]>> {
+      if(userId == undefined || !userId) {
+        throw new nonUser('상대방 Id가 존재하지 않거나 누락되었습니다.');
+      }
 
-   if(userId == undefined || !userId) {
-    throw new nonUser('상대방 Id가 존재하지 않거나 누락되었습니다.');
-   }
+      const result = await this.FollowService.ShowUpFollowCountService(userId);
 
-   const result = await this.FollowService.ShowUpFollowCountService(userId);
-
-   return new TsoaSuccessResponse<number[]>(result);
- };
+      return new TsoaSuccessResponse<number[]>(result);
+    };
 }
 
 @Route('specifyProfile')
@@ -136,7 +132,7 @@ export class specifyProfileController extends Controller {
    * @param body 유저 Token & 해당 UserId
    * @returns 요청 성공 여부
    */
-  @Get('showProfile')
+  @Get('showProfile/{userId}')
   @Middlewares(verify)
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
@@ -163,31 +159,27 @@ export class specifyProfileController extends Controller {
       },
       success: null
     })
-    public async showProfile(
+  public async showProfile(
       @Request() req : ExpressRequest,
-      @Body() body : {
-        userId : number;
-      }
-    ):Promise<TsoaSuccessResponse<specifyProfileDTO>> {
-      const {userId} = body;
+        userId: number
+  ):Promise<TsoaSuccessResponse<specifyProfileDTO>> {
+    if(userId == undefined || !userId) {
+      throw new nonProfile('상대방 Id가 존재하지 않거나 누락되었습니다.');
+    }
 
-      if(userId == undefined || !userId) {
-        throw new nonProfile('상대방 Id가 존재하지 않거나 누락되었습니다.');
-      }
+    const result = await this.specifyProfileService.showProfileService(userId);
 
-      const result = await this.specifyProfileService.showProfileService(userId);
+    return new TsoaSuccessResponse<specifyProfileDTO>(result);
+  };
 
-      return new TsoaSuccessResponse<specifyProfileDTO>(result);
-    };
-
-    /**
+  /**
    * Coffect coffeeChat Profile API.
    * 
    * @summary 전체적인 피드 조회 API
    * @param body 유저 Token & 해당 UserId
    * @returns 요청 성공 여부
    */
-    @Get('showAllFeed')
+        @Get('showAllFeed/{userId}')
     @Middlewares(verify)
     @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
     @Response<ITsoaErrorResponse>(
@@ -214,22 +206,18 @@ export class specifyProfileController extends Controller {
         },
         success: null
       })
-      public async showAllFeed(
+  public async showAllFeed(
         @Request() req : ExpressRequest,
-        @Body() body : {
-          userId : number;
-        }
-      ):Promise<TsoaSuccessResponse<specifyFeedDTO[]>> {
-        const {userId} = body;
+          userId: number
+  ):Promise<TsoaSuccessResponse<specifyFeedDTO[]>> {
+    if(userId == undefined || !userId) {
+      throw new nonUser('상대방 Id가 존재하지 않거나 누락되었습니다.');
+    }
 
-        if(userId == undefined || !userId) {
-          throw new nonUser('상대방 Id가 존재하지 않거나 누락되었습니다.');
-        }
+    const result = await this.specifyProfileService.showAllFeedService(userId);
 
-        const result = await this.specifyProfileService.showAllFeedService(userId);
-
-        return new TsoaSuccessResponse<specifyFeedDTO[]>(result);
-      };
+    return new TsoaSuccessResponse<specifyFeedDTO[]>(result);
+  };
 
 
     /**
@@ -239,7 +227,7 @@ export class specifyProfileController extends Controller {
    * @param body 유저 Token & 해당 UserId
    * @returns 요청 성공 여부
    */
-    @Get('showFeedCount')
+    @Get('showFeedCount/{userId}')
     @Middlewares(verify)
     @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
     @Response<ITsoaErrorResponse>(
@@ -266,21 +254,17 @@ export class specifyProfileController extends Controller {
         },
         success: null
       })
-      public async ShowFeedCount(
+        public async ShowFeedCount(
         @Request() req : ExpressRequest,
-        @Body() body : {
-          userId : number;
-        }
-      ):Promise<TsoaSuccessResponse<number>> {
-        const {userId} = body;
+          userId: number
+        ):Promise<TsoaSuccessResponse<number>> {
+          if(userId == undefined || !userId) {
+            throw new nonUser('상대방 Id가 존재하지 않거나 누락되었습니다.');
+          }
 
-        if(userId == undefined || !userId) {
-          throw new nonUser('상대방 Id가 존재하지 않거나 누락되었습니다.');
-        }
+          const result = await this.specifyProfileService.ShowFeedCountService(userId);
 
-        const result = await this.specifyProfileService.ShowFeedCountService(userId);
-
-        return new TsoaSuccessResponse<number>(result);
-      };
+          return new TsoaSuccessResponse<number>(result);
+        };
   
 }

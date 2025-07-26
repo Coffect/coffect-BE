@@ -1,5 +1,5 @@
 import { specifyFeedDTO, specifyProfileDTO } from '../middleware/profile.DTO/profile.DTO';
-import { FollowModel, specifyProfileModel } from './profile.Model';
+import { FollowModel, specifyProfileModel } from './follow.Model';
 
 export class FollowService {
   private FollowModel: FollowModel;

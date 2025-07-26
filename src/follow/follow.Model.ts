@@ -115,7 +115,7 @@ export class specifyProfileModel {
     userId : number
   ):Promise<number> {
     const result = await prisma.thread.count({
-      where : { userId : userId },
+      where : { userId : userId }
     });
 
     return result;
