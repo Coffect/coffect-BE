@@ -6,7 +6,7 @@ import { HomeService } from './coffeeChat.Service';
 import verify from '../middleware/verifyJWT';
 import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatRecordDetail, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 
-@Route('home')
+@Route('home') 
 @Tags('Home Controller')
 export class HomeController extends Controller {
   private homeService : HomeService;
@@ -186,7 +186,7 @@ export class HomeController extends Controller {
     const { otherUserid, suggestion } = body;
 
     if (!suggestion || suggestion.trim().length === 0) {
-      throw new Error('커피챗 제안 내용이 누락되어있습니다.');
+      throw new nonPostComment('커피챗 제안 내용이 누락되었습니다.');
     }
 
     await this.homeService.postSuggestCoffeeChatService(myUserId, otherUserid, suggestion);
