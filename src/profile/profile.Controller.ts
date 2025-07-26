@@ -2,8 +2,8 @@ import { Body, Controller, Get, Middlewares, Post, Request, Response, Route, Suc
 import { ITsoaErrorResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import verify from '../middleware/verifyJWT';
 import { Request as ExpressRequest } from 'express';
-import { nonUser } from './follow.Message';
-import { FollowService } from './follow.Service';
+import { nonUser } from './profile.Message';
+import { FollowService } from './profile.Service';
 
 @Route('follow')
 @Tags('Follow Controller')
