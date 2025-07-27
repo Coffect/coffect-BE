@@ -1,9 +1,11 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ES2020", // 또는 최소 ES2020
+    "lib": ["ES2021", "DOM"],
     "module": "commonjs",
     "rootDir": "src",
     "outDir": "dist",
+    "typeRoots": ["./@types", "./node_modules/@types"],
     "moduleResolution": "node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
