@@ -64,7 +64,7 @@ export class UserController extends Controller {
   public async login(
     @Request() req: ExpressRequest,
     @Body()
-    body: {
+      body: {
       userPassword: string;
       userId: string;
     }

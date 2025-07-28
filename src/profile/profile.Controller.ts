@@ -29,7 +29,24 @@ export class ProfileController extends Controller {
     this.profileService = new ProfileService();
   }
 
+  /**
+   * 유저의 기본적인 프로필
+   * 쓰레드수, 팔로잉, 팔로워, 유저정보를 반환한다
+   *
+   * @summary 유저 프로필 조회
+   *
+   */
   @Get('/')
+  @Response(200, '조회성공')
+  @Response<ITsoaErrorResponse>(500, '서버에러', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-0',
+      reason: 'Unknown server error.',
+      data: null
+    },
+    success: null
+  })
   @Security('jwt_token')
   public async myprofile(
     @Request() req: Express.Request
