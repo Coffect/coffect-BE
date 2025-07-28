@@ -3,11 +3,6 @@ generator client {
   output   = "../node_modules/.prisma/client"
 }
 
-// generator erd {
-//   provider = "prisma-erd-generator"
-//   output   = "../ERD.svg"
-// }
-
 datasource db {
   provider = "mysql"
   url      = env("DATABASE_HOST")
@@ -27,6 +22,9 @@ model User {
   coffeeChatCount    Int             @default(4)
   todayInterest      Int?            @default(0)
   todayInterestArray Json?
+  dept               String?         @db.VarChar(20)
+  studentId          Int?
+  univId             Int?
   categoryMatch      CategoryMatch[]
   chatJoins          ChatJoin[]
   coffeeChats1       CoffeeChat[]    @relation("FirstUser")
@@ -39,6 +37,9 @@ model User {
   threads            Thread[]
   threadLikes        ThreadLike[]
   threadScraps       ThreadScrap[]
+  UnivList           UnivList?       @relation(fields: [univId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "User_UnivList__fk")
+
+  @@index([univId], map: "User_UnivList__fk")
 }
 
 model UserTimetable {
@@ -238,6 +239,7 @@ model UnivList {
   updated_at   DateTime? @default(now()) @db.DateTime(0)
   name_initial String?   @db.VarChar(50)
   location     String?   @db.VarChar(100)
+  User         User[]
 }
 
 model UnivDept {

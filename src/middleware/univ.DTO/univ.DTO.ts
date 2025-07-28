@@ -17,6 +17,7 @@ export class UnivCertRequest {
   }
 }
 type UnivList = {
+  id: number;
   name: string;
   location: string | null;
 };
