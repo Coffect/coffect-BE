@@ -70,6 +70,7 @@ jobs:
             
             echo "📦 백업 서버 Dependencies 설치 중..."
             npm install
+            npm install pm2
             echo "✅ 백업 서버 Dependencies 설치 완료"
           '
 
@@ -111,7 +112,7 @@ jobs:
           DATABASE_PORT=${{ secrets.DATABASE_PORT }}
           DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
           DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-          EC2_PORT=${{ secrets.EC2_PORT }}
+          EC2_PORT=3002
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_REFRESH=${{ secrets.JWT_REFRESH }}
           S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
