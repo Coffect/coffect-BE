@@ -186,11 +186,12 @@ export class UserController extends Controller {
     @Request() req: ExpressRequest,
     @FormField() id: string,
     @FormField() password: string,
-    @FormField() univ: string,
-    @FormField() major: string,
     @FormField() email: string,
     @FormField() name: string,
     @FormField() interest: number[],
+    @FormField() univId: number,
+    @FormField() dept: string,
+    @FormField() studentId: number,
     @UploadedFile() img: Express.Multer.File
   ): Promise<ITsoaSuccessResponse<UserSignUpResponse>> {
     const singUpInfo = new UserSignUpRequest(req);

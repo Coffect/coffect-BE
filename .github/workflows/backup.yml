@@ -1,0 +1,168 @@
+name: deploy-backup
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Configure SSH for Backup Server
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.BACKUP_SERVER_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          cat > ~/.ssh/config << EOF
+          Host backup-server
+            HostName ${{ secrets.BACKUP_SERVER_HOST }}
+            User ubuntu
+            IdentityFile ~/.ssh/id_rsa
+            StrictHostKeyChecking no
+            UserKnownHostsFile /dev/null
+            LogLevel ERROR
+          EOF
+
+      - name: Test SSH Connection
+        run: ssh backup-server "echo '✅ Backup Server SSH Connection Successful'"
+
+      - name: Sync Files to Backup Server
+        run: |
+          echo "📁 백업 서버로 파일 동기화 중..."
+          rsync -avz --progress \
+            --exclude 'node_modules' \
+            --exclude '.git' \
+            --exclude 'logs' \
+            --exclude 'dist' \
+            --exclude '.env' \
+            ./ backup-server:/home/ubuntu/coffect-BE-backup/
+
+      - name: Setup Backup Server Directory
+        run: |
+          ssh backup-server '
+            # 백업 디렉토리 준비
+            mkdir -p /home/ubuntu/coffect-BE-backup
+            
+            # 기존 .env 백업
+            if [ -f /home/ubuntu/coffect-BE-backup/.env ]; then
+              cp /home/ubuntu/coffect-BE-backup/.env /home/ubuntu/coffect-BE-backup/.env.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
+            fi
+          '
+
+      - name: Install Dependencies on Backup
+        run: |
+          ssh backup-server '
+            cd /home/ubuntu/coffect-BE-backup
+            
+            echo "📦 백업 서버 Dependencies 설치 중..."
+            npm install
+            echo "✅ 백업 서버 Dependencies 설치 완료"
+          '
+
+      - name: Generate Prisma Client on Backup
+        run: |
+          ssh backup-server '
+            cd /home/ubuntu/coffect-BE-backup
+            
+            echo "🔧 백업 서버 Prisma 클라이언트 생성 중..."
+            npx prisma generate --schema=prisma/schema.prisma
+            echo "✅ 백업 서버 Prisma 클라이언트 생성 완료"
+          '
+
+      - name: Fix Source Code Imports on Backup
+        run: |
+          ssh backup-server '
+            cd /home/ubuntu/coffect-BE-backup
+            
+            echo "🔍 백업 서버 Prisma import 경로 수정 중..."
+            
+            # 효율적인 파일 수정
+            find src/ -name "*.ts" -type f | while read file; do
+              if grep -q "generated/prisma" "$file" 2>/dev/null; then
+                echo "수정: $file"
+                sed -i "s|from [\"'\''].*generated/prisma[\"'\'']|from '\''@prisma/client'\''|g" "$file"
+                sed -i "s|require([\"'\''].*generated/prisma[\"'\''])|require('\''@prisma/client'\'')|g" "$file"
+              fi
+            done
+            
+            echo "✅ 백업 서버 Import 경로 수정 완료"
+          '
+
+      - name: Create Environment File for Backup
+        run: |
+          ssh backup-server "cat > /home/ubuntu/coffect-BE-backup/.env << 'EOF'
+          DATABASE_NAME=${{ secrets.DATABASE_NAME }}
+          DATABASE_Endpoint=${{ secrets.DATABASE_Endpoint }}
+          DATABASE_HOST=${{ secrets.DATABASE_HOST }}
+          DATABASE_PORT=${{ secrets.DATABASE_PORT }}
+          DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
+          DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+          EC2_PORT=${{ secrets.EC2_PORT }}
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+          JWT_REFRESH=${{ secrets.JWT_REFRESH }}
+          S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+          S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
+          S3_NAME=${{ secrets.S3_NAME }}
+          ENV=3002
+          EOF"
+
+      - name: Build on Backup
+        run: |
+          ssh backup-server '
+            cd /home/ubuntu/coffect-BE-backup
+            
+            echo "🏗️ 백업 서버 빌드 중..."
+            npm run build
+            echo "✅ 백업 서버 빌드 완료"
+          '
+
+      - name: Stop PM2 Process on Backup
+        run: |
+          ssh backup-server '
+            cd /home/ubuntu/coffect-BE-backup
+            
+            echo "🛑 PM2 프로세스 정리 중..."
+            pm2 stop coffect-backup || true
+            pm2 delete coffect-backup || true
+            echo "✅ PM2 프로세스 정리 완료"
+          '
+
+      - name: Start PM2 Process on Backup
+        run: |
+          ssh backup-server '
+            cd /home/ubuntu/coffect-BE-backup
+            
+            echo "🚀 PM2로 백업 애플리케이션 시작 중..."
+            pm2 start dist/index.js --name coffect-backup
+            echo "✅ PM2 백업 프로세스 시작 완료"
+          '
+
+      - name: Check PM2 Status
+        run: |
+          ssh backup-server '
+            echo "🏥 PM2 상태 확인..."
+            pm2 status
+            echo "✅ 백업 서버 배포 완료"
+          '
+
+      - name: Backup Deployment Summary
+        if: always()
+        run: |
+          echo "📊 백업 서버 배포 완료"
+          echo "============================"
+          echo "✅ 메인 브랜치 변경사항이 백업 서버에 반영되었습니다"
+          echo "✅ PM2로 coffect-backup 프로세스가 실행 중입니다"
+          echo "⏰ 배포 완료: $(date)"

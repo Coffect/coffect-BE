@@ -57,7 +57,10 @@ export class UserModel {
         mail: info.email,
         name: info.name,
         salt: info.salt,
-        profileImage: info.profile
+        profileImage: info.profile,
+        univId: info.univId,
+        dept: info.dept,
+        studentId: info.studentId
       }
     });
     if (info.interest.length !== 0) {
