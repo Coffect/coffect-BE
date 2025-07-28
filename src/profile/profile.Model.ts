@@ -2,7 +2,7 @@ import { prisma } from '../config/prisma.config';
 
 export class ProfileModel {
   public async selectUserProfile(userId: number) {
-    const [threadCount, following, follower, userInfo] = await Promise.all([
+    const data = await Promise.all([
       prisma.thread.count({
         where: { userId: userId }
       }),
@@ -12,7 +12,7 @@ export class ProfileModel {
       prisma.follow.count({
         where: { followerId: userId }
       }),
-      prisma.user.findFirst({
+      prisma.user.findMany({
         where: { userId: userId },
         select: {
           name: true,
@@ -28,6 +28,6 @@ export class ProfileModel {
         }
       })
     ]);
-    console.log(threadCount, following, follower, userInfo);
+    return data;
   }
 }

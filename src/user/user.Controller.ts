@@ -64,7 +64,7 @@ export class UserController extends Controller {
   public async login(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       userPassword: string;
       userId: string;
     }
@@ -186,8 +186,6 @@ export class UserController extends Controller {
     @Request() req: ExpressRequest,
     @FormField() id: string,
     @FormField() password: string,
-    @FormField() univ: string,
-    @FormField() major: string,
     @FormField() email: string,
     @FormField() name: string,
     @FormField() interest: number[],
