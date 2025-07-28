@@ -1,4 +1,4 @@
-import { uploadToS3, replaceFileInS3, deleteFromS3 } from '../config/s3';
+import { uploadToS3 } from '../config/s3';
 import {
   ProfileDTO,
   ProfileUpdateDTO
