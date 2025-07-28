@@ -20,3 +20,26 @@ export class ProfileDTO {
     this.userInfo = data[3] as UserInfo;
   }
 }
+
+export class ProfileUpdateDTO {
+  id: string;
+  name: string;
+  introduce: string;
+  userId: number;
+  img?: Express.Multer.File;
+  profileImage?: string = '';
+
+  constructor(
+    userId: number,
+    id?: string,
+    name?: string,
+    introduce?: string,
+    img?: Express.Multer.File
+  ) {
+    this.id = id || '';
+    this.name = name || '';
+    this.introduce = introduce || '';
+    this.userId = userId;
+    this.img = img;
+  }
+}

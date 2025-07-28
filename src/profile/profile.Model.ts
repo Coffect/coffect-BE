@@ -1,4 +1,5 @@
 import { prisma } from '../config/prisma.config';
+import { ProfileUpdateDTO } from '../middleware/profile.DTO/temp.DTO';
 
 export class ProfileModel {
   public async selectUserProfile(userId: number) {
@@ -29,5 +30,19 @@ export class ProfileModel {
       })
     ]);
     return data;
+  }
+
+  public async updataUserProfile(info: ProfileUpdateDTO) {
+    Object.keys(info).forEach(async (key) => {
+      const value = info[key as keyof ProfileUpdateDTO];
+      if (value) {
+        await prisma.user.update({
+          where: { userId: info.userId },
+          data: {
+            [key]: value
+          }
+        });
+      }
+    });
   }
 }
