@@ -1,3 +1,5 @@
+import { Example } from 'tsoa';
+
 type UserInfo = {
   name: string;
   introduce?: string;
@@ -42,4 +44,9 @@ export class ProfileUpdateDTO {
     this.userId = userId;
     this.img = img;
   }
+}
+
+export class UpdateProfileBody {
+  @Example('[1,2,3]')
+  interest!: number[];
 }

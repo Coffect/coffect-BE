@@ -12,7 +12,8 @@ import {
   UploadedFile,
   Security,
   Patch,
-  Example
+  Example,
+  Path
 } from 'tsoa';
 
 import {
@@ -23,8 +24,9 @@ import {
 import { ProfileService } from './profile.Service';
 import {
   ProfileDTO,
-  ProfileUpdateDTO
-} from '../middleware/follow.DTO/profile.DTO';
+  ProfileUpdateDTO,
+  UpdateProfileBody
+} from '../middleware/detailProfile.DTO/detailProfile.DTO';
 @Route('profile')
 @Tags('Profile Controller')
 export class ProfileController extends Controller {
@@ -38,7 +40,7 @@ export class ProfileController extends Controller {
    * 유저의 기본적인 프로필
    * 쓰레드수, 팔로잉, 팔로워, 유저정보를 반환한다
    *
-   * @summary 유저 프로필 조회
+   * @summary 본인 프로필 조회
    *
    */
   @Get('/')
@@ -58,6 +60,23 @@ export class ProfileController extends Controller {
   ): Promise<ITsoaSuccessResponse<ProfileDTO>> {
     const userId = req.user.index;
     const data = await this.profileService.myProfile(userId);
+    return new TsoaSuccessResponse(data);
+  }
+
+  /**
+   * 유저의 프로필을 조회한다
+   * 조회하려는 유저의 아이디를 검색한다
+   *
+   * @summary 유저 프로필 조회
+   * @param id 아이디
+   */
+  @Get('/{id}')
+  @Response(200, '조회성공')
+  public async getProfile(
+    @Request() req: Express.Request,
+    @Path() id: string
+  ): Promise<ITsoaSuccessResponse<ProfileDTO>> {
+    const data = await this.profileService.getProfile(id);
     return new TsoaSuccessResponse(data);
   }
 
@@ -84,6 +103,15 @@ export class ProfileController extends Controller {
     },
     success: null
   })
+  @Response<ITsoaErrorResponse>(500, '서버에러', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-0',
+      reason: 'Unknown server error.',
+      data: null
+    },
+    success: null
+  })
   public async updateProfile(
     @Request() req: Express.Request,
     @FormField() id?: string,
@@ -94,6 +122,35 @@ export class ProfileController extends Controller {
     const userId = req.user.index;
     const info = new ProfileUpdateDTO(userId, id, name, introduce, img);
     await this.profileService.updateProfile(info);
-    return new TsoaSuccessResponse('ok');
+    return new TsoaSuccessResponse('프로필 수정 성공');
+  }
+
+  /**
+   * 유저의 관심사를 수정한다
+   * 관심사는 카테고리 아이디 배열로 수정한다.
+   * 수정하는 하려는 값은 추가된 관심사 뿐만 아니라 모든 정보를 보내준다.
+   *
+   * @summary 유저 관심사 수정
+   * @param body 관심사 아이디 배열
+   */
+  @Patch('/interest')
+  @Security('jwt_token')
+  @Response(200, '관심사 수정 성공')
+  @Response<ITsoaErrorResponse>(500, '서버에러', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-0',
+      reason: 'Unknown server error.',
+      data: null
+    },
+    success: null
+  })
+  public async updateInterest(
+    @Request() req: Express.Request,
+    @Body() body: UpdateProfileBody
+  ): Promise<ITsoaSuccessResponse<string>> {
+    const userId = req.user.index;
+    await this.profileService.updateInterest(userId, body.interest);
+    return new TsoaSuccessResponse('관심사 수정 성공');
   }
 }

@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma.config';
-import { ProfileUpdateDTO } from '../middleware/follow.DTO/profile.DTO';
+import { ProfileUpdateDTO } from '../middleware/detailProfile.DTO/detailProfile.DTO';
 
 export class ProfileModel {
   public async selectUserProfile(userId: number) {
@@ -53,5 +53,22 @@ export class ProfileModel {
       }
     });
     return data[0];
+  }
+
+  public async deleteInterest(userId: number) {
+    await prisma.categoryMatch.deleteMany({
+      where: { userId: userId }
+    });
+  }
+
+  public async insertInterest(userId: number, interest: number[]) {
+    for (const index of interest) {
+      await prisma.categoryMatch.create({
+        data: {
+          userId: userId,
+          categotyId: index
+        }
+      });
+    }
   }
 }
