@@ -33,6 +33,7 @@ jobs:
             IdentityFile ~/.ssh/id_rsa
             StrictHostKeyChecking no
             UserKnownHostsFile /dev/null
+            PORT 2210
             LogLevel ERROR
           EOF
 
@@ -69,6 +70,7 @@ jobs:
             
             echo "📦 백업 서버 Dependencies 설치 중..."
             npm install
+            npm install pm2
             echo "✅ 백업 서버 Dependencies 설치 완료"
           '
 
@@ -110,7 +112,7 @@ jobs:
           DATABASE_PORT=${{ secrets.DATABASE_PORT }}
           DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
           DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-          EC2_PORT=${{ secrets.EC2_PORT }}
+          EC2_PORT=3002
           JWT_SECRET=${{ secrets.JWT_SECRET }}
           JWT_REFRESH=${{ secrets.JWT_REFRESH }}
           S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
@@ -135,8 +137,8 @@ jobs:
             cd /home/ubuntu/coffect-BE-backup
             
             echo "🛑 PM2 프로세스 정리 중..."
-            pm2 stop coffect-backup || true
-            pm2 delete coffect-backup || true
+            npx pm2 stop coffect-backup || true
+            npx pm2 delete coffect-backup || true
             echo "✅ PM2 프로세스 정리 완료"
           '
 
@@ -146,7 +148,7 @@ jobs:
             cd /home/ubuntu/coffect-BE-backup
             
             echo "🚀 PM2로 백업 애플리케이션 시작 중..."
-            pm2 start dist/index.js --name coffect-backup
+            npx pm2 start dist/index.js --name coffect-backup
             echo "✅ PM2 백업 프로세스 시작 완료"
           '
 
@@ -154,7 +156,7 @@ jobs:
         run: |
           ssh backup-server '
             echo "🏥 PM2 상태 확인..."
-            pm2 status
+            npx pm2 status
             echo "✅ 백업 서버 배포 완료"
           '
 
