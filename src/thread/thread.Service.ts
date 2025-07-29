@@ -1,5 +1,5 @@
 import { ThreadCreateError, ThreadNotFoundError } from './thread.Message';
-import { BodyToAddThread, BodyToLookUpMainThread, ResponseFromSingleThreadWithLikes, ResponseFromThreadMainCursor } from '../middleware/thread.DTO/thread.DTO';
+import { BodyToAddThread, BodyToLookUpMainThread, ResponseFromSingleThreadWithLikes, ResponseFromThreadMainCursor, ResponseFromThreadMainCursorToClient } from '../middleware/thread.DTO/thread.DTO';
 
 import { ThreadModel } from './thread.Model';
 
@@ -39,7 +39,7 @@ export class ThreadService {
 
   public lookUpThreadMainService = async (
     body: BodyToLookUpMainThread
-  ): Promise<ResponseFromThreadMainCursor> => {
+  ): Promise<ResponseFromThreadMainCursorToClient> => {
     const results: ResponseFromThreadMainCursor = await this.ThreadModel.lookUpThreadMainRepository(body);
 
     if (!results || results.thread.length === 0) {
@@ -52,7 +52,7 @@ export class ThreadService {
       likeCount: Number(thread.likeCount) // BigInt를 Number로 변환
     }));
 
-    const responseToClient: ResponseFromThreadMainCursor = {
+    const responseToClient: ResponseFromThreadMainCursorToClient = {
       thread: serializedResults,
       nextCursor: results.nextCursor
     }
