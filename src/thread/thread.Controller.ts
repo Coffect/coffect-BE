@@ -11,7 +11,8 @@ import {
   Get,
   Query,
   Security,
-  Patch
+  Patch,
+  Delete
 } from 'tsoa';
 
 import { Request as ExpressRequest } from 'express';
@@ -21,8 +22,6 @@ import {
   ITsoaSuccessResponse,
   TsoaSuccessResponse
 } from '../config/tsoaResponse';
-
-import verify from '../middleware/verifyJWT';
 
 import { 
   BodyToAddThread,
@@ -36,7 +35,8 @@ import {
 import { UserUnauthorizedError } from '../user/user.Message';
 
 import { ThreadService } from './thread.Service';
-import { ThreadInvalidOrderByError, ThreadNoID } from './thread.Message';
+import { ThreadInvalidOrderByError, ThreadNoID, ThreadUnauthorizedError } from './thread.Message';
+import { checkThreadOwner } from './thread.Model';
 
 @Route('thread')
 @Tags('Thread Controller')
@@ -91,7 +91,6 @@ export class ThreadController extends Controller {
     @Request() req: ExpressRequest,
     @Body()
       body: {
-      userId?: number;
       type: ThreadType;
       threadTitle: string;
       threadBody: string;
@@ -102,10 +101,6 @@ export class ThreadController extends Controller {
       throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
     }
 
-    // if (body.userId === undefined || body.userId === null) {
-    //   throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
-    // }
-
     const userId = req.user.index;
     const newThread: BodyToAddThread = new BodyToAddThread(body, userId);
 
@@ -113,7 +108,7 @@ export class ThreadController extends Controller {
 
     console.log('새로운 게시글 ID:', result);
 
-    return new TsoaSuccessResponse<string>(`게시글 업로드 성공: id ${result}`);
+    return new TsoaSuccessResponse<string>(result);
   }
 
   /**
@@ -176,6 +171,24 @@ export class ThreadController extends Controller {
    */
   @Post('main')
   @SuccessResponse('200', '게시글 메인 조회 성공')
+  @Response<ITsoaErrorResponse>('400', '유효하지 않은 정렬 기준입니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-05',
+      reason: '유효하지 않은 정렬 기준입니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('404', '필터링 된 게시글이 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-01',
+      reason: '필터링 된 게시글이 없습니다.',
+      data: null
+    },
+    success: null
+  })
   public async mainThread(
     @Body() body: {
       type: ThreadType;
@@ -202,14 +215,49 @@ export class ThreadController extends Controller {
    * @param body.threadBody 스레드 본문
    * @param body.type 스레드 타입
    * @param body.threadSubject 스레드 주제
-   * 
+   * @example
+   * {
+   *  "threadId": "312be12e-df91-4213-9801-4a8aaa9139c6",
+   *  "threadTitle": "수정된 제목",
+   *  "threadBody": "수정된 본문 내용",
+   *  "type": "아티클",
+   *  "threadSubject": [1, 2]
+   * }
    * @summary 게시물 수정
    * @returns 수정 성공한 게시물의 ID
    */
   @Patch('edit')
   @Security('jwt_token')
   @SuccessResponse('200', '게시글 수정 성공')
+  @Response<ITsoaErrorResponse>('401', '게시글 수정 권한이 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-06',
+      reason: '게시글 수정 권한이 없습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('500', '게시글 트랜잭션 처리에 실패했습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-03',
+      reason: '게시글 트랜잭션 처리에 실패했습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('404', '게시글이 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-01',
+      reason: '게시글이 없습니다.',
+      data: null
+    },
+    success: null
+  })
   public async editThread(
+    @Request() req: ExpressRequest,
     @Body() body: {
       threadId: string;
       threadTitle: string;
@@ -218,8 +266,102 @@ export class ThreadController extends Controller {
       threadSubject: number[];
     }
   ): Promise<ITsoaSuccessResponse<string>>{
+    if(!req.user || !req.user.index) {
+      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+    }
+
+    const verifyRequest: boolean = await checkThreadOwner(body.threadId, req.user.index);
+    
+    if(!verifyRequest) {
+      throw new ThreadUnauthorizedError(`게시글 수정 권한이 없습니다. ID: ${body.threadId}`);
+    }
+
     const result = await this.ThreadService.threadEditService(body);
 
     return new TsoaSuccessResponse<string>(result);
+  }
+
+  /**
+   * 게시글 삭제 API
+   * @param threadId - 삭제할 게시글의 ID
+   * @summary 게시글 삭제
+   * @returns 삭제된 게시글의 ID
+   * 
+   */
+  @Delete('delete')
+  @Security('jwt_token')
+  @SuccessResponse('200', '게시글 삭제 성공')
+  @Response<ITsoaErrorResponse>('401', '게시글 삭제 권한이 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-06',
+      reason: '게시글 삭제 권한이 없습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('404', '게시글이 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-01',
+      reason: '게시글이 없습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('500', '게시글 트랜잭션 처리에 실패했습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-03',
+      reason: '게시글 트랜잭션 처리에 실패했습니다.',
+      data: null
+    },
+    success: null
+  })
+  public async deleteThread(
+    @Request() req: ExpressRequest,
+    @Query() threadId: string
+  ): Promise<ITsoaSuccessResponse<string>> { 
+    if(!req.user || !req.user.index) {
+      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+    }
+
+    if(threadId === undefined || threadId === null) {
+      throw new ThreadNoID('게시글 ID가 없습니다.');
+    }
+
+    const verifyRequest: boolean = await checkThreadOwner(threadId, req.user.index);
+    
+    if(!verifyRequest) {
+      throw new ThreadUnauthorizedError(`게시글 삭제 권한이 없습니다. ID: ${threadId}`);
+    }
+
+    const result = await this.ThreadService.threadDeleteService(threadId);
+
+    return new TsoaSuccessResponse<string>(result);
+  }
+
+  /**
+   * 게시글 스크랩 API
+   * 
+   */
+  @Post('scrap')
+  @Security('jwt_token')
+  @SuccessResponse('200', '게시글 스크랩 성공')
+  public async scrapThread(
+    @Request() req: ExpressRequest,
+    @Query() threadId: string
+  ): Promise<ITsoaSuccessResponse<string>> {
+    if(!req.user || !req.user.index) {
+      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+    }
+
+    if(threadId === undefined || threadId === null) {
+      throw new ThreadNoID('게시글 ID가 없습니다.');
+    }
+
+    // 스크랩 로직은 추후 구현 예정
+    // 현재는 단순히 성공 메시지를 반환
+    return new TsoaSuccessResponse<string>(`게시글 ${threadId} 스크랩 성공`);
   }
 }

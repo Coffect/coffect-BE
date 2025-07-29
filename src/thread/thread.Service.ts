@@ -71,4 +71,21 @@ export class ThreadService {
 
     return result;
   };
+
+  public threadDeleteService = async (
+    threadId: string
+  ): Promise<string> => {
+    const result = await this.ThreadModel.threadDeleteRepository(threadId);
+
+    if(result === null) {
+      throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${threadId}`);
+    }
+
+    return result;
+  };
+
+  // public threadScrapService = async (
+  //   threadId: string
+  // ): Promise<string> => {
+  // }
 }

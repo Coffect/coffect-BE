@@ -29,3 +29,9 @@ export class ThreadInvalidOrderByError extends BasicError {
     super(400, 'THR-05', '유효하지 않은 정렬 기준입니다.', message);
   }
 }
+
+export class ThreadUnauthorizedError extends BasicError {
+  constructor(message: string) {
+    super(401, 'THR-06', '게시글 접근 권한이 없습니다.', message);
+  }
+}

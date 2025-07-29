@@ -1,6 +1,6 @@
 import { prisma } from '../config/prisma.config';
 import { Prisma } from '@prisma/client';
-import { ThreadTransactionError } from './thread.Message';
+import { ThreadNotFoundError, ThreadTransactionError } from './thread.Message';
 import { 
   BodyToAddThread,
   BodyToEditThread,
@@ -10,7 +10,6 @@ import {
   ResponseFromThreadMain,
   ResponseFromThreadMainCursor
 } from '../middleware/thread.DTO/thread.DTO';
-import { error } from 'node:console';
 
 export class ThreadModel {
   // 게시글 업로드 모델
@@ -81,6 +80,7 @@ export class ThreadModel {
     return {result, likes};
   };
 
+  // 게시글 메인 페이지 조회 모델 (필터링 포함)
   public lookUpThreadMainRepository = async (
     body: BodyToLookUpMainThread
   ): Promise<ResponseFromThreadMainCursor> => {
@@ -172,4 +172,71 @@ export class ThreadModel {
 
     return transaction.threadId;
   };
+
+  public threadDeleteRepository = async (
+    threadId: string
+  ): Promise<string | null> => {
+    const isExistThread = await prisma.thread.findUnique({
+      where: { threadId: threadId }
+    });
+
+    if(!isExistThread){
+      return null;
+    }
+
+    const result = await prisma.$transaction(async (prisma: any) => {
+      await prisma.subjectMatch.deleteMany({
+        where: { threadId: threadId }
+      });
+      
+      const thread = await prisma.thread.delete({
+        where: { threadId: threadId }
+      });
+      
+      return thread;
+    })
+      .then((thread) => {
+        return thread.threadId;
+      })
+      .catch(error => {
+        throw new ThreadTransactionError(`게시글 삭제에 실패했습니다. ${error.message}`);
+      });
+
+    return result.threadId;
+  };
+
+  // public threadScrapRepository = async (
+  //   threadId: string,
+  //   userId: number
+  // ): Promise<string | null> => {
+  //   const isExistThread = await prisma.thread.findUnique({
+  //     where: { threadId: threadId }
+  //   });
+
+  //   if(!isExistThread){
+  //     return null;
+  //   }
+
+  //   const isExistScrap = await prisma.scrapMatch.findUnique({
+  //     where: {
+  //       threadId: threadId,
+  //     }
+  //   })
+  // }
 }
+
+export const checkThreadOwner = async (
+  threadId: string,
+  userId: number
+): Promise<boolean> => {
+  const thread = await prisma.thread.findUnique({
+    where: {threadId: threadId},
+    select: {userId: true}
+  });
+
+  if(thread === null) {
+    throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${threadId}`);
+  }
+
+  return thread.userId === userId;
+};
