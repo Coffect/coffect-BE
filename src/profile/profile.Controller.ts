@@ -24,7 +24,7 @@ import { ProfileService } from './profile.Service';
 import {
   ProfileDTO,
   ProfileUpdateDTO
-} from '../middleware/profile.DTO/temp.DTO';
+} from '../middleware/follow.DTO/profile.DTO';
 @Route('profile')
 @Tags('Profile Controller')
 export class ProfileController extends Controller {

@@ -1,3 +1,4 @@
+import { KSTtime } from '../config/KSTtime';
 import { prisma } from '../config/prisma.config';
 import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatRecordDetail, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 
@@ -114,14 +115,13 @@ export class HomeModel {
   ):Promise<number[]> {
     const result = await prisma.user.findUniqueOrThrow({
       where : {userId : userId},
-      select : {mail : true}
+      select : {univId : true} 
     });
 
-    // mail 도메인 추출
-    const compareSameSchoole = await this.extractSchoolDomain(result.mail);
-
-    if(compareSameSchoole === null || compareSameSchoole === undefined) {
-      throw new Error(`Invalid email format: ${result.mail}`);
+    const compareSameSchoole = result.univId; // 나의 학교 조회
+    
+    if (compareSameSchoole === null || compareSameSchoole === undefined) {
+      throw new Error(`User ${userId} has no university ID`);
     }
 
     // 같은 학교 사용자 조회
@@ -130,22 +130,22 @@ export class HomeModel {
     return sameSchoolUsers;
   };
 
-  // 이메일 도메인 추출
-  private extractSchoolDomain(email: string): string | null {
-    // 정규표현식: @ 다음부터 .kr 전까지
-    const match = email.match(/@([^.]+)\.kr$/);
-    return match ? match[1] : null;
-  };
+  // // 이메일 도메인 추출
+  // private extractSchoolDomain(email: string): string | null {
+  //   // 정규표현식: @ 다음부터 .kr 전까지
+  //   const match = email.match(/@([^.]+)\.kr$/);
+  //   return match ? match[1] : null;
+  // };
 
   // 같은 학교 도메인 추출 (filteredArray 생성)
   private async getUsersBySchoolDomain(
     userId: number,
-    schoolDomain: string
+    schoolDomain: number
   ): Promise<number[]> {
     const users = await prisma.user.findMany({
       where: {
         userId: { not: userId },
-        mail: { endsWith: `@${schoolDomain}.kr` }
+        univId: { equals: schoolDomain }
       },
       select: { userId : true },
       take: 20
@@ -163,7 +163,10 @@ export class HomeModel {
 
     const copyFiltedArray  = [... filteredArray];
 
-    for(let i = 0; i < 4; i++) {
+    // 최대 4개까지 선택하되, 배열 크기보다 작으면 그만큼만 선택
+    const maxCount = Math.min(4, copyFiltedArray.length);
+
+    for(let i = 0; i < maxCount; i++) {
       if (copyFiltedArray.length === 0) break;
 
       const randomIndex = Math.floor(Math.random() * copyFiltedArray.length);
@@ -249,6 +252,18 @@ export class HomeModel {
 
     array = Array.from(selectedUser);
 
+    // 만약 4명보다 적으면 나머지는 랜덤으로 채움
+    if (array.length < 4 && filteredArray.length > array.length) {
+      const remainingUsers = filteredArray.filter(id => !array.includes(id));
+      const additionalCount = Math.min(4 - array.length, remainingUsers.length);
+      
+      for (let i = 0; i < additionalCount; i++) {
+        const randomIndex = Math.floor(Math.random() * remainingUsers.length);
+        array.push(remainingUsers[randomIndex]);
+        remainingUsers.splice(randomIndex, 1);
+      }
+    }
+
     await prisma.user.update({
       where : {userId : userId},
       data : {
@@ -266,13 +281,13 @@ export class HomeModel {
 
     const userGrade = await prisma.user.findUniqueOrThrow({
       where : {userId : userId},
-      select : {mail : true}
+      select : {studentId : true}
     });
 
-    const currentGrade = this.extractGrade(userGrade.mail);
+    const currentGrade = userGrade.studentId;
 
     if(currentGrade === null || currentGrade === undefined) {
-      throw new Error (`Cannot extract grade from email: ${userGrade.mail}`);
+      throw new Error (`Cannot extract grade: ${userGrade.studentId}`);
     }
 
     // filteredArray를 순회하면서 조건에 맞는 사용자를 탐색
@@ -283,15 +298,27 @@ export class HomeModel {
 
       const targetUser = await prisma.user.findFirst({
         where : { userId : targetUserId },
-        select : {mail : true}
+        select : { studentId : true }
       });
 
       if(targetUser) {
-        const targetGrade = this.extractGrade(targetUser.mail);
+        const targetGrade = targetUser.studentId;
 
         if(targetGrade === currentGrade) {
           array.push(targetUserId);
         }
+      }
+    }
+
+    // 만약 4명보다 적으면 나머지는 랜덤으로 채움
+    if (array.length < 4 && filteredArray.length > array.length) {
+      const remainingUsers = filteredArray.filter(id => !array.includes(id));
+      const additionalCount = Math.min(4 - array.length, remainingUsers.length);
+      
+      for (let i = 0; i < additionalCount; i++) {
+        const randomIndex = Math.floor(Math.random() * remainingUsers.length);
+        array.push(remainingUsers[randomIndex]);
+        remainingUsers.splice(randomIndex, 1);
       }
     }
 
@@ -301,14 +328,14 @@ export class HomeModel {
     });
   };
   
-  private extractGrade(
-    email: string
-  ):string{
-    // 202010836@school.kr에서 앞 4자리(2020) 추출
-    const match = email.match(/^(\d{4})/);
+  // private extractGrade(
+  //   email: string
+  // ):string{
+  //   // 202010836@school.kr에서 앞 4자리(2020) 추출
+  //   const match = email.match(/^(\d{4})/);
 
-    return match![0]; 
-  };
+  //   return match![0]; 
+  // };
 
   // <4> 최근에 글을 쓴 사용자
   private async recentPostUser(
@@ -347,6 +374,18 @@ export class HomeModel {
 
     array = userFilterThread;
 
+    // 만약 4명보다 적으면 나머지는 랜덤으로 채움
+    if (array.length < 4 && filteredArray.length > array.length) {
+      const remainingUsers = filteredArray.filter(id => !array.includes(id));
+      const additionalCount = Math.min(4 - array.length, remainingUsers.length);
+      
+      for (let i = 0; i < additionalCount; i++) {
+        const randomIndex = Math.floor(Math.random() * remainingUsers.length);
+        array.push(remainingUsers[randomIndex]);
+        remainingUsers.splice(randomIndex, 1);
+      }
+    }
+
     await prisma.user.update({
       where : {userId : userId},
       data : { todayInterestArray : array } as any // any로 타입 우회
@@ -361,7 +400,7 @@ export class HomeModel {
       where : {userId : userId},
       select: {
         name : true,
-        mail : true,
+        studentId : true,
         introduce : true,
         profileImage : true,
 
@@ -377,7 +416,11 @@ export class HomeModel {
       }
     });
 
-    const grade = this.extractGrade(result.mail);
+    const grade = result.studentId;
+    
+    if (grade === null || grade === undefined) {
+      throw new Error(`User ${userId} has no student ID`);
+    }
     const categoryNames = result.categoryMatch.map(
       (match: any) => match.category.categoryName
     );
@@ -387,8 +430,7 @@ export class HomeModel {
       grade,
       result.introduce || '',
       categoryNames,
-      result.profileImage,
-      result.mail
+      result.profileImage
     );
 
     return cardDTO;
@@ -399,12 +441,14 @@ export class HomeModel {
     otherUserId : number,
     suggestion : string
   ):Promise<void> {
+    const currentDate = KSTtime();
+
     await prisma.coffeeChat.create({
       data: {
         firstUserId: myUserId,   
         secondUserId: otherUserId,
         message: suggestion,
-        coffectDate: new Date(),
+        coffectDate: currentDate,
         location: '',
         valid: false
       }
@@ -416,7 +460,7 @@ export class HomeModel {
     userId : number
   ):Promise<CoffeeChatSchedule[]> {
 
-    const currentDate = new Date();
+    const currentDate = KSTtime();
 
     const result = await prisma.coffeeChat.findMany({
       where : { 

@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma.config';
-import { specifyFeedDTO, specifyProfileDTO } from '../middleware/profile.DTO/profile.DTO';
+import { specifyFeedDTO, specifyProfileDTO } from '../middleware/follow.DTO/follow.DTO';
 
 // 시간 차이를 계산하는 유틸리티 함수
 function getTimeDifference(createdAt: Date): string {

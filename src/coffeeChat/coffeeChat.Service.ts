@@ -32,7 +32,8 @@ export class HomeService {
       // 2. todayInterest값이 유효하지 않으면 예외 발생
       if (
         !getTodayInterestValue ||
-        ![1, 2, 3, 4].includes(getTodayInterestValue)
+        ![1, 2, 3, 4].includes(getTodayInterestValue) ||
+        getTodayInterestValue === 0
       ) {
         throw new postTodayError('주제를 먼저 선정해주세요.');
       }
