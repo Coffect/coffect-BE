@@ -11,7 +11,8 @@ import {
   FormField,
   UploadedFile,
   Security,
-  Patch
+  Patch,
+  Example
 } from 'tsoa';
 
 import {
@@ -81,12 +82,6 @@ export class ProfileController extends Controller {
   })
   public async updateProfile(
     @Request() req: Express.Request,
-    // @Body()
-    // body: {
-    //   id: string;
-    //   name: string;
-    //   introduce: string;
-    // }
     @FormField() id?: string,
     @FormField() name?: string,
     @FormField() introduce?: string,

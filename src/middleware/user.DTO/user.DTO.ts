@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { Example, FormField } from 'tsoa';
 
 export class UserLoginResponse {
   aToken: string;
@@ -8,6 +9,13 @@ export class UserLoginResponse {
     this.aToken = aToken;
     this.rToken = rToken;
   }
+}
+
+export class UserLoginBody {
+  @Example<string>('seoki')
+  userId!: string;
+  @Example<string>('1234')
+  userPassword!: string;
 }
 
 export class UserLoginRequest {

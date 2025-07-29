@@ -3,7 +3,6 @@ import {
   ProfileDTO,
   ProfileUpdateDTO
 } from '../middleware/profile.DTO/temp.DTO';
-import { UserModel } from '../user/user.Model';
 import { UserService } from '../user/user.Service';
 import { ProfileModel } from './profile.Model';
 
