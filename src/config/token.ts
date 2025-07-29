@@ -1,6 +1,7 @@
 import { sign, verify, decode } from 'jsonwebtoken';
 import process from 'node:process';
 import { CustomJwt } from '../../@types/jwt';
+import { KSTtime } from './KSTtime';
 
 const verifyToken = (
   token: string,
@@ -24,10 +25,12 @@ const decodeToken = (token: string) => {
 
 const accessToken = (name: string, userId: number) => {
   const jwtSercet = process.env.JWT_SECRET!;
+  const iat = KSTtime().getTime() / 1000;
   const token = sign(
     {
       index: userId,
-      userName: name
+      userName: name,
+      iat: iat
     },
     jwtSercet,
     {
@@ -40,10 +43,13 @@ const accessToken = (name: string, userId: number) => {
 
 const refreshToken = (name: string, userId: number) => {
   const jwtRefresh = process.env.JWT_REFRESH!;
+  const iat = KSTtime().getTime() / 1000;
+
   const token = sign(
     {
       index: userId,
-      userName: name
+      userName: name,
+      iat: iat
     },
     jwtRefresh,
     {
