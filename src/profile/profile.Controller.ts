@@ -11,7 +11,8 @@ import {
   FormField,
   UploadedFile,
   Security,
-  Patch
+  Patch,
+  Example
 } from 'tsoa';
 
 import {
@@ -62,9 +63,13 @@ export class ProfileController extends Controller {
 
   /**
    * 유저의 프로필을 수정한다
-   * 이름, 아이디, 소개글을 수정한다. req.body는 수정하지 않는값이어도 '' 으로 문자열 넘겨야한다. 이때 공백값이 들아온다면 공백값으로 수정된다.
+   * 이름, 아이디, 소개글, 프로필사진을 수정한다. req.body는 수정하지 않는값이어도 빈칸으로 넘긴다. 이때 공백값이 들아온다면 공백값으로 수정된다.
    *
    * @summary 유저 프로필 수정
+   * @param id 아이디
+   * @param name 이름
+   * @param introduce 소개글
+   * @param img 프로필사진
    *
    */
   @Patch('/')
@@ -81,12 +86,6 @@ export class ProfileController extends Controller {
   })
   public async updateProfile(
     @Request() req: Express.Request,
-    // @Body()
-    // body: {
-    //   id: string;
-    //   name: string;
-    //   introduce: string;
-    // }
     @FormField() id?: string,
     @FormField() name?: string,
     @FormField() introduce?: string,

@@ -9,7 +9,8 @@ import {
   Response,
   Get,
   FormField,
-  UploadedFile
+  UploadedFile,
+  Example
 } from 'tsoa';
 import { Request as ExpressRequest } from 'express';
 
@@ -20,6 +21,7 @@ import {
 } from '../config/tsoaResponse';
 import { UserService } from './user.Service';
 import {
+  UserLoginBody,
   UserLoginRequest,
   UserLoginResponse,
   UserSignUpRequest,
@@ -39,7 +41,6 @@ export class UserController extends Controller {
    *
    * @summary 로그인
    * @param body 유저아이디, 비밀번호
-   * @returns accessToken, refreshToken
    */
   @Post('login')
   @SuccessResponse(200, '로그인성공')
@@ -63,11 +64,7 @@ export class UserController extends Controller {
   })
   public async login(
     @Request() req: ExpressRequest,
-    @Body()
-      body: {
-      userPassword: string;
-      userId: string;
-    }
+    @Body() body: UserLoginBody
   ): Promise<ITsoaSuccessResponse<UserLoginResponse>> {
     const userid = body.userId;
     const userPassword = body.userPassword;
@@ -78,7 +75,8 @@ export class UserController extends Controller {
   }
 
   /**
-   *  데이터베이스에 토큰이 존재하는지 검증하고, 유효할 경우 새로운 토큰을 발급해준다.
+   *  Header authorization에 리프레시 토큰을 담아 전송한다.
+   *  데이터베이스에 토큰이 존재하는지 검증하고, 유효할 경우 새로운 토큰을 발급해준다.'
    *
    * @summary 토큰검증
    * @returns accessToken, refreshToken
@@ -149,8 +147,16 @@ export class UserController extends Controller {
   }
 
   /**
-   * 회원가입 form-data로 img, userInfo두가지를 따로 보낸다. 이때 userInfo는 json을 직렬화해 보내야하며 img에는 파일을 그대로 첨부해 보낸다.
-   *
+   * 회원가입 정보를 form-data로 보낸다.
+   * @param id 아이디
+   * @param password 비밀번호
+   * @param name 이름
+   * @param email 이메일
+   * @param univId 대학교 고유 번호
+   * @param dept 학과
+   * @param studentId 입학년도
+   * @param img 프로필 사진
+   * @param interest 관심사
    * @summary 회원가입
    */
   @Post('signup')
@@ -186,13 +192,13 @@ export class UserController extends Controller {
     @Request() req: ExpressRequest,
     @FormField() id: string,
     @FormField() password: string,
-    @FormField() email: string,
     @FormField() name: string,
-    @FormField() interest: number[],
+    @FormField() email: string,
     @FormField() univId: number,
     @FormField() dept: string,
     @FormField() studentId: number,
-    @UploadedFile() img: Express.Multer.File
+    @UploadedFile() img: Express.Multer.File,
+    @FormField() interest?: number[]
   ): Promise<ITsoaSuccessResponse<UserSignUpResponse>> {
     const singUpInfo = new UserSignUpRequest(req);
     await this.userService.signUpService(singUpInfo, img);
@@ -217,7 +223,10 @@ export class UserController extends Controller {
   })
   public async idcheck(
     @Request() req: ExpressRequest,
-    @Body() body: { id: string }
+    @Body()
+      body: {
+      id: string;
+    }
   ): Promise<ITsoaSuccessResponse<string>> {
     await this.userService.idCheckService(body.id);
     return new TsoaSuccessResponse('Ok');

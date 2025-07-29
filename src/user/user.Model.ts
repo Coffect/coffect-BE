@@ -1,4 +1,5 @@
 import { CustomJwt } from '../../@types/jwt';
+import { KSTtime } from '../config/KSTtime';
 import { prisma } from '../config/prisma.config';
 import { UserSignUpRequest } from '../middleware/user.DTO/user.DTO';
 
@@ -60,7 +61,8 @@ export class UserModel {
         profileImage: info.profile,
         univId: info.univId,
         dept: info.dept,
-        studentId: info.studentId
+        studentId: info.studentId,
+        createdAt: KSTtime()
       }
     });
     if (info.interest.length !== 0) {
