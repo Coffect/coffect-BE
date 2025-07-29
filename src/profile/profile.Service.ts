@@ -2,7 +2,7 @@ import { uploadToS3 } from '../config/s3';
 import {
   ProfileDTO,
   ProfileUpdateDTO
-} from '../middleware/profile.DTO/temp.DTO';
+} from '../middleware/follow.DTO/profile.DTO';
 import { UserService } from '../user/user.Service';
 import { ProfileModel } from './profile.Model';
 

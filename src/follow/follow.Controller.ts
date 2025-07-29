@@ -4,7 +4,7 @@ import verify from '../middleware/verifyJWT';
 import { Request as ExpressRequest } from 'express';
 import { nonProfile, nonUser } from './follow.Message';
 import { FollowService, specifyProfileService } from './follow.Service';
-import { specifyFeedDTO, specifyProfileDTO } from '../middleware/profile.DTO/profile.DTO';
+import { specifyFeedDTO, specifyProfileDTO } from '../middleware/follow.DTO/follow.DTO';
 
 @Route('follow')
 @Tags('Follow Controller')

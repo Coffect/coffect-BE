@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma.config';
-import { ProfileUpdateDTO } from '../middleware/profile.DTO/temp.DTO';
+import { ProfileUpdateDTO } from '../middleware/follow.DTO/profile.DTO';
 
 export class ProfileModel {
   public async selectUserProfile(userId: number) {
