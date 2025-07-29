@@ -287,7 +287,8 @@ export class HomeModel {
     const currentGrade = userGrade.studentId;
 
     if(currentGrade === null || currentGrade === undefined) {
-      throw new Error (`Cannot extract grade: ${userGrade.studentId}`);
+      // studentId가 없으면 filteredArray 그대로 사용
+      return;
     }
 
     // filteredArray를 순회하면서 조건에 맞는 사용자를 탐색
@@ -469,6 +470,7 @@ export class HomeModel {
           { secondUserId: userId }
         ],
         valid: true,
+        // 커피챗 일정이 오늘 이후인 경우만 조회
         coffectDate: {
           gte: currentDate
         }
@@ -670,4 +672,42 @@ export class HomeModel {
       secondUserImage
     );
   };
+
+  public async fixCoffeeChatScheduleModel(
+    userId : number,
+    coffectId : number,
+    coffeeChat : Date,
+    location : string,
+    time : Date
+  ):Promise<void> {
+    const combineDate = new Date(coffeeChat.getTime() + time.getTime());
+
+    await prisma.coffeeChat.update({
+      where : {
+        coffectId : coffectId,
+        OR : [{firstUserId : userId}, {secondUserId : userId}]
+      },
+      data : {
+        coffectDate : combineDate,
+        location : location
+      }
+    });
+  };
+
+  public async acceptCoffeeChatModel(
+    userId : number,
+    coffectId : number
+  ):Promise<void> {
+    await prisma.coffeeChat.update({
+      where : {
+        OR : [{firstUserId : userId}, {secondUserId : userId}],
+        coffectId : coffectId
+      },
+      data : {
+        valid : true
+      }
+    });
+  };
+
+  
 }
