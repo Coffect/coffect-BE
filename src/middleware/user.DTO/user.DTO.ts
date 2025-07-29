@@ -13,9 +13,9 @@ export class UserLoginResponse {
 
 export class UserLoginBody {
   @Example<string>('seoki')
-  userId!: string;
+    userId!: string;
   @Example<string>('1234')
-  userPassword!: string;
+    userPassword!: string;
 }
 
 export class UserLoginRequest {

@@ -27,7 +27,8 @@ import {
   BodyToAddThread,
   ResponseFromSingleThreadWithLikes,
   ThreadType,
-  BodyToLookUpMainThread
+  BodyToLookUpMainThread,
+  ResponseFromThreadMainCursor
 } from '../middleware/thread.DTO/thread.DTO';
 
 import { UserUnauthorizedError } from '../user/user.Message';
@@ -181,13 +182,13 @@ export class ThreadController extends Controller {
       ascend: boolean;
       cursor: number;
     }
-  ): Promise<any> {
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursor>> {
     if(body.orderBy !== 'createdAt' && body.orderBy !== 'likeCount') {
       throw new ThreadInvalidOrderByError(`정렬 기준은 createdAt 또는 likeCount 중 하나여야 합니다. orderBy: ${body.orderBy}`);
     }
 
     const result = await this.ThreadService.lookUpThreadMainService(new BodyToLookUpMainThread(body));
 
-    return new TsoaSuccessResponse<any>(result);
+    return new TsoaSuccessResponse<ResponseFromThreadMainCursor>(result);
   }
 }

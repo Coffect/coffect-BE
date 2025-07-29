@@ -96,8 +96,26 @@ export interface ResponseFromSingleThreadWithLikes {
   likes: number;
 }
 
+export interface ResponseFromThreadMain {
+  threadId: string;
+  userId: number;
+  threadTitle: string;
+  thradBody: string;
+  createdAt: Date;
+  threadShare: number;
+  name: string;
+  profileImage: string;
+  likeCount: bigint | number;
+}
+
+export interface ResponseFromThreadMainCursor{
+  thread: ResponseFromThreadMain[];
+  nextCursor: number;
+}
+
 export enum ThreadType {
   article = '아티클',
   teamMate = '팀원모집',
   question = '질문'
 }
+

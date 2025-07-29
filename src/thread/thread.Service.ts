@@ -1,5 +1,5 @@
 import { ThreadCreateError, ThreadNotFoundError } from './thread.Message';
-import { BodyToAddThread, BodyToLookUpMainThread, ResponseFromSingleThreadWithLikes } from '../middleware/thread.DTO/thread.DTO';
+import { BodyToAddThread, BodyToLookUpMainThread, ResponseFromSingleThreadWithLikes, ResponseFromThreadMainCursor } from '../middleware/thread.DTO/thread.DTO';
 
 import { ThreadModel } from './thread.Model';
 
@@ -39,19 +39,24 @@ export class ThreadService {
 
   public lookUpThreadMainService = async (
     body: BodyToLookUpMainThread
-  ): Promise<any> => {
-    const results: any[] = await this.ThreadModel.lookUpThreadMainRepository(body);
+  ): Promise<ResponseFromThreadMainCursor> => {
+    const results: ResponseFromThreadMainCursor = await this.ThreadModel.lookUpThreadMainRepository(body);
 
-    if (!results || results.length === 0) {
+    if (!results || results.thread.length === 0) {
       throw new ThreadNotFoundError(`필터링 된 게시글이 없습니다. type: ${body.type}, subjects: ${body.threadSubject}`);
     }
 
     // bigint 변환
-    const serializedResults = results.map((thread) => ({
+    const serializedResults = results.thread.map((thread) => ({
       ...thread,
       likeCount: Number(thread.likeCount) // BigInt를 Number로 변환
     }));
 
-    return serializedResults;
+    const responseToClient: ResponseFromThreadMainCursor = {
+      thread: serializedResults,
+      nextCursor: results.nextCursor
+    }
+
+    return responseToClient;
   };
 }

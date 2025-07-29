@@ -4,7 +4,9 @@ import { ThreadTransactionError } from './thread.Message';
 import { 
   BodyToAddThread,
   BodyToLookUpMainThread,
-  ResponseFromSingleThreadWithLikes
+  ResponseFromSingleThreadWithLikes,
+  ResponseFromThreadMain,
+  ResponseFromThreadMainCursor
 } from '../middleware/thread.DTO/thread.DTO';
 
 export class ThreadModel {
@@ -78,7 +80,7 @@ export class ThreadModel {
 
   public lookUpThreadMainRepository = async (
     body: BodyToLookUpMainThread
-  ): Promise<any> => {
+  ): Promise<ResponseFromThreadMainCursor> => {
     const { type, threadSubject, ascend, cursor } = body;
 
     // 정렬 순서
@@ -88,24 +90,22 @@ export class ThreadModel {
     const limit = 10;
     const offset = cursor > 0 ? (cursor - 1) * limit : 0;
     const paginationClause = Prisma.sql`LIMIT ${limit} OFFSET ${offset}`;
+    let thread: ResponseFromThreadMain[];
 
     // 주제 필터링이 없는 경우
     if (!threadSubject || threadSubject.length === 0) {
-      return prisma.$queryRaw`
+      thread = await prisma.$queryRaw`
         SELECT
           T.threadId, T.userId, T.threadTitle, T.thradBody, T.createdAt, T.threadShare,
           U.name, U.profileImage,
           (SELECT COUNT(*) FROM ThreadLike WHERE threadId = T.threadId) AS likeCount
         FROM Thread AS T
         JOIN User AS U ON T.userId = U.userId
-        WHERE T.type = ${type}
         ${orderClause}
         ${paginationClause}
       `;
-    }
-
-    // 주제 필터링이 있는 경우 (모든 주제를 포함해야 함)
-    return prisma.$queryRaw`
+    }else{
+      thread = await prisma.$queryRaw`
       SELECT
         T.threadId, T.userId, T.threadTitle, T.thradBody, T.createdAt, T.threadShare,
         U.name, U.profileImage,
@@ -119,5 +119,13 @@ export class ThreadModel {
       ${orderClause}
       ${paginationClause}
     `;
+    }
+
+    var nextCursor = cursor + thread.length;
+    if(thread.length < limit) { // 마지막 게시글
+      nextCursor = -1;
+    }
+
+    return {thread, nextCursor};
   };
 }
