@@ -10,7 +10,8 @@ import {
   Request,
   Get,
   Query,
-  Security
+  Security,
+  Patch
 } from 'tsoa';
 
 import { Request as ExpressRequest } from 'express';
@@ -191,5 +192,34 @@ export class ThreadController extends Controller {
     const result = await this.ThreadService.lookUpThreadMainService(new BodyToLookUpMainThread(body));
 
     return new TsoaSuccessResponse<ResponseFromThreadMainCursorToClient>(result);
+  }
+
+  /**
+   * 게시글 수정 API
+   * @param body 수정 게시물에 대한 정보와 수정 사항들
+   * @param body.threadId 스레드 ID
+   * @param body.threadTitle 스레드 제목
+   * @param body.threadBody 스레드 본문
+   * @param body.type 스레드 타입
+   * @param body.threadSubject 스레드 주제
+   * 
+   * @summary 게시물 수정
+   * @returns 수정 성공한 게시물의 ID
+   */
+  @Patch('edit')
+  @Security('jwt_token')
+  @SuccessResponse('200', '게시글 수정 성공')
+  public async editThread(
+    @Body() body: {
+      threadId: string;
+      threadTitle: string;
+      threadBody: string;
+      type: ThreadType;
+      threadSubject: number[];
+    }
+  ): Promise<ITsoaSuccessResponse<string>>{
+    const result = await this.ThreadService.threadEditService(body);
+
+    return new TsoaSuccessResponse<string>(result);
   }
 }
