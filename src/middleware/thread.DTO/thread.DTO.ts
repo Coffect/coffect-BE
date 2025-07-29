@@ -105,11 +105,28 @@ export interface ResponseFromThreadMain {
   threadShare: number;
   name: string;
   profileImage: string;
-  likeCount: bigint | number;
+  likeCount: bigint;
+}
+
+export interface ResponseFromThreadMainToClient {
+  threadId: string;
+  userId: number;
+  threadTitle: string;
+  thradBody: string;
+  createdAt: Date;
+  threadShare: number;
+  name: string;
+  profileImage: string;
+  likeCount: number;
 }
 
 export interface ResponseFromThreadMainCursor{
   thread: ResponseFromThreadMain[];
+  nextCursor: number;
+}
+
+export interface ResponseFromThreadMainCursorToClient{
+  thread: ResponseFromThreadMainToClient[];
   nextCursor: number;
 }
 
