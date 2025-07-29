@@ -36,7 +36,6 @@ const upload = multer({
 });
 
 async function uploadToS3(file: Express.Multer.File): Promise<string> {
-  console.log(file);
   if (!file.mimetype.startsWith('image/')) {
     throw new MulterUploadError('지원되지 않는 파일 형식입니다.');
   }
@@ -59,17 +58,6 @@ async function uploadToS3(file: Express.Multer.File): Promise<string> {
 
 async function deleteFromS3(fileUrl: string): Promise<boolean> {
   try {
-    // URL에서 파일 키 추출
-    // let fileKey: string;
-
-    // if (fileUrl.startsWith('http')) {
-    //   // URL인 경우 파일 키 추출
-    //   const urlParts = fileUrl.split('/');
-    //   fileKey = urlParts[urlParts.length - 1];
-    // } else {
-    //   // 이미 파일 키인 경우
-    //   fileKey = fileUrl;
-    // }
     const fileKey = extractFileKeyFromUrl(fileUrl);
     const command = new DeleteObjectCommand({
       Bucket: process.env.S3_NAME || '',
@@ -77,10 +65,8 @@ async function deleteFromS3(fileUrl: string): Promise<boolean> {
     });
 
     await settingS3.send(command);
-    console.log(`S3에서 파일 삭제 성공: ${fileKey}`);
     return true;
   } catch (error) {
-    console.error('S3 파일 삭제 실패:', error);
     throw new MulterUploadError('S3에서 파일 삭제 중 오류가 발생했습니다');
   }
 }

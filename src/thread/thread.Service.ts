@@ -55,7 +55,7 @@ export class ThreadService {
     const responseToClient: ResponseFromThreadMainCursorToClient = {
       thread: serializedResults,
       nextCursor: results.nextCursor
-    }
+    };
 
     return responseToClient;
   };

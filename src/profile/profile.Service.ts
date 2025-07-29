@@ -1,4 +1,4 @@
-import { uploadToS3 } from '../config/s3';
+import { deleteFromS3, uploadToS3 } from '../config/s3';
 import {
   ProfileDTO,
   ProfileUpdateDTO
@@ -23,6 +23,8 @@ export class ProfileService {
     if (info.img) {
       info.profileImage = await uploadToS3(info.img);
       info.img = undefined;
+      const profile = await this.profileModel.selectUserProfileImg(info.userId);
+      await deleteFromS3(profile.profileImage);
     }
     await this.profileModel.updataUserProfile(info);
   }

@@ -121,7 +121,7 @@ export class ThreadModel {
     `;
     }
 
-    var nextCursor = cursor + thread.length;
+    let nextCursor = cursor + thread.length;
     if(thread.length < limit) { // 마지막 게시글
       nextCursor = -1;
     }

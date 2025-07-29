@@ -4,10 +4,10 @@ import { prisma } from '../config/prisma.config';
 import { UserSignUpRequest } from '../middleware/user.DTO/user.DTO';
 
 export class UserModel {
-  public async selectUserInfo(userId: string) {
+  public async selectUserInfo(id: string) {
     const q = await prisma.user.findMany({
       where: {
-        id: userId
+        id: id
       }
     });
     if (q.length !== 0) {

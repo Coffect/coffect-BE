@@ -45,4 +45,13 @@ export class ProfileModel {
       }
     });
   }
+  public async selectUserProfileImg(userId: number) {
+    const data = await prisma.user.findMany({
+      where: { userId: userId },
+      select: {
+        profileImage: true
+      }
+    });
+    return data[0];
+  }
 }
