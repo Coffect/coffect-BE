@@ -46,6 +46,14 @@ export class BodyToLookUpMainThread {
   }
 }
 
+export interface BodyToEditThread{
+  threadId: string;
+  threadTitle: string;
+  threadBody: string;
+  type: ThreadType;
+  threadSubject: number[];
+}
+
 export class ResponseFromThread {
   type: ThreadType;
   threadTitle: string;

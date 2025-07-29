@@ -3,11 +3,14 @@ import { Prisma } from '@prisma/client';
 import { ThreadTransactionError } from './thread.Message';
 import { 
   BodyToAddThread,
+  BodyToEditThread,
   BodyToLookUpMainThread,
   ResponseFromSingleThreadWithLikes,
+  ResponseFromThread,
   ResponseFromThreadMain,
   ResponseFromThreadMainCursor
 } from '../middleware/thread.DTO/thread.DTO';
+import { error } from 'node:console';
 
 export class ThreadModel {
   // 게시글 업로드 모델
@@ -27,10 +30,10 @@ export class ThreadModel {
         });
 
         await prisma.subjectMatch.createMany({
-          data: {
+          data: newThread.threadSubject.map((subjectId) => ({
             threadId: thread.threadId,
-            subjectId: newThread.threadSubject
-          }
+            subjectId: subjectId
+          }))
         });
         return thread;
       })
@@ -121,11 +124,52 @@ export class ThreadModel {
     `;
     }
 
-    var nextCursor = cursor + thread.length;
+    let nextCursor = cursor + thread.length;
     if(thread.length < limit) { // 마지막 게시글
       nextCursor = -1;
     }
 
     return {thread, nextCursor};
+  };
+
+  public threadEditRepository = async (
+    body: BodyToEditThread
+  ): Promise<string | null> => {
+    const isExistThread = await prisma.thread.findUnique({
+      where: { threadId: body.threadId }
+    });
+
+    if(!isExistThread){
+      return null;
+    }
+
+    const transaction = await prisma.$transaction(async (prisma: any) => {
+      const result = await prisma.thread.update({
+        where: { threadId: body.threadId },
+        data: {
+          threadTitle: body.threadTitle,
+          thradBody: body.threadBody,
+          type: body.type
+        }
+      });
+
+      await prisma.subjectMatch.deleteMany({
+        where: { threadId: body.threadId }
+      });
+
+      await prisma.subjectMatch.createMany({
+        data: body.threadSubject.map((subjectId) => ({
+          threadId: result.threadId,
+          subjectId: subjectId
+        }))
+      });
+
+      return result;
+    })
+      .catch(error => {
+        throw new ThreadTransactionError(`게시글 수정에 실패했습니다. ${error.message}`);
+      });
+
+    return transaction.threadId;
   };
 }
