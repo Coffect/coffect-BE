@@ -27,7 +27,6 @@ import {
   UserSignUpRequest,
   UserSignUpResponse
 } from '../middleware/user.DTO/user.DTO';
-import { FollowModel } from '../follow/follow.Model';
 
 @Route('user')
 @Tags('User Controller')

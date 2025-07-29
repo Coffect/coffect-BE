@@ -8,27 +8,21 @@ import {
   Body,
   Response
 } from 'tsoa';
-import {
-  Request as ExpressRequest,
-  Response as ExpressResponse
-} from 'express';
+import { Request as ExpressRequest } from 'express';
 
 import {
   ITsoaErrorResponse,
   ITsoaSuccessResponse,
   TsoaSuccessResponse
 } from '../config/tsoaResponse';
-import {
-  UserLoginRequest,
-  UserLoginResponse,
-  UserSignUpResponse
-} from '../middleware/user.DTO/user.DTO';
-import { decodeToken } from '../config/token';
-import verify from '../middleware/verifyJWT';
+
 import { UnivService } from './univ.Service';
 import {
+  DeptSearchBody,
   DeptSearchResponse,
+  UnivCertBody,
   UnivCertRequest,
+  UnivSearchBody,
   UnivSearchResponse
 } from '../middleware/univ.DTO/univ.DTO';
 
@@ -58,7 +52,7 @@ export class UnivController extends Controller {
   })
   public async dept(
     @Request() req: ExpressRequest,
-    @Body() body: { univName: string; search: string }
+    @Body() body: DeptSearchBody
   ): Promise<ITsoaSuccessResponse<DeptSearchResponse>> {
     const data = await this.univService.deptService(body.search, body.univName);
     return new TsoaSuccessResponse(data);
@@ -82,7 +76,7 @@ export class UnivController extends Controller {
   })
   public async search(
     @Request() req: ExpressRequest,
-    @Body() body: { univName: string }
+    @Body() body: UnivSearchBody
   ): Promise<TsoaSuccessResponse<UnivSearchResponse>> {
     const data = await this.univService.searchService(body.univName);
     return new TsoaSuccessResponse(data);
@@ -133,11 +127,7 @@ export class UnivController extends Controller {
   })
   public async cert(
     @Request() req: ExpressRequest,
-    @Body()
-      body: {
-      certCode: number;
-      email: string;
-    }
+    @Body() body: UnivCertBody
   ): Promise<ITsoaSuccessResponse<string>> {
     const info = new UnivCertRequest(body.certCode, body.email);
     await this.univService.certService(info);

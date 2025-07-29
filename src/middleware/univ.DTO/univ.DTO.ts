@@ -1,3 +1,5 @@
+import { Example } from 'tsoa';
+
 export class UnivCertRespone {
   aToken: string;
   rToken: string;
@@ -6,6 +8,12 @@ export class UnivCertRespone {
     this.aToken = aToken;
     this.rToken = rToken;
   }
+}
+export class UnivCertBody {
+  @Example(123456)
+  certCode!: number;
+  @Example('seoki180@inha.edu')
+  email!: string;
 }
 export class UnivCertRequest {
   certCode: number;
@@ -22,6 +30,11 @@ type UnivList = {
   location: string | null;
 };
 
+export class UnivSearchBody {
+  @Example('인하')
+  univName!: string;
+}
+
 export class UnivSearchResponse {
   univList: UnivList[];
 
@@ -36,6 +49,12 @@ type DeptList = {
   college: string;
   dept: string;
 };
+export class DeptSearchBody {
+  @Example('인하')
+  univName!: string;
+  @Example('컴퓨터공학과')
+  search!: string;
+}
 export class DeptSearchResponse {
   deptList: DeptList[];
 
