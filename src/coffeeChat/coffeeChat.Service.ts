@@ -118,5 +118,23 @@ export class HomeService {
     const result = await this.homeModel.getSpecifyCoffeeChatModel(userId);
 
     return result;
-  }
+  };
+
+  public async fixCoffeeChatScheduleService(
+    userId : number,
+    coffectId : number,
+    coffeeChat : Date,
+    location : string,
+    time : Date
+  ):Promise<void> {
+    await this.homeModel.fixCoffeeChatScheduleModel(userId, coffectId, coffeeChat, location, time);
+  };
+
+  public async acceptCoffeeChatService(
+    userId : number,
+    coffectId : number
+  ):Promise<void> {
+    await this.homeModel.acceptCoffeeChatModel(userId, coffectId);
+  };
+  
 }
