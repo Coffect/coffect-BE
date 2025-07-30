@@ -1,5 +1,5 @@
 import { ThreadCreateError, ThreadNotFoundError } from './thread.Message';
-import { BodyToAddThread, BodyToLookUpMainThread, ResponseFromSingleThreadWithLikes, ResponseFromThreadMainCursor, ResponseFromThreadMainCursorToClient } from '../middleware/thread.DTO/thread.DTO';
+import { BodyToAddThread, BodyToEditThread, BodyToLookUpMainThread, ResponseFromSingleThreadWithLikes, ResponseFromThreadMainCursor, ResponseFromThreadMainCursorToClient } from '../middleware/thread.DTO/thread.DTO';
 
 import { ThreadModel } from './thread.Model';
 
@@ -59,4 +59,33 @@ export class ThreadService {
 
     return responseToClient;
   };
+
+  public threadEditService = async (
+    body: BodyToEditThread
+  ): Promise<string> => {
+    const result = await this.ThreadModel.threadEditRepository(body);
+
+    if(result === null){
+      throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${body.threadId}`);
+    }
+
+    return result;
+  };
+
+  public threadDeleteService = async (
+    threadId: string
+  ): Promise<string> => {
+    const result = await this.ThreadModel.threadDeleteRepository(threadId);
+
+    if(result === null) {
+      throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${threadId}`);
+    }
+
+    return result;
+  };
+
+  // public threadScrapService = async (
+  //   threadId: string
+  // ): Promise<string> => {
+  // }
 }
