@@ -1,7 +1,8 @@
 import { deleteFromS3, uploadToS3 } from '../config/s3';
 import {
   ProfileDTO,
-  ProfileUpdateDTO
+  ProfileUpdateDTO,
+  DetailProfileBody
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
 import { ResponseFromSingleThreadWithLikes } from '../middleware/thread.DTO/thread.DTO';
 import { UserModel } from '../user/user.Model';
@@ -63,5 +64,26 @@ export class ProfileService {
   public async updateInterest(userId: number, interest: number[]) {
     await this.profileModel.deleteInterest(userId);
     await this.profileModel.insertInterest(userId, interest);
+  }
+
+  public async updateDetailProfile(userId: number, body: DetailProfileBody[]) {
+    await this.profileModel.updateSpecificInfo(userId, body);
+  }
+
+  public async getDetailProfile(userId: number) {
+    const data = await this.profileModel.selectSpecificInfo(userId);
+    if (!data || !Array.isArray(data)) {
+      return [];
+    }
+    const temp: DetailProfileBody[] = [];
+    for (const item of data as {
+      question: string;
+      answer: string;
+      isMain: boolean;
+    }[]) {
+      const element = new DetailProfileBody(item);
+      temp.push(element);
+    }
+    return temp;
   }
 }

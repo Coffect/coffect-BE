@@ -73,5 +73,8 @@ export class UserModel {
         });
       }
     }
+    await prisma.specifyInfo.create({
+      data: { userId: createdUser.userId, info: [] }
+    });
   }
 }

@@ -1,5 +1,8 @@
 import { prisma } from '../config/prisma.config';
-import { ProfileUpdateDTO } from '../middleware/detailProfile.DTO/detailProfile.DTO';
+import {
+  ProfileUpdateDTO,
+  DetailProfileBody
+} from '../middleware/detailProfile.DTO/detailProfile.DTO';
 import { ResponseFromSingleThread } from '../middleware/thread.DTO/thread.DTO';
 
 export class ProfileModel {
@@ -112,5 +115,37 @@ export class ProfileModel {
       likes.push(like);
     }
     return { data, likes };
+  }
+
+  public async selectSpecificInfo(userId: number) {
+    try {
+      const data = await prisma.specifyInfo.findMany({
+        where: { userId: userId },
+        select: {
+          info: true
+        }
+      });
+
+      // 해당 유저의 정보가 없으면 기본 정보를 생성
+      if (data.length === 0) {
+        await prisma.specifyInfo.create({
+          data: {
+            userId: userId
+          }
+        });
+      }
+      return data[0].info;
+    } catch (error) {
+      console.error('Error in selectSpecificInfo:', error);
+      throw new Error('유저 정보 조회 중 오류가 발생했습니다.');
+    }
+  }
+
+  public async updateSpecificInfo(userId: number, body: DetailProfileBody[]) {
+    await prisma.specifyInfo.upsert({
+      where: { userId: userId },
+      update: { info: body as any },
+      create: { userId: userId, info: body as any }
+    });
   }
 }
