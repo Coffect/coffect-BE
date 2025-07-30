@@ -10,7 +10,8 @@ import {
   UploadedFile,
   Security,
   Patch,
-  Query
+  Query,
+  SuccessResponse
 } from 'tsoa';
 
 import {
@@ -44,7 +45,7 @@ export class ProfileController extends Controller {
    *
    */
   @Get('/')
-  @Response(200, '조회성공')
+  @SuccessResponse(200, '조회성공')
   @Response<ITsoaErrorResponse>(500, '서버에러', {
     resultType: 'FAIL',
     error: {
@@ -72,7 +73,7 @@ export class ProfileController extends Controller {
    */
   @Patch('/interest')
   @Security('jwt_token')
-  @Response(200, '관심사 수정 성공')
+  @SuccessResponse(200, '관심사 수정 성공')
   @Response<ITsoaErrorResponse>(500, '서버에러', {
     resultType: 'FAIL',
     error: {
@@ -97,7 +98,7 @@ export class ProfileController extends Controller {
    */
   @Get('/mythread')
   @Security('jwt_token')
-  @Response(200, '게시글 조회 성공')
+  @SuccessResponse(200, '게시글 조회 성공')
   public async getMyThread(
     @Request() req: Express.Request
   ): Promise<ITsoaSuccessResponse<ResponseFromSingleThreadWithLikes[]>> {
@@ -114,7 +115,7 @@ export class ProfileController extends Controller {
    */
   @Patch('/detail')
   @Security('jwt_token')
-  @Response(200, '상세 프로필 수정 성공')
+  @SuccessResponse(200, '상세 프로필 수정 성공')
   public async updateDetailProfile(
     @Request() req: Express.Request,
     @Body() body: DetailProfileBody[]
@@ -131,7 +132,7 @@ export class ProfileController extends Controller {
    */
   @Get('/detail')
   @Security('jwt_token')
-  @Response(200, '상세 프로필 조회 성공')
+  @SuccessResponse(200, '상세 프로필 조회 성공')
   public async getDetailProfile(
     @Request() req: Express.Request
   ): Promise<ITsoaSuccessResponse<DetailProfileBody[]>> {
@@ -153,7 +154,7 @@ export class ProfileController extends Controller {
    */
   @Patch('/')
   @Security('jwt_token')
-  @Response(200, '프로필 수정 성공')
+  @SuccessResponse(200, '프로필 수정 성공')
   @Response<ITsoaErrorResponse>(409, '중복된 아이디', {
     resultType: 'FAIL',
     error: {
@@ -192,7 +193,7 @@ export class ProfileController extends Controller {
    * @param id 아이디
    */
   @Get('/search')
-  @Response(200, '조회성공')
+  @SuccessResponse(200, '조회성공')
   @Security('jwt_token')
   public async getProfile(
     @Request() req: Express.Request,
@@ -210,7 +211,7 @@ export class ProfileController extends Controller {
    */
   @Get('/thread/search')
   @Security('jwt_token')
-  @Response(200, '게시글 조회 성공')
+  @SuccessResponse(200, '게시글 조회 성공')
   public async getThread(
     @Query() id: string
   ): Promise<ITsoaSuccessResponse<ResponseFromSingleThreadWithLikes[]>> {
@@ -225,7 +226,7 @@ export class ProfileController extends Controller {
    */
   @Get('/detail/search')
   @Security('jwt_token')
-  @Response(200, '상세 프로필 조회 성공')
+  @SuccessResponse(200, '상세 프로필 조회 성공')
   public async getDetailProfileSearch(
     @Request() req: Express.Request,
     @Query() id: string
