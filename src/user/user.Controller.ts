@@ -229,6 +229,6 @@ export class UserController extends Controller {
     }
   ): Promise<ITsoaSuccessResponse<string>> {
     await this.userService.idCheckService(body.id);
-    return new TsoaSuccessResponse('Ok');
+    return new TsoaSuccessResponse('존재하지 않는 아이디');
   }
 }

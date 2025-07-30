@@ -1,4 +1,8 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand
+} from '@aws-sdk/client-s3';
 import dotenv from 'dotenv';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
@@ -32,7 +36,6 @@ const upload = multer({
 });
 
 async function uploadToS3(file: Express.Multer.File): Promise<string> {
-  console.log(file);
   if (!file.mimetype.startsWith('image/')) {
     throw new MulterUploadError('지원되지 않는 파일 형식입니다.');
   }
@@ -49,9 +52,32 @@ async function uploadToS3(file: Express.Multer.File): Promise<string> {
   } catch (err) {
     new MulterUploadError('사진을 올리는 중 오류가 발생했습니다');
   }
-
   // S3 URL 반환 (필요에 따라 public URL로 수정)
   return `https://${process.env.S3_NAME}.s3.ap-northeast-2.amazonaws.com/${uniqueName}`;
 }
 
-export { upload, uploadToS3 };
+async function deleteFromS3(fileUrl: string): Promise<boolean> {
+  try {
+    const fileKey = extractFileKeyFromUrl(fileUrl);
+    const command = new DeleteObjectCommand({
+      Bucket: process.env.S3_NAME || '',
+      Key: fileKey
+    });
+
+    await settingS3.send(command);
+    return true;
+  } catch (error) {
+    throw new MulterUploadError('S3에서 파일 삭제 중 오류가 발생했습니다');
+  }
+}
+
+function extractFileKeyFromUrl(fileUrl: string): string {
+  if (!fileUrl.startsWith('http')) {
+    return fileUrl; // 이미 파일 키인 경우
+  }
+
+  const urlParts = fileUrl.split('/');
+  return urlParts[urlParts.length - 1];
+}
+
+export { upload, uploadToS3, deleteFromS3, extractFileKeyFromUrl };
