@@ -3,6 +3,7 @@ import {
   ProfileDTO,
   ProfileUpdateDTO
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
+import { ResponseFromSingleThreadWithLikes } from '../middleware/thread.DTO/thread.DTO';
 import { UserModel } from '../user/user.Model';
 import { UserService } from '../user/user.Service';
 import { ProfileModel } from './profile.Model';
@@ -23,6 +24,29 @@ export class ProfileService {
     const user = await new UserModel().selectUserInfo(id);
     const data = await this.profileModel.selectUserProfile(user?.userId!);
     return new ProfileDTO(data);
+  }
+
+  public async getThread(id?: string, userIndex?: number) {
+    const threads: ResponseFromSingleThreadWithLikes[] = [];
+    if (id) {
+      const userId = await new UserModel().selectUserInfo(id);
+      const data = await this.profileModel.selectUserThread(userId?.userId!);
+      for (const item of data.data) {
+        threads.push({
+          result: item,
+          likes: data.likes[data.data.indexOf(item)]
+        });
+      }
+    } else {
+      const data = await this.profileModel.selectUserThread(userIndex!);
+      for (const item of data.data) {
+        threads.push({
+          result: item,
+          likes: data.likes[data.data.indexOf(item)]
+        });
+      }
+    }
+    return threads;
   }
 
   public async updateProfile(info: ProfileUpdateDTO) {

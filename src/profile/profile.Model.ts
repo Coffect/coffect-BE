@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma.config';
 import { ProfileUpdateDTO } from '../middleware/detailProfile.DTO/detailProfile.DTO';
+import { ResponseFromSingleThread } from '../middleware/thread.DTO/thread.DTO';
 
 export class ProfileModel {
   public async selectUserProfile(userId: number) {
@@ -70,5 +71,46 @@ export class ProfileModel {
         }
       });
     }
+  }
+  public async selectUserThread(
+    userId: number
+  ): Promise<{ data: ResponseFromSingleThread[]; likes: number[] }> {
+    const data = await prisma.thread.findMany({
+      where: { userId: userId },
+      select: {
+        threadId: true,
+        thradBody: true,
+        threadTitle: true,
+        threadShare: true,
+        createdAt: true,
+        type: true,
+        subjectMatch: {
+          select: {
+            threadSubject: {
+              select: {
+                subjectId: true,
+                subjectName: true
+              }
+            }
+          }
+        },
+        user: {
+          select: {
+            userId: true,
+            name: true,
+            profileImage: true
+          }
+        }
+      }
+    });
+
+    const likes: number[] = [];
+    for (const thread of data) {
+      const like = await prisma.threadLike.count({
+        where: { threadId: thread.threadId }
+      });
+      likes.push(like);
+    }
+    return { data, likes };
   }
 }
