@@ -9,6 +9,7 @@ import * as swaggerUI from 'swagger-ui-express';
 import { Request, Response, NextFunction } from 'express';
 import { RegisterRoutes } from './routes/tsoaRoutes';
 import { errorHandler } from './middleware/error';
+import './config/scheduler';
 
 dotenv.config();
 const app = express();
@@ -33,7 +34,7 @@ app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerJson));
 
 // 서버 실행
 app.listen(port, () => {
-  console.log(`Sever is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
 
 app.use(errorHandler);

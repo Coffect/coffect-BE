@@ -400,6 +400,7 @@ export class HomeModel {
     const result  = await prisma.user.findUniqueOrThrow({
       where : {userId : userId},
       select: {
+        userId : true,
         name : true,
         studentId : true,
         introduce : true,
@@ -427,6 +428,7 @@ export class HomeModel {
     );
 
     const cardDTO = new coffectChatCardDTO (
+      result.userId,
       result.name,
       grade,
       result.introduce || '',
@@ -709,5 +711,34 @@ export class HomeModel {
     });
   };
 
-  
+  /** 스케줄러 수동 실행 모델 */
+  public async resetDailyFieldsModel(): Promise<void> {
+    console.log('Manual reset job started at:', new Date().toISOString());
+    
+    try {
+      // 먼저 전체 사용자 수 확인
+      const totalUsers = await prisma.user.count();
+      console.log(`Total users in database: ${totalUsers}`);
+      
+      // 모든 사용자의 daily 필드 초기화
+      const result = await prisma.user.updateMany({
+        where: {}, // 모든 사용자 대상
+        data: {
+          coffeeChatCount: 4,
+          todayInterest: null,
+          todayInterestArray: []
+        }
+      });
+      
+      console.log(`Manual reset completed. Updated ${result.count} users out of ${totalUsers} total users`);
+      
+      // 변경된 사용자 수가 전체 사용자 수와 일치하는지 확인
+      if (result.count !== totalUsers) {
+        console.warn(`Warning: Only ${result.count} users were updated, but there are ${totalUsers} total users`);
+      }
+    } catch (err) {
+      console.error('Failed to reset daily fields:', err);
+      throw err;
+    }
+  };
 }

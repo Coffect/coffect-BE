@@ -1,13 +1,15 @@
 
 
 export class coffectChatCardDTO {
+  userId : number; // 상대방 userid
   name : string;
   grade : number;
   introduce : string;
   categoryMatch : string[]; // 배열로 받아야함
   profileImage : string;
 
-  constructor(name : string, grade : number, introduce : string, categoryMatch : string[], profileImage : string) {
+  constructor(userId : number, name : string, grade : number, introduce : string, categoryMatch : string[], profileImage : string) {
+    this.userId = userId;
     this.name = name;
     this.grade = grade;
     this.introduce = introduce;
