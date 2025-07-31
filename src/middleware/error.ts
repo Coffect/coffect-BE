@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { ValidateError } from 'tsoa';
 
 //에러 처리 미들웨어
 export const errorHandler = (
@@ -20,6 +21,21 @@ export const errorHandler = (
         errorCode: err.code,
         reason: err.message,
         data: err.description
+      },
+      success: null
+    });
+
+    return;
+  }
+
+  //tsoa validation 에러 처리
+  if(err instanceof ValidateError) {
+    res.status(err.status).json({
+      resultType: 'FAIL',
+      error: {
+        errorCode: err.status,
+        reason: err.message,
+        data: err.fields
       },
       success: null
     });
