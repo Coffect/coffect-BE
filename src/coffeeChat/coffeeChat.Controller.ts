@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Route, SuccessResponse, Tags, Response, Request, Middlewares, Query, Patch } from 'tsoa';
+import { Body, Controller, Get, Post, Route, SuccessResponse, Tags, Response, Request, Middlewares, Query, Patch, Security } from 'tsoa';
 import { ITsoaErrorResponse, ITsoaSuccessResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import { Request as ExpressRequest } from 'express';
 import { exceedLimitError, nonData, nonPostComment, postTodayError } from './coffeeChat.Message';
@@ -28,7 +28,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Post('postTodayInterest')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -83,7 +83,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('getCardClose')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -152,7 +152,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('currentCardRecommend')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 불러왔습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -210,7 +210,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Post('postSuggestCoffeeChat')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse>(
     400,
@@ -265,7 +265,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('getCoffeeChatSchedule')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -310,7 +310,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('getPastCoffeeChat')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -359,7 +359,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('getSpecifyCoffeeChat')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -407,7 +407,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Patch('fixCoffeeChatSchedule')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '정상적으로 커피챗 일정을 수정하였습니다다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -468,7 +468,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Patch('acceptCoffeeChat')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 커피챗을 승낙했습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -519,7 +519,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Post('resetDailyFields')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 daily 필드를 초기화했습니다.')
   @Response<ITsoaErrorResponse>(
     500,

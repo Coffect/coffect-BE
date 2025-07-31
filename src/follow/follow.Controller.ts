@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Middlewares, Post, Query, Request, Response, Route, SuccessResponse, Tags } from 'tsoa';
+import { Body, Controller, Get, Middlewares, Post, Query, Request, Response, Route, Security, SuccessResponse, Tags } from 'tsoa';
 import { ITsoaErrorResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import verify from '../middleware/verifyJWT';
 import { Request as ExpressRequest } from 'express';
@@ -24,7 +24,7 @@ export class FollowController extends Controller {
    * @returns 요청 성공 여부
    */
     @Post('followRequest')
-    @Middlewares(verify)
+    @Security('jwt_token')
     @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
     @Response<ITsoaErrorResponse> (
       400,
@@ -133,7 +133,7 @@ export class specifyProfileController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('showProfile')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400,
@@ -180,7 +180,7 @@ export class specifyProfileController extends Controller {
    * @returns 요청 성공 여부
    */
     @Get('showAllFeed')
-    @Middlewares(verify)
+    @Security('jwt_token')
     @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
     @Response<ITsoaErrorResponse>(
       400,
@@ -228,7 +228,7 @@ export class specifyProfileController extends Controller {
    * @returns 요청 성공 여부
    */
     @Get('showFeedCount')
-    @Middlewares(verify)
+    @Security('jwt_token')
     @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
     @Response<ITsoaErrorResponse>(
       400,
