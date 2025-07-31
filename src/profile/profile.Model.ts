@@ -20,6 +20,7 @@ export class ProfileModel {
       prisma.user.findFirst({
         where: { userId: userId },
         select: {
+          id: true,
           name: true,
           introduce: true,
           profileImage: true,
