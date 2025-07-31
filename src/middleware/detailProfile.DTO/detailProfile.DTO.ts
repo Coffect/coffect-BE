@@ -22,7 +22,7 @@ export class ProfileDTO {
   userInfo: UserInfo;
   interest: Category[];
 
-  constructor(data: [number, number, number, object, object]) {
+  constructor(data: [number, number, number, object, object[]]) {
     this.threadCount = data[0];
     this.following = data[1];
     this.follower = data[2];
