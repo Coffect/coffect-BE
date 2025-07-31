@@ -88,7 +88,7 @@ export class HomeService {
     
     const recommendIndex = await this.homeModel.getCoffeeChatCount(userId) + 1;
 
-    if(recommendIndex <= 0) {
+    if(recommendIndex < 1) {
       throw new exceedLimitError('오늘 하루 추천 커피챗 횟수를 초과 했습니다.');
     }
 
@@ -139,9 +139,10 @@ export class HomeService {
   };
 
   public async getSpecifyCoffeeChatService(
-    userId : number
+    userId : number,
+    coffectId : number
   ):Promise<CoffeeChatRecordDetail> {
-    const result = await this.homeModel.getSpecifyCoffeeChatModel(userId);
+    const result = await this.homeModel.getSpecifyCoffeeChatModel(userId, coffectId);
 
     return result;
   };
@@ -161,6 +162,13 @@ export class HomeService {
     coffectId : number
   ):Promise<void> {
     await this.homeModel.acceptCoffeeChatModel(userId, coffectId);
+  };
+
+  public async getTotalCoffeeChatCountService(
+    userId : number
+  ):Promise<number> {
+    const result = await this.homeModel.getTotalCoffeeChatCountModel(userId);
+    return result;
   };
 
   /** 스케줄러 수동 실행 서비스 */

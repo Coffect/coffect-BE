@@ -16,10 +16,6 @@ export class HomeController extends Controller {
     this.homeService = new HomeService();
   }
 
-
-
-
-
   /**
    * Coffect coffeeChat Home API.
    * 
@@ -385,11 +381,16 @@ export class HomeController extends Controller {
       success: null
     })
   public async getSpecifyCoffeeChat (
-    @Request() req: ExpressRequest
+    @Request() req: ExpressRequest,
+    @Query() coffectId: number
   ):Promise<ITsoaSuccessResponse<CoffeeChatRecordDetail>> { 
     const userId = req.user.index;
 
-    const result = await this.homeService.getSpecifyCoffeeChatService(userId);
+    if(coffectId === null) {
+      throw new nonData('커피챗 기록이 존재하지 않습니다.');
+    }
+
+    const result = await this.homeService.getSpecifyCoffeeChatService(userId, coffectId);
 
     if(result === null) {
       throw new nonData('커피챗 기록이 존재하지 않습니다.');
@@ -509,6 +510,50 @@ export class HomeController extends Controller {
     await this.homeService.acceptCoffeeChatService(userId, coffectId);
 
     return new TsoaSuccessResponse<string>('정상적으로 커피챗을 승낙했습니다.');
+  };
+
+  /**
+   * Coffect coffeeChat Home API.
+   * 
+   * @summary 커피챗 갯수 가져오는 API
+   * @param body 유저 Token
+   * @returns 요청 성공 여부
+   */
+  @Get('getTotalCoffeeChatCount')
+  @Security('jwt_token')
+  @SuccessResponse('200', '성공적으로 커피챗을 승낙했습니다.')
+  @Response<ITsoaErrorResponse> (
+    400, 
+    'Bad Request', 
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE404',
+        reason: '존재하지 않는 커피챗 일정입니다.',
+        data: null
+      },
+      success: null
+    })
+  @Response<ITsoaErrorResponse>(
+    500,
+    'Internal Server Error',
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE500',
+        reason: '서버 오류가 발생했습니다.',
+        data: null
+      },
+      success: null
+    })
+  public async getTotalCoffeeChatCount(
+      @Request() req: ExpressRequest,
+  ):Promise<ITsoaSuccessResponse<number>> {
+    const userId = req.user.index;
+
+    const result = await this.homeService.getTotalCoffeeChatCountService(userId);
+
+    return new TsoaSuccessResponse<number>(result);
   };
 
   /**

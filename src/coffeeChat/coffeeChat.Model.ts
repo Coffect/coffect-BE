@@ -603,11 +603,13 @@ export class HomeModel {
 
   /** 커피챗 상세 보기 Model */
   public async getSpecifyCoffeeChatModel(
-    userId : number
+    userId : number,
+    coffectId : number
   ):Promise<CoffeeChatRecordDetail> {
     // 과거 커피챗 기록 조회
     const result = await prisma.coffeeChat.findFirstOrThrow({
       where: {
+        coffectId : coffectId,
         OR: [{ firstUserId: userId }, { secondUserId: userId }],
         valid: true
       },
@@ -716,6 +718,19 @@ export class HomeModel {
         valid : true
       }
     });
+  };
+
+  public async getTotalCoffeeChatCountModel(
+    userId : number
+  ):Promise<number> {
+    const result = await prisma.coffeeChat.count({
+      where : {
+        OR : [{firstUserId : userId}, {secondUserId : userId}],
+        valid : true
+      }
+    });
+
+    return result;
   };
 
   /** 스케줄러 수동 실행 모델 */
