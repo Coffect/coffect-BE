@@ -23,7 +23,7 @@ export class CoffeeChatSchedule {
   opponentName: string;
   coffeeDate: Date;
   location: string;
-  restDate: Date;
+  restDate: number; // 남은 일수 (number로 변경)
   firstUserImage: string;
   secondUserImage: string;
 
@@ -32,7 +32,7 @@ export class CoffeeChatSchedule {
     opponentName: string,
     coffeeDate: Date,
     location: string,
-    restDate: Date,
+    restDate: number, // 남은 일수 (number로 변경)
     firstUserImage: string,
     secondUserImage: string
   ) {
