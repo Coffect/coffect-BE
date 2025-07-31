@@ -7,6 +7,7 @@ import {
 import { ResponseFromSingleThreadWithLikes } from '../middleware/thread.DTO/thread.DTO';
 import { UserModel } from '../user/user.Model';
 import { UserService } from '../user/user.Service';
+import { UserIdNotFound } from './profile.Message';
 import { ProfileModel } from './profile.Model';
 
 export class ProfileService {
@@ -85,5 +86,13 @@ export class ProfileService {
       temp.push(element);
     }
     return temp;
+  }
+
+  public async getUserId(userId: number) {
+    const data = await this.profileModel.selectUserId(userId);
+    if (!data) {
+      throw new UserIdNotFound('유저 아이디를 찾을 수 없습니다.');
+    }
+    return data;
   }
 }
