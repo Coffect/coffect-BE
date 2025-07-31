@@ -1,10 +1,13 @@
 import { prisma } from '../config/prisma.config';
 import { Prisma } from '@prisma/client';
-import { ThreadNotFoundError, ThreadTransactionError } from './thread.Message';
+import { ThreadImageUploadError, ThreadNotFoundError, ThreadTransactionError } from './thread.Message';
 import { 
   BodyToAddThread,
   BodyToEditThread,
   BodyToLookUpMainThread,
+  BodyToPostComment,
+  ResponseFromGetComment,
+  ResponseFromPostComment,
   ResponseFromSingleThreadWithLikes,
   ResponseFromThread,
   ResponseFromThreadMain,
@@ -44,6 +47,32 @@ export class ThreadModel {
       });
 
     return result.threadId;
+  };
+
+  // 게시글 이미지 업로드 모델
+  public addThreadImageRepository = async (
+    imageUrls: string[],
+    threadId: string
+  ): Promise<string[]> => {
+    if(!imageUrls || imageUrls.length === 0) {
+      throw new ThreadImageUploadError('이미지 URL이 없습니다.');
+    }
+
+    await prisma.threadImage.createMany({
+      data: imageUrls.map((imageUrl) => {
+        return {
+          threadId: threadId,
+          imageId: imageUrl
+        };
+      })
+    })
+      .catch((error: any) => {
+        throw new ThreadImageUploadError(
+          `게시글 이미지 업로드에 실패했습니다. ${error.message}`
+        );
+      });
+
+    return imageUrls;
   };
 
   // 게시글 단일 조회 모델
@@ -205,24 +234,94 @@ export class ThreadModel {
     return result.threadId;
   };
 
-  // public threadScrapRepository = async (
-  //   threadId: string,
-  //   userId: number
-  // ): Promise<string | null> => {
-  //   const isExistThread = await prisma.thread.findUnique({
-  //     where: { threadId: threadId }
-  //   });
+  public threadScrapRepository = async (
+    threadId: string,
+    userId: number
+  ): Promise<string | null> => {
+    const isExistThread = await prisma.thread.findUnique({
+      where: { threadId: threadId }
+    });
 
-  //   if(!isExistThread){
-  //     return null;
-  //   }
+    if(!isExistThread){
+      return null;
+    }
 
-  //   const isExistScrap = await prisma.scrapMatch.findUnique({
-  //     where: {
-  //       threadId: threadId,
-  //     }
-  //   })
-  // }
+    const result = await prisma.$transaction(async (prisma: any) => {
+      const scrap = await prisma.threadScrap.create({
+        data: {
+          userId: userId
+        }
+      });
+
+      const match = await prisma.scrapMatch.create({
+        data: {
+          scrapId: scrap.scrapId,
+          threadId: threadId
+        }
+      });
+
+      return match;
+    })
+      .then((match) => {
+        return match.threadId;
+      })
+      .catch(error => {
+        throw new ThreadTransactionError(`게시글 스크랩에 실패했습니다. ${error.message}`);
+      });
+
+    return result;
+  };
+
+  public threadPostCommentRepository = async (
+    body: BodyToPostComment,
+    userId: number
+  ): Promise<ResponseFromPostComment> => {
+    const { threadId, commentBody, quote} = body;
+
+    const isExistThread = await prisma.thread.findUnique({
+      where: { threadId: threadId }
+    });
+
+    if(!isExistThread){
+      throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${threadId}`);
+    }
+
+    const result = await prisma.comment.create({
+      data: {
+        threadId: threadId,
+        userId: userId,
+        commentBody: commentBody,
+        quote: quote ? quote : null
+      }
+    });
+
+    return result;
+  };
+
+  public threadGetCommentRepository = async (
+    threadId: string
+  ): Promise<ResponseFromGetComment[] | null> => {
+    const comments = await prisma.comment.findMany({
+      where: {threadId: threadId},
+      include: {
+        user: {
+          select: {
+            name: true,
+            profileImage: true,
+            studentId: true
+          }
+        }
+      }
+    });
+
+    if(!comments || comments.length === 0) {
+      return null;
+    }
+
+    console.log(comments);
+
+    return comments;
+  };
 }
 
 export const checkThreadOwner = async (

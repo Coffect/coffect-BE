@@ -35,3 +35,21 @@ export class ThreadUnauthorizedError extends BasicError {
     super(401, 'THR-06', '게시글 접근 권한이 없습니다.', message);
   }
 }
+
+export class ThreadImageUploadError extends BasicError {
+  constructor(message: string) {
+    super(500, 'THR-07', '게시글 이미지 업로드에 실패했습니다.', message);
+  }
+}
+
+export class ThreadPostCommentError extends BasicError {
+  constructor(message: string) {
+    super(500, 'THR-08', '댓글 작성에 실패했습니다.', message);
+  }
+}
+
+export class ThreadScrapError extends BasicError {
+  constructor(message: string) {
+    super(500, 'THR-09', '게시글 스크랩에 실패했습니다.', message);
+  }
+}

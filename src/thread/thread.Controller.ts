@@ -12,7 +12,10 @@ import {
   Query,
   Security,
   Patch,
-  Delete
+  Delete,
+  UploadedFile,
+  FormField,
+  UploadedFiles
 } from 'tsoa';
 
 import { Request as ExpressRequest } from 'express';
@@ -29,7 +32,9 @@ import {
   ThreadType,
   BodyToLookUpMainThread,
   ResponseFromThreadMainCursor,
-  ResponseFromThreadMainCursorToClient
+  ResponseFromThreadMainCursorToClient,
+  ResponseFromPostComment,
+  ResponseFromGetComment
 } from '../middleware/thread.DTO/thread.DTO';
 
 import { UserUnauthorizedError } from '../user/user.Message';
@@ -109,6 +114,35 @@ export class ThreadController extends Controller {
     console.log('새로운 게시글 ID:', result);
 
     return new TsoaSuccessResponse<string>(result);
+  }
+
+  // 나중에 리팩토링 필요 - 게시글 이미지 업로드와 게시글 업로드 통합 가능
+  // 또는 수정할 때 재사용할 수 있는 API로 냅둬도 될 듯?
+  /**
+   * 게시글 이미지 업로드 API
+   * @summary 게시글 이미지 업로드
+   */
+  @Post('addImage')
+  @Security('jwt_token')
+  @SuccessResponse('201', '게시글 이미지 업로드 성공')
+  public async addThreadImage(
+    @Request() req: ExpressRequest,
+    @FormField() threadId: string,
+    @UploadedFiles('image') image: Express.Multer.File[]
+  ): Promise<ITsoaSuccessResponse<string[]>> {
+    if(!req.user || !req.user.index) {
+      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+    }
+
+    const verifyRequest: boolean = await checkThreadOwner(threadId, req.user.index);
+    
+    if(!verifyRequest) {
+      throw new ThreadUnauthorizedError(`게시글 이미지 업로드 권한이 없습니다. ID: ${threadId}`);
+    }
+
+    const result = await this.ThreadService.addThreadImageService(image, threadId);
+
+    return new TsoaSuccessResponse<string[]>(result);
   }
 
   /**
@@ -215,8 +249,7 @@ export class ThreadController extends Controller {
    * @param body.threadBody 스레드 본문
    * @param body.type 스레드 타입
    * @param body.threadSubject 스레드 주제
-   * @example
-   * {
+   * @example {
    *  "threadId": "312be12e-df91-4213-9801-4a8aaa9139c6",
    *  "threadTitle": "수정된 제목",
    *  "threadBody": "수정된 본문 내용",
@@ -344,6 +377,12 @@ export class ThreadController extends Controller {
   /**
    * 게시글 스크랩 API
    * 
+   * @param threadId - 스크랩할 게시물 ID
+   * 
+   * @example threadId "312be12e-df91-4213-9801-4a8aaa9139c6"
+   * @returns 스크랩 성공 문구
+   * @summary 게시물 스크랩
+   * 
    */
   @Post('scrap')
   @Security('jwt_token')
@@ -360,8 +399,103 @@ export class ThreadController extends Controller {
       throw new ThreadNoID('게시글 ID가 없습니다.');
     }
 
-    // 스크랩 로직은 추후 구현 예정
-    // 현재는 단순히 성공 메시지를 반환
+    const result = await this.ThreadService.threadScrapService(threadId, req.user.index);
+
     return new TsoaSuccessResponse<string>(`게시글 ${threadId} 스크랩 성공`);
+  }
+
+  /**
+   * 게시글 댓글 작성 API
+   * @param body - 댓글 작성 정보
+   * @param body.threadId - 댓글을 작성할 게시글 ID
+   * @param body.commentBody - 댓글 내용
+   * @param body.quote - 댓글 인용 ID (선택 사항)
+   * @description 게시글에 댓글을 작성합니다.
+   * @example
+   * {
+   *  "threadId": "312be12e-df91-4213-9801-4a8aaa9139c6",
+   *  "commentBody": "이 게시글에 대한 댓글입니다.",
+   *  "quote": 1
+   * }
+   * @returns 작성된 댓글 정보
+   * @summary 게시글 댓글 작성
+   */
+  @Post('postComment')
+  @Security('jwt_token')
+  @SuccessResponse('200', '게시글 댓글 작성 성공')
+  @Response<ITsoaErrorResponse>('400', '유저 인증 정보가 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-1',
+      reason: '유저 인증 정보가 없습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('400', '게시글 ID 또는 댓글 내용이 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-04',
+      reason: '게시글 ID 또는 댓글 내용이 없습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('404', '게시글이 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-01',
+      reason: '게시글이 없습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('500', '댓글 작성에 실패했습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-08',
+      reason: '댓글 작성에 실패했습니다.',
+      data: null
+    },
+    success: null
+  })
+  public async commentThread(
+    @Request() req: ExpressRequest,
+    @Body() body: {
+      threadId: string;
+      commentBody: string;
+      quote?: number;
+    }
+  ): Promise<ITsoaSuccessResponse<ResponseFromPostComment>> {
+    if(!req.user || !req.user.index) {
+      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+    }
+
+    if(!body.threadId || !body.commentBody) {
+      throw new ThreadNoID('게시글 ID 또는 댓글 내용이 없습니다.');
+    }
+
+    const result = await this.ThreadService.threadPostCommentService(body, req.user.index);
+    
+    return new TsoaSuccessResponse<ResponseFromPostComment>(result);
+  }
+
+  /**
+   * 게시글 댓글 조회 API
+   * @param threadId - 댓글을 조회할 게시글 ID
+   * @summary 게시글 댓글 조회
+   */
+  @Get('getComment')
+  @SuccessResponse('200', '게시글 댓글 조회 성공')
+  public async getComment (
+    @Query() threadId: string
+  ): Promise<ITsoaSuccessResponse<ResponseFromGetComment[]>> {
+    if(!threadId || threadId === null) {
+      throw new ThreadNoID('게시글 ID가 없습니다.');
+    }
+    
+    const result = await this.ThreadService.threadGetCommentService(threadId);
+
+    return new TsoaSuccessResponse<ResponseFromGetComment[]>(result);
   }
 }

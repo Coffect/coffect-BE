@@ -54,6 +54,12 @@ export interface BodyToEditThread{
   threadSubject: number[];
 }
 
+export interface BodyToPostComment {
+  threadId: string;
+  commentBody: string;
+  quote?: number;
+}
+
 export class ResponseFromThread {
   type: ThreadType;
   threadTitle: string;
@@ -136,6 +142,29 @@ export interface ResponseFromThreadMainCursor{
 export interface ResponseFromThreadMainCursorToClient{
   thread: ResponseFromThreadMainToClient[];
   nextCursor: number;
+}
+
+export interface ResponseFromPostComment {
+  threadId: string;
+  userId: number;
+  commentBody: string;
+  quote?: number | null;
+  createdAtD: Date;
+  commentId: number;
+}
+
+export interface ResponseFromGetComment {
+  commentId: number;
+  userId: number;
+  threadId: string;
+  commentBody: string;
+  quote?: number | null;
+  createdAtD: Date;
+  user: {
+    name: string;
+    profileImage: string;
+    studentId: number | null;
+  }
 }
 
 export enum ThreadType {
