@@ -88,7 +88,7 @@ export class HomeService {
     
     const recommendIndex = await this.homeModel.getCoffeeChatCount(userId) + 1;
 
-    if(recommendIndex < 0) {
+    if(recommendIndex <= 0) {
       throw new exceedLimitError('오늘 하루 추천 커피챗 횟수를 초과 했습니다.');
     }
 

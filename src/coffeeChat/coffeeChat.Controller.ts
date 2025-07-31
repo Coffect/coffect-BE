@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Route, SuccessResponse, Tags, Response, Request, Middlewares, Query, Patch } from 'tsoa';
+import { Body, Controller, Get, Post, Route, SuccessResponse, Tags, Response, Request, Middlewares, Query, Patch, Security } from 'tsoa';
 import { ITsoaErrorResponse, ITsoaSuccessResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import { Request as ExpressRequest } from 'express';
 import { exceedLimitError, nonData, nonPostComment, postTodayError } from './coffeeChat.Message';
@@ -28,7 +28,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Post('postTodayInterest')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -62,8 +62,7 @@ export class HomeController extends Controller {
   ): Promise<ITsoaSuccessResponse<string>> {
     
     const todayInterestIndex : number = body.todayInterest;
-    const userId = req.decoded.index;
-    // await decodeToken(token).userId as number;
+    const userId = req.user.index;
 
     if(todayInterestIndex === null || todayInterestIndex === undefined) {
       throw new postTodayError('주제를 선정하지 않았습니다.');
@@ -83,7 +82,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('getCardClose')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -124,7 +123,7 @@ export class HomeController extends Controller {
   public async CardCloseCoffeeChatController (
     @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<coffectChatCardDTO>> { 
-    const userId = req.decoded.index;
+    const userId = req.user.index;
 
     const result = await this.homeService.CardCoffeeChatService(userId);
 
@@ -152,7 +151,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('currentCardRecommend')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 불러왔습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -193,7 +192,7 @@ export class HomeController extends Controller {
   public async currentCardRecommend (
         @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<coffectChatCardDTO>> {
-    const userId = req.decoded.index;
+    const userId = req.user.index;
 
     const result = await this.homeService.currentCardRecommendService(userId);
 
@@ -210,7 +209,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Post('postSuggestCoffeeChat')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse>(
     400,
@@ -243,7 +242,7 @@ export class HomeController extends Controller {
       suggestion: string;
     },
   ): Promise<ITsoaSuccessResponse<string>> {
-    const myUserId = req.decoded.index; // 내 userId
+    const myUserId = req.user.index; // 내 userId
     const { otherUserid, suggestion } = body;
 
     if (!suggestion || suggestion.trim().length === 0) {
@@ -265,7 +264,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('getCoffeeChatSchedule')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -294,7 +293,7 @@ export class HomeController extends Controller {
   public async GetCoffeeChatSchedule (
     @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<CoffeeChatSchedule[]>> { 
-    const userId = req.decoded.index;
+    const userId = req.user.index;
 
     const result = await this.homeService.GetCoffeeChatScheduleService(userId);
 
@@ -310,7 +309,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('getPastCoffeeChat')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -339,7 +338,7 @@ export class HomeController extends Controller {
   public async getPastCoffeeChat (
     @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<CoffeeChatRecord[]>> { 
-    const userId = req.decoded.index;
+    const userId = req.user.index;
 
     const result = await this.homeService.getPastCoffeeChatService(userId);
 
@@ -359,7 +358,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Get('getSpecifyCoffeeChat')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -388,7 +387,7 @@ export class HomeController extends Controller {
   public async getSpecifyCoffeeChat (
     @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<CoffeeChatRecordDetail>> { 
-    const userId = req.decoded.index;
+    const userId = req.user.index;
 
     const result = await this.homeService.getSpecifyCoffeeChatService(userId);
 
@@ -407,7 +406,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Patch('fixCoffeeChatSchedule')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '정상적으로 커피챗 일정을 수정하였습니다다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -442,7 +441,7 @@ export class HomeController extends Controller {
       time: Date;
     },
   ):Promise<ITsoaSuccessResponse<string>> { 
-    const userId = req.decoded.index;
+    const userId = req.user.index;
     const { coffectId, coffeeDate, location, time } = body;
     
     if(coffectId === null) {
@@ -468,7 +467,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Patch('acceptCoffeeChat')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 커피챗을 승낙했습니다.')
   @Response<ITsoaErrorResponse> (
     400, 
@@ -500,7 +499,7 @@ export class HomeController extends Controller {
         coffectId : number;
       },
   ):Promise<ITsoaSuccessResponse<string>> {
-    const userId = req.decoded.index;
+    const userId = req.user.index;
     const { coffectId } = body;
 
     if(coffectId === null) {
@@ -519,7 +518,7 @@ export class HomeController extends Controller {
    * @returns 요청 성공 여부
    */
   @Post('resetDailyFields')
-  @Middlewares(verify)
+  @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 daily 필드를 초기화했습니다.')
   @Response<ITsoaErrorResponse>(
     500,
