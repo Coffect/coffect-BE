@@ -16,10 +16,6 @@ export class HomeController extends Controller {
     this.homeService = new HomeService();
   }
 
-
-
-
-
   /**
    * Coffect coffeeChat Home API.
    * 
@@ -385,11 +381,16 @@ export class HomeController extends Controller {
       success: null
     })
   public async getSpecifyCoffeeChat (
-    @Request() req: ExpressRequest
+    @Request() req: ExpressRequest,
+    @Query() coffectId: number
   ):Promise<ITsoaSuccessResponse<CoffeeChatRecordDetail>> { 
     const userId = req.user.index;
 
-    const result = await this.homeService.getSpecifyCoffeeChatService(userId);
+    if(coffectId === null) {
+      throw new nonData('커피챗 기록이 존재하지 않습니다.');
+    }
+
+    const result = await this.homeService.getSpecifyCoffeeChatService(userId, coffectId);
 
     if(result === null) {
       throw new nonData('커피챗 기록이 존재하지 않습니다.');

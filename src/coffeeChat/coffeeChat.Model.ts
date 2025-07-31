@@ -603,11 +603,13 @@ export class HomeModel {
 
   /** 커피챗 상세 보기 Model */
   public async getSpecifyCoffeeChatModel(
-    userId : number
+    userId : number,
+    coffectId : number
   ):Promise<CoffeeChatRecordDetail> {
     // 과거 커피챗 기록 조회
     const result = await prisma.coffeeChat.findFirstOrThrow({
       where: {
+        coffectId : coffectId,
         OR: [{ firstUserId: userId }, { secondUserId: userId }],
         valid: true
       },
