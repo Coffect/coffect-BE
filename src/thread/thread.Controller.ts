@@ -6,14 +6,12 @@ import {
   SuccessResponse,
   Response,
   Body,
-  Middlewares,
   Request,
   Get,
   Query,
   Security,
   Patch,
   Delete,
-  UploadedFile,
   FormField,
   UploadedFiles
 } from 'tsoa';
@@ -31,7 +29,6 @@ import {
   ResponseFromSingleThreadWithLikes,
   ThreadType,
   BodyToLookUpMainThread,
-  ResponseFromThreadMainCursor,
   ResponseFromThreadMainCursorToClient,
   ResponseFromPostComment,
   ResponseFromGetComment
@@ -387,6 +384,33 @@ export class ThreadController extends Controller {
   @Post('scrap')
   @Security('jwt_token')
   @SuccessResponse('200', '게시글 스크랩 성공')
+  @Response<ITsoaErrorResponse>('400', '유저 인증 정보가 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-1',
+      reason: '유저 인증 정보가 없습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('400', '게시글 ID가 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-04',
+      reason: '게시글 ID가 없습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>('500', '게시글 스크랩에 실패했습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'THR-09',
+      reason: '게시글 스크랩에 실패했습니다.',
+      data: null
+    },
+    success: null
+  })
   public async scrapThread(
     @Request() req: ExpressRequest,
     @Query() threadId: string
@@ -487,15 +511,50 @@ export class ThreadController extends Controller {
    */
   @Get('getComment')
   @SuccessResponse('200', '게시글 댓글 조회 성공')
+  @Response('400', '게시글 ID가 없습니다.', {
+    resultType:'FAIL',
+    error: {
+      errorCode: 'THR-04',
+      reason: '게시글 ID가 없습니다.',
+      data: null
+    },
+    success: null
+  })
   public async getComment (
     @Query() threadId: string
   ): Promise<ITsoaSuccessResponse<ResponseFromGetComment[]>> {
-    if(!threadId || threadId === null) {
+    if(threadId === undefined || threadId === null) {
       throw new ThreadNoID('게시글 ID가 없습니다.');
     }
     
     const result = await this.ThreadService.threadGetCommentService(threadId);
 
     return new TsoaSuccessResponse<ResponseFromGetComment[]>(result);
+  }
+
+  /**
+   * 게시글 좋아요 API
+   * 
+   * @param threadId - 좋아요 할 게시글 ID
+   * 
+   * @returns 좋아요 성공 문구
+   */
+  @Post('/like')
+  @SuccessResponse('200', '게시글 좋아요 성공')
+  public async likeThread(
+    @Request() req: ExpressRequest,
+    @Query() threadId: string
+  ): Promise<ITsoaSuccessResponse<string>> {
+    if(!req.user || !req.user.index){
+      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+    }
+
+    if(threadId === undefined || threadId === null) {
+      throw new ThreadNoID('게시글 ID가 없습니다.');
+    }
+
+    const result = await this.ThreadService.threadLikeService(threadId, req.user.index);
+
+    return new TsoaSuccessResponse<string>(result);
   }
 }

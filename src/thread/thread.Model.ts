@@ -1,6 +1,10 @@
 import { prisma } from '../config/prisma.config';
 import { Prisma } from '@prisma/client';
-import { ThreadImageUploadError, ThreadNotFoundError, ThreadTransactionError } from './thread.Message';
+import { 
+  ThreadImageUploadError, 
+  ThreadNotFoundError, 
+  ThreadTransactionError 
+} from './thread.Message';
 import { 
   BodyToAddThread,
   BodyToEditThread,
@@ -9,7 +13,6 @@ import {
   ResponseFromGetComment,
   ResponseFromPostComment,
   ResponseFromSingleThreadWithLikes,
-  ResponseFromThread,
   ResponseFromThreadMain,
   ResponseFromThreadMainCursor
 } from '../middleware/thread.DTO/thread.DTO';
@@ -322,6 +325,31 @@ export class ThreadModel {
 
     return comments;
   };
+
+  public threadLikeRepository = async (
+    threadId: string,
+    userId: number
+  ): Promise<string | null> => {
+    const isExistLike = await prisma.threadLike.findFirst({
+      where: {
+        threadId: threadId,
+        userId: userId
+      }
+    });
+
+    if(isExistLike) {
+      return null;
+    }
+
+    const result = await prisma.threadLike.create({
+      data: {
+        threadId: threadId,
+        userId: userId
+      }
+    });
+
+    return result.threadId;
+  }
 }
 
 export const checkThreadOwner = async (
