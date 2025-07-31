@@ -20,6 +20,7 @@ export class coffectChatCardDTO {
 
 export class CoffeeChatSchedule {
   opponentId: string;
+  opponentName: string;
   coffeeDate: Date;
   location: string;
   restDate: Date;
@@ -28,6 +29,7 @@ export class CoffeeChatSchedule {
 
   constructor(
     opponentId: string,
+    opponentName: string,
     coffeeDate: Date,
     location: string,
     restDate: Date,
@@ -35,6 +37,7 @@ export class CoffeeChatSchedule {
     secondUserImage: string
   ) {
     this.opponentId = opponentId;
+    this.opponentName = opponentName;
     this.coffeeDate = coffeeDate;
     this.location = location;
     this.restDate = restDate;

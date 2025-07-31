@@ -480,11 +480,13 @@ export class HomeModel {
       include: {
         firstUser: {
           select: {
+            name: true,
             profileImage: true
           }
         },
         secondUser: {
           select: {
+            name: true,
             profileImage: true
           }
         }
@@ -498,6 +500,10 @@ export class HomeModel {
       const opponentId = coffeeChat.firstUserId === userId 
         ? coffeeChat.secondUserId.toString() 
         : coffeeChat.firstUserId.toString();
+
+      const opponentName = coffeeChat.firstUserId === userId 
+        ? coffeeChat.secondUser.name 
+        : coffeeChat.firstUser.name;
       
       const firstUserImage = coffeeChat.firstUser?.profileImage || '';
       const secondUserImage = coffeeChat.secondUser?.profileImage || '';
@@ -507,6 +513,7 @@ export class HomeModel {
       
       return new CoffeeChatSchedule(
         opponentId,
+        opponentName,
         coffeeChat.coffectDate,
         coffeeChat.location,
         restDate,

@@ -16,6 +16,10 @@ export class HomeController extends Controller {
     this.homeService = new HomeService();
   }
 
+
+
+
+
   /**
    * Coffect coffeeChat Home API.
    * 
@@ -140,6 +144,13 @@ export class HomeController extends Controller {
     return new TsoaSuccessResponse<coffectChatCardDTO>(result);
   };
 
+  /**
+   * Coffect coffeeChat Home API.
+   * 
+   * @summary 현재 추천 카드 가져오는 API
+   * @param body 유저 Token
+   * @returns 요청 성공 여부
+   */
   @Get('currentCardRecommend')
   @Middlewares(verify)
   @SuccessResponse('200', '성공적으로 Data를 불러왔습니다.')
