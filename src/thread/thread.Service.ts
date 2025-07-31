@@ -1,5 +1,20 @@
-import { ThreadCreateError, ThreadNotFoundError, ThreadPostCommentError, ThreadScrapError } from './thread.Message';
-import { BodyToAddThread, BodyToEditThread, BodyToLookUpMainThread, BodyToPostComment, ResponseFromGetComment, ResponseFromPostComment, ResponseFromSingleThreadWithLikes, ResponseFromThreadMainCursor, ResponseFromThreadMainCursorToClient } from '../middleware/thread.DTO/thread.DTO';
+import { 
+  ThreadCreateError, 
+  ThreadNotFoundError, 
+  ThreadPostCommentError, 
+  ThreadScrapError 
+} from './thread.Message';
+import { 
+  BodyToAddThread, 
+  BodyToEditThread, 
+  BodyToLookUpMainThread, 
+  BodyToPostComment, 
+  ResponseFromGetComment, 
+  ResponseFromPostComment, 
+  ResponseFromSingleThreadWithLikes, 
+  ResponseFromThreadMainCursor, 
+  ResponseFromThreadMainCursorToClient 
+} from '../middleware/thread.DTO/thread.DTO';
 
 import { ThreadModel } from './thread.Model';
 import { uploadToS3 } from '../config/s3';
@@ -141,4 +156,17 @@ export class ThreadService {
 
     return result;
   };
+
+  public threadLikeService = async (
+    threadId: string,
+    userId: number
+  ): Promise<string> => {
+    const result = await this.ThreadModel.threadLikeRepository(threadId, userId);
+
+    if(result === null) {
+      throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${threadId}`);
+    }
+
+    return result;
+  }
 }
