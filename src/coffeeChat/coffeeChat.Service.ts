@@ -164,6 +164,13 @@ export class HomeService {
     await this.homeModel.acceptCoffeeChatModel(userId, coffectId);
   };
 
+  public async getTotalCoffeeChatCountService(
+    userId : number
+  ):Promise<number> {
+    const result = await this.homeModel.getTotalCoffeeChatCountModel(userId);
+    return result;
+  };
+
   /** 스케줄러 수동 실행 서비스 */
   public async resetDailyFieldsService(): Promise<void> {
     await this.homeModel.resetDailyFieldsModel();

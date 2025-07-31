@@ -515,6 +515,50 @@ export class HomeController extends Controller {
   /**
    * Coffect coffeeChat Home API.
    * 
+   * @summary 커피챗 갯수 가져오는 API
+   * @param body 유저 Token
+   * @returns 요청 성공 여부
+   */
+  @Get('getTotalCoffeeChatCount')
+  @Security('jwt_token')
+  @SuccessResponse('200', '성공적으로 커피챗을 승낙했습니다.')
+  @Response<ITsoaErrorResponse> (
+    400, 
+    'Bad Request', 
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE404',
+        reason: '존재하지 않는 커피챗 일정입니다.',
+        data: null
+      },
+      success: null
+    })
+  @Response<ITsoaErrorResponse>(
+    500,
+    'Internal Server Error',
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE500',
+        reason: '서버 오류가 발생했습니다.',
+        data: null
+      },
+      success: null
+    })
+  public async getTotalCoffeeChatCount(
+      @Request() req: ExpressRequest,
+  ):Promise<ITsoaSuccessResponse<number>> {
+    const userId = req.user.index;
+
+    const result = await this.homeService.getTotalCoffeeChatCountService(userId);
+
+    return new TsoaSuccessResponse<number>(result);
+  };
+
+  /**
+   * Coffect coffeeChat Home API.
+   * 
    * @summary 스케줄러를 수동으로 실행하는 API (개발/테스트용)
    * @returns 요청 성공 여부
    */

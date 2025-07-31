@@ -720,6 +720,19 @@ export class HomeModel {
     });
   };
 
+  public async getTotalCoffeeChatCountModel(
+    userId : number
+  ):Promise<number> {
+    const result = await prisma.coffeeChat.count({
+      where : {
+        OR : [{firstUserId : userId}, {secondUserId : userId}],
+        valid : true
+      }
+    });
+
+    return result;
+  };
+
   /** 스케줄러 수동 실행 모델 */
   public async resetDailyFieldsModel(): Promise<void> {
     console.log('Manual reset job started at:', new Date().toISOString());
