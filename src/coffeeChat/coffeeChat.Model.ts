@@ -509,14 +509,15 @@ export class HomeModel {
       const secondUserImage = coffeeChat.secondUser?.profileImage || '';
       
       // 남은 일수 계산 (밀리초를 일수로 변환)
-      const restDate = new Date(coffeeChat.coffectDate.getTime() - currentDate.getTime());
+      const timeDiff = coffeeChat.coffectDate.getTime() - currentDate.getTime();
+      const restDate = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24))); // 밀리초를 일수로 변환, 음수 방지
       
       return new CoffeeChatSchedule(
         opponentId,
         opponentName,
         coffeeChat.coffectDate,
         coffeeChat.location,
-        restDate,
+        restDate, // 이제 number 타입
         firstUserImage,
         secondUserImage
       );
