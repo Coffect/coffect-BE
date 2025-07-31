@@ -39,7 +39,7 @@ export class ProfileController extends Controller {
 
   /**
    * 본인의 기본적인 프로필
-   * 쓰레드수, 팔로잉, 팔로워, 유저정보를 반환한다
+   * 쓰레드수, 팔로잉, 팔로워, 유저정보, 관심키워드를 반환한다
    *
    * @summary 본인 프로필 조회
    *
@@ -91,6 +91,7 @@ export class ProfileController extends Controller {
     await this.profileService.updateInterest(userId, body.interest);
     return new TsoaSuccessResponse('관심사 수정 성공');
   }
+
   /**
    * 본인의 게시글을 조회한다
    *
@@ -187,7 +188,8 @@ export class ProfileController extends Controller {
   }
   /**
    * 유저의 프로필을 조회한다
-   * 조회하려는 유저의 아이디를 검색한다
+   * 조회하려는 유저의 아이디를 검색한다,
+   * 쓰레드수, 팔로잉, 팔로워, 유저정보, 관심키워드를 반환한다
    *
    * @summary 유저 프로필 조회
    * @param id 아이디

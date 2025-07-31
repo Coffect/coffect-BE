@@ -18,13 +18,13 @@ export class ProfileService {
 
   public async myProfile(userId: number) {
     const data = await this.profileModel.selectUserProfile(userId);
-    return new ProfileDTO(data);
+    return new ProfileDTO(data as [number, number, number, object, object[]]);
   }
 
   public async getProfile(id: string) {
     const user = await new UserModel().selectUserInfo(id);
     const data = await this.profileModel.selectUserProfile(user?.userId!);
-    return new ProfileDTO(data);
+    return new ProfileDTO(data as [number, number, number, object, object[]]);
   }
 
   public async getThread(id?: string, userIndex?: number) {

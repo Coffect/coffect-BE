@@ -190,15 +190,15 @@ export class HomeController extends Controller {
         },
         success: null
       })
-      public async currentCardRecommend (
+  public async currentCardRecommend (
         @Request() req: ExpressRequest
-      ):Promise<ITsoaSuccessResponse<coffectChatCardDTO>> {
-        const userId = req.decoded.index;
+  ):Promise<ITsoaSuccessResponse<coffectChatCardDTO>> {
+    const userId = req.decoded.index;
 
-        const result = await this.homeService.currentCardRecommendService(userId);
+    const result = await this.homeService.currentCardRecommendService(userId);
 
-        return new TsoaSuccessResponse<coffectChatCardDTO>(result);
-      };
+    return new TsoaSuccessResponse<coffectChatCardDTO>(result);
+  };
 
 
 

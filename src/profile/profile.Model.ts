@@ -17,7 +17,7 @@ export class ProfileModel {
       prisma.follow.count({
         where: { followerId: userId }
       }),
-      prisma.user.findMany({
+      prisma.user.findFirst({
         where: { userId: userId },
         select: {
           name: true,
@@ -28,6 +28,18 @@ export class ProfileModel {
           UnivList: {
             select: {
               name: true
+            }
+          }
+        }
+      }),
+      prisma.categoryMatch.findMany({
+        where: { userId: userId },
+        select: {
+          category: {
+            select: {
+              categoryId: true,
+              categoryName: true,
+              categoryColor: true
             }
           }
         }
