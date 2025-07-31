@@ -56,7 +56,7 @@ export class FollowController extends Controller {
             oppentUserId: number;
         }  
   ):Promise<TsoaSuccessResponse<string>> {
-    const userId = req.decoded.index;
+    const userId = req.user.index;
     const {oppentUserId }= body;
 
     if(oppentUserId == undefined || !oppentUserId) {

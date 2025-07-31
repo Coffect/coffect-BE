@@ -62,8 +62,7 @@ export class HomeController extends Controller {
   ): Promise<ITsoaSuccessResponse<string>> {
     
     const todayInterestIndex : number = body.todayInterest;
-    const userId = req.decoded.index;
-    // await decodeToken(token).userId as number;
+    const userId = req.user.index;
 
     if(todayInterestIndex === null || todayInterestIndex === undefined) {
       throw new postTodayError('주제를 선정하지 않았습니다.');
@@ -124,7 +123,7 @@ export class HomeController extends Controller {
   public async CardCloseCoffeeChatController (
     @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<coffectChatCardDTO>> { 
-    const userId = req.decoded.index;
+    const userId = req.user.index;
 
     const result = await this.homeService.CardCoffeeChatService(userId);
 
@@ -193,7 +192,7 @@ export class HomeController extends Controller {
   public async currentCardRecommend (
         @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<coffectChatCardDTO>> {
-    const userId = req.decoded.index;
+    const userId = req.user.index;
 
     const result = await this.homeService.currentCardRecommendService(userId);
 
@@ -243,7 +242,7 @@ export class HomeController extends Controller {
       suggestion: string;
     },
   ): Promise<ITsoaSuccessResponse<string>> {
-    const myUserId = req.decoded.index; // 내 userId
+    const myUserId = req.user.index; // 내 userId
     const { otherUserid, suggestion } = body;
 
     if (!suggestion || suggestion.trim().length === 0) {
@@ -294,7 +293,7 @@ export class HomeController extends Controller {
   public async GetCoffeeChatSchedule (
     @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<CoffeeChatSchedule[]>> { 
-    const userId = req.decoded.index;
+    const userId = req.user.index;
 
     const result = await this.homeService.GetCoffeeChatScheduleService(userId);
 
@@ -339,7 +338,7 @@ export class HomeController extends Controller {
   public async getPastCoffeeChat (
     @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<CoffeeChatRecord[]>> { 
-    const userId = req.decoded.index;
+    const userId = req.user.index;
 
     const result = await this.homeService.getPastCoffeeChatService(userId);
 
@@ -388,7 +387,7 @@ export class HomeController extends Controller {
   public async getSpecifyCoffeeChat (
     @Request() req: ExpressRequest
   ):Promise<ITsoaSuccessResponse<CoffeeChatRecordDetail>> { 
-    const userId = req.decoded.index;
+    const userId = req.user.index;
 
     const result = await this.homeService.getSpecifyCoffeeChatService(userId);
 
@@ -442,7 +441,7 @@ export class HomeController extends Controller {
       time: Date;
     },
   ):Promise<ITsoaSuccessResponse<string>> { 
-    const userId = req.decoded.index;
+    const userId = req.user.index;
     const { coffectId, coffeeDate, location, time } = body;
     
     if(coffectId === null) {
@@ -500,7 +499,7 @@ export class HomeController extends Controller {
         coffectId : number;
       },
   ):Promise<ITsoaSuccessResponse<string>> {
-    const userId = req.decoded.index;
+    const userId = req.user.index;
     const { coffectId } = body;
 
     if(coffectId === null) {
