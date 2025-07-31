@@ -6,20 +6,28 @@ type UserInfo = {
   profileImage: string;
   dept: string;
   studentId: number;
-  //   univName: string;
   UnivList: { name: string };
 };
+
+type Category = {
+  categoryId: number;
+  categoryName: string;
+  categoryColor: string;
+};
+
 export class ProfileDTO {
   threadCount: number;
   following: number;
   follower: number;
   userInfo: UserInfo;
+  interest: Category[];
 
-  constructor(data: [number, number, number, object]) {
+  constructor(data: [number, number, number, object, object]) {
     this.threadCount = data[0];
     this.following = data[1];
     this.follower = data[2];
     this.userInfo = data[3] as UserInfo;
+    this.interest = data[4] as Category[];
   }
 }
 
@@ -47,7 +55,7 @@ export class ProfileUpdateDTO {
 }
 
 export class UpdateProfileBody {
-  @Example('[1,2,3]')
+  @Example('[1,2,3,4]')
   interest!: number[];
 }
 

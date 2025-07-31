@@ -91,6 +91,7 @@ export class ProfileController extends Controller {
     await this.profileService.updateInterest(userId, body.interest);
     return new TsoaSuccessResponse('관심사 수정 성공');
   }
+
   /**
    * 본인의 게시글을 조회한다
    *

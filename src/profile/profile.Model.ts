@@ -31,6 +31,18 @@ export class ProfileModel {
             }
           }
         }
+      }),
+      prisma.categoryMatch.findMany({
+        where: { userId: userId },
+        select: {
+          category: {
+            select: {
+              categoryId: true,
+              categoryName: true,
+              categoryColor: true
+            }
+          }
+        }
       })
     ]);
     return data;

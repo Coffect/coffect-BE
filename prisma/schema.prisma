@@ -173,7 +173,7 @@ model SubjectMatch {
 }
 
 model Category {
-  categotyId    Int             @id @default(autoincrement())
+  categoryId    Int             @id @default(autoincrement())
   categoryName  CategoryEnum
   categoryColor String
   categoryMatch CategoryMatch[]
@@ -183,7 +183,7 @@ model CategoryMatch {
   userId     Int
   categotyId Int
   createdAt  DateTime @default(now())
-  category   Category @relation(fields: [categotyId], references: [categotyId])
+  category   Category @relation(fields: [categotyId], references: [categoryId])
   user       User     @relation(fields: [userId], references: [userId])
 
   @@id([userId, categotyId])
