@@ -16,6 +16,10 @@ export class HomeController extends Controller {
     this.homeService = new HomeService();
   }
 
+
+
+
+
   /**
    * Coffect coffeeChat Home API.
    * 
@@ -139,6 +143,63 @@ export class HomeController extends Controller {
 
     return new TsoaSuccessResponse<coffectChatCardDTO>(result);
   };
+
+  /**
+   * Coffect coffeeChat Home API.
+   * 
+   * @summary 현재 추천 카드 가져오는 API
+   * @param body 유저 Token
+   * @returns 요청 성공 여부
+   */
+  @Get('currentCardRecommend')
+  @Middlewares(verify)
+  @SuccessResponse('200', '성공적으로 Data를 불러왔습니다.')
+  @Response<ITsoaErrorResponse> (
+    400, 
+    'Bad Request', 
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE400',
+        reason: '주제 선정해주세요.',
+        data: null
+      },
+      success: null
+    })
+    @Response<ITsoaErrorResponse> (
+      400, 
+      'Bad Request', 
+      {
+        resultType: 'FAIL',
+        error: {
+          errorCode: 'HE401',
+          reason: '오늘 하루 추천 커피챗 횟수를 초과 했습니다.',
+          data: null
+        },
+        success: null
+      })
+    @Response<ITsoaErrorResponse>(
+      500,
+      'Internal Server Error',
+      {
+        resultType: 'FAIL',
+        error: {
+          errorCode: 'HE500',
+          reason: '서버 오류가 발생했습니다.',
+          data: null
+        },
+        success: null
+      })
+      public async currentCardRecommend (
+        @Request() req: ExpressRequest
+      ):Promise<ITsoaSuccessResponse<coffectChatCardDTO>> {
+        const userId = req.decoded.index;
+
+        const result = await this.homeService.currentCardRecommendService(userId);
+
+        return new TsoaSuccessResponse<coffectChatCardDTO>(result);
+      };
+
 
 
   /**
@@ -449,5 +510,35 @@ export class HomeController extends Controller {
     await this.homeService.acceptCoffeeChatService(userId, coffectId);
 
     return new TsoaSuccessResponse<string>('정상적으로 커피챗을 승낙했습니다.');
+  };
+
+  /**
+   * Coffect coffeeChat Home API.
+   * 
+   * @summary 스케줄러를 수동으로 실행하는 API (개발/테스트용)
+   * @returns 요청 성공 여부
+   */
+  @Post('resetDailyFields')
+  @Middlewares(verify)
+  @SuccessResponse('200', '성공적으로 daily 필드를 초기화했습니다.')
+  @Response<ITsoaErrorResponse>(
+    500,
+    'Internal Server Error',
+    {
+      resultType: 'FAIL',
+      error: {
+        errorCode: 'HE500',
+        reason: '서버 오류가 발생했습니다.',
+        data: null
+      },
+      success: null
+    })
+  public async resetDailyFieldsController(
+    @Request() req: ExpressRequest,
+  ): Promise<ITsoaSuccessResponse<string>> {
+    
+    await this.homeService.resetDailyFieldsService();
+
+    return new TsoaSuccessResponse<string>('성공적으로 daily 필드를 초기화했습니다.');
   };
 }

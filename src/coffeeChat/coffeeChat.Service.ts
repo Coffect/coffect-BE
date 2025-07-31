@@ -81,6 +81,32 @@ export class HomeService {
     return showFrontProfile; // 항상 CoffectChatCardDTO 반환
   };
 
+  /** 현재 coffeeChatCount값에 따른 사용자 추천 */
+  public async currentCardRecommendService(
+    userId : number
+  ):Promise<coffectChatCardDTO> {
+    
+    const recommendIndex = await this.homeModel.getCoffeeChatCount(userId) + 1;
+
+    if(recommendIndex < 0) {
+      throw new exceedLimitError('오늘 하루 추천 커피챗 횟수를 초과 했습니다.');
+    }
+
+    const todayInterestArray = await this.homeModel.getTodayInterestArray(userId);
+
+    if (recommendIndex >= todayInterestArray.length) {
+      throw new Error(
+        `Invalid recommend index: ${recommendIndex}, array length: ${todayInterestArray.length}`
+      );
+    }
+
+    const recommendUserId = todayInterestArray[recommendIndex];
+
+    const result = await this.homeModel.showFrontProfile(recommendUserId);
+
+    return result;
+  };
+
   /** 커피챗 제안 서비스 */
   public async postSuggestCoffeeChatService(
     myUserId: number,
@@ -136,5 +162,9 @@ export class HomeService {
   ):Promise<void> {
     await this.homeModel.acceptCoffeeChatModel(userId, coffectId);
   };
-  
+
+  /** 스케줄러 수동 실행 서비스 */
+  public async resetDailyFieldsService(): Promise<void> {
+    await this.homeModel.resetDailyFieldsModel();
+  };
 }

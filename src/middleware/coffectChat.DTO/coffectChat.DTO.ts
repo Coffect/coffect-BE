@@ -1,13 +1,15 @@
 
 
 export class coffectChatCardDTO {
+  userId : number; // 상대방 userid
   name : string;
   grade : number;
   introduce : string;
   categoryMatch : string[]; // 배열로 받아야함
   profileImage : string;
 
-  constructor(name : string, grade : number, introduce : string, categoryMatch : string[], profileImage : string) {
+  constructor(userId : number, name : string, grade : number, introduce : string, categoryMatch : string[], profileImage : string) {
+    this.userId = userId;
     this.name = name;
     this.grade = grade;
     this.introduce = introduce;
@@ -18,6 +20,7 @@ export class coffectChatCardDTO {
 
 export class CoffeeChatSchedule {
   opponentId: string;
+  opponentName: string;
   coffeeDate: Date;
   location: string;
   restDate: Date;
@@ -26,6 +29,7 @@ export class CoffeeChatSchedule {
 
   constructor(
     opponentId: string,
+    opponentName: string,
     coffeeDate: Date,
     location: string,
     restDate: Date,
@@ -33,6 +37,7 @@ export class CoffeeChatSchedule {
     secondUserImage: string
   ) {
     this.opponentId = opponentId;
+    this.opponentName = opponentName;
     this.coffeeDate = coffeeDate;
     this.location = location;
     this.restDate = restDate;
