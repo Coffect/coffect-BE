@@ -7,46 +7,80 @@ import { ResponseFromSingleThread } from '../middleware/thread.DTO/thread.DTO';
 
 export class ProfileModel {
   public async selectUserProfile(userId: number) {
-    const data = await Promise.all([
-      prisma.thread.count({
-        where: { userId: userId }
-      }),
-      prisma.follow.count({
-        where: { followingId: userId }
-      }),
-      prisma.follow.count({
-        where: { followerId: userId }
-      }),
-      prisma.user.findFirst({
-        where: { userId: userId },
-        select: {
-          id: true,
-          name: true,
-          introduce: true,
-          profileImage: true,
-          dept: true,
-          studentId: true,
-          UnivList: {
-            select: {
-              name: true
+    try {
+      const data = await Promise.all([
+        prisma.thread.count({
+          where: { userId: userId }
+        }),
+        prisma.follow.count({
+          where: { followingId: userId }
+        }),
+        prisma.follow.count({
+          where: { followerId: userId }
+        }),
+        prisma.user.findFirst({
+          where: { userId: userId },
+          select: {
+            id: true,
+            name: true,
+            introduce: true,
+            profileImage: true,
+            dept: true,
+            studentId: true,
+            UnivList: {
+              select: {
+                name: true
+              }
             }
           }
-        }
-      }),
-      prisma.categoryMatch.findMany({
-        where: { userId: userId },
-        select: {
-          category: {
-            select: {
-              categoryId: true,
-              categoryName: true,
-              categoryColor: true
+        }),
+        prisma.categoryMatch.findMany({
+          where: { userId: userId },
+          select: {
+            category: {
+              select: {
+                categoryId: true,
+                categoryName: true,
+                categoryColor: true
+              }
             }
           }
-        }
-      })
-    ]);
-    return data;
+        })
+      ]);
+      return data;
+    } catch (error) {
+      console.error('Profile select error:', error);
+      // 카테고리 조회 실패 시 빈 배열로 대체
+      const data = await Promise.all([
+        prisma.thread.count({
+          where: { userId: userId }
+        }),
+        prisma.follow.count({
+          where: { followingId: userId }
+        }),
+        prisma.follow.count({
+          where: { followerId: userId }
+        }),
+        prisma.user.findFirst({
+          where: { userId: userId },
+          select: {
+            id: true,
+            name: true,
+            introduce: true,
+            profileImage: true,
+            dept: true,
+            studentId: true,
+            UnivList: {
+              select: {
+                name: true
+              }
+            }
+          }
+        }),
+        [] // 카테고리 대신 빈 배열 반환
+      ]);
+      return data;
+    }
   }
 
   public async updataUserProfile(info: ProfileUpdateDTO) {
