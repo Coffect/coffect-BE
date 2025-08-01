@@ -74,7 +74,7 @@ export class ThreadService {
 
   public lookUpThreadMainService = async (
     body: BodyToLookUpMainThread
-  ): Promise<ResponseFromThreadMainCursorToClient> => {
+  ): Promise<ResponseFromThreadMainCursor> => {
     const results: ResponseFromThreadMainCursor = await this.ThreadModel.lookUpThreadMainRepository(body);
 
     if (!results || results.thread.length === 0) {
@@ -82,17 +82,18 @@ export class ThreadService {
     }
 
     // bigint 변환
-    const serializedResults = results.thread.map((thread) => ({
-      ...thread,
-      likeCount: Number(thread.likeCount) // BigInt를 Number로 변환
-    }));
+    // const serializedResults = results.thread.map((thread: any) => ({
+    //   ...thread,
+    //   commentCount: Number(thread.commentCount), // BigInt를 Number로 변환
+    //   likeCount: Number(thread.likeCount) // BigInt를 Number로 변환
+    // }));
 
-    const responseToClient: ResponseFromThreadMainCursorToClient = {
-      thread: serializedResults,
-      nextCursor: results.nextCursor
-    };
+    // const responseToClient: ResponseFromThreadMainCursorToClient = {
+    //   thread: serializedResults,
+    //   nextCursor: results.nextCursor
+    // };
 
-    return responseToClient;
+    return results;
   };
 
   public threadEditService = async (
@@ -168,5 +169,5 @@ export class ThreadService {
     }
 
     return result;
-  }
+  };
 }

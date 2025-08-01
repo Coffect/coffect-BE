@@ -1,3 +1,5 @@
+import { Thread_type } from '@prisma/client';
+
 export class BodyToAddThread {
   type: ThreadType;
   threadTitle: string;
@@ -23,26 +25,29 @@ export class BodyToAddThread {
 }
 
 export class BodyToLookUpMainThread {
-  type: ThreadType;
+  type?: Thread_type;
   threadSubject?: number[];
   ascend: boolean;
   orderBy: 'createdAt' | 'likeCount';
-  cursor: number;
+  likeCursor?: number;
+  dateCursor?: Date;
 
   constructor(
     body: {
-      type: ThreadType;
+      type?: Thread_type;
       threadSubject?: number[];
       ascend?: boolean;
+      likeCursor?: number;
+      dateCursor?: Date;
       orderBy?: 'createdAt' | 'likeCount';
-      cursor?: number;
     }
   ) {
     this.type = body.type;
-    this.threadSubject = body.threadSubject;
-    this.ascend = body.ascend ?? true; // 기본값은 오름차순
     this.orderBy = body.orderBy ?? 'createdAt'; // 기본값은 createdAt
-    this.cursor = body.cursor ?? 0; // 기본값은 0
+    this.threadSubject = body.threadSubject ?? []; // 기본값은 빈 배열
+    this.ascend = body.ascend ?? true; // 기본값은 오름차순
+    this.likeCursor = body.likeCursor;
+    this.dateCursor = body.dateCursor;
   }
 }
 
@@ -113,30 +118,71 @@ export interface ResponseFromSingleThreadWithLikes {
 export interface ResponseFromThreadMain {
   threadId: string;
   userId: number;
+  type: string;
   threadTitle: string;
-  thradBody: string;
+  thradBody: string | null;
   createdAt: Date;
   threadShare: number;
-  name: string;
-  profileImage: string;
-  likeCount: bigint;
+  user: {
+    name: string;
+    profileImage: string;
+    studentId: number | null;
+    dept: string | null;
+  };
+  subjectMatch: {
+    threadSubject: {
+      subjectName: string;
+    }
+  }[];
+  images: {
+    imageId: string;
+  }[];
+  _count: {
+    comments: number;
+    likes: number;
+  }
 }
 
-export interface ResponseFromThreadMainToClient {
+export class ResponseFromThreadMainToClient {
   threadId: string;
   userId: number;
+  type: string;
   threadTitle: string;
-  thradBody: string;
+  threadBody: string | null;
   createdAt: Date;
   threadShare: number;
-  name: string;
-  profileImage: string;
+  user: {
+    name: string;
+    profileImage: string;
+    studentId: number | null;
+    dept: string | null;
+  };
+  subjects: string[];
+  images: string[];
+  commentCount: number;
   likeCount: number;
+
+  constructor(body: ResponseFromThreadMain) {
+    const { threadId, userId, type, threadTitle, thradBody, createdAt, threadShare, user, subjectMatch, images, _count } = body;
+
+    this.threadId = threadId;
+    this.userId = userId;
+    this.type = type;
+    this.threadTitle = threadTitle;
+    this.threadBody = thradBody;
+    this.createdAt = createdAt;
+    this.threadShare = threadShare;
+    this.user = user;
+    this.subjects = subjectMatch.map((subjectMatch => {return subjectMatch.threadSubject.subjectName;}));
+    this.images = images.map((image => {return image.imageId;}));
+    this.commentCount = Number(_count.comments);
+    this.likeCount = Number(_count.likes);
+  }
 }
 
 export interface ResponseFromThreadMainCursor{
   thread: ResponseFromThreadMain[];
-  nextCursor: number;
+  nextCursor: number | Date;
 }
 
 export interface ResponseFromThreadMainCursorToClient{
@@ -170,6 +216,9 @@ export interface ResponseFromGetComment {
 export enum ThreadType {
   article = '아티클',
   teamMate = '팀원모집',
-  question = '질문'
+  question = '질문',
+  review = '후기글',
+  tip = '팁 공유',
+  help = '도움 필요'
 }
 

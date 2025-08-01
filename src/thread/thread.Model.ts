@@ -116,50 +116,232 @@ export class ThreadModel {
   public lookUpThreadMainRepository = async (
     body: BodyToLookUpMainThread
   ): Promise<ResponseFromThreadMainCursor> => {
-    const { type, threadSubject, ascend, cursor } = body;
-
-    // 정렬 순서
-    const orderClause = ascend ? Prisma.sql`ORDER BY ${body.orderBy} ASC` : Prisma.sql`ORDER BY ${body.orderBy} DESC`;
+    const { type, threadSubject, dateCursor } = body;
 
     // 페이지네이션 (커서 기반)
     const limit = 10;
-    const offset = cursor > 0 ? (cursor - 1) * limit : 0;
-    const paginationClause = Prisma.sql`LIMIT ${limit} OFFSET ${offset}`;
-    let thread: ResponseFromThreadMain[];
 
-    // 주제 필터링이 없는 경우
-    if (!threadSubject || threadSubject.length === 0) {
-      thread = await prisma.$queryRaw`
-        SELECT
-          T.threadId, T.userId, T.threadTitle, T.thradBody, T.createdAt, T.threadShare,
-          U.name, U.profileImage,
-          (SELECT COUNT(*) FROM ThreadLike WHERE threadId = T.threadId) AS likeCount
-        FROM Thread AS T
-        JOIN User AS U ON T.userId = U.userId
-        ${orderClause}
-        ${paginationClause}
-      `;
+    let thread: ResponseFromThreadMain[] = [];
+
+    console.log(threadSubject);
+    if(threadSubject === undefined) {
+      throw new ThreadNotFoundError('게시글 주제가 유효하지 않습니다. type: undefined');
+    }
+    if(threadSubject.length === 0){
+      if (dateCursor === undefined) {
+        thread = await prisma.thread.findMany({
+          take: limit,
+          select: {
+            threadId: true,
+            userId: true,
+            type: true,
+            threadTitle: true,
+            thradBody: true,
+            createdAt: true,
+            threadShare: true,
+            user: {
+              select: {
+                name: true,
+                profileImage: true,
+                studentId: true,
+                dept: true
+              }
+            },
+            subjectMatch: {
+              select: {
+                threadSubject: {
+                  select: {
+                    subjectName: true
+                  }
+                }
+              }
+            },
+            images: {
+              select: {
+                imageId: true
+              }
+            },
+            _count: {
+              select: {
+                comments: true,
+                likes: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        });
+      }else{
+        thread = await prisma.thread.findMany({
+          take: limit,
+          skip: 1,
+          cursor: {
+            createdAt: dateCursor
+          },
+          select: {
+            threadId: true,
+            userId: true,
+            type: true,
+            threadTitle: true,
+            thradBody: true,
+            createdAt: true,
+            threadShare: true,
+            user: {
+              select: {
+                name: true,
+                profileImage: true,
+                studentId: true,
+                dept: true
+              }
+            },
+            subjectMatch: {
+              select: {
+                threadSubject: {
+                  select: {
+                    subjectName: true
+                  }
+                }
+              }
+            },
+            images: {
+              select: {
+                imageId: true
+              }
+            },
+            _count: {
+              select: {
+                comments: true,
+                likes: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        });
+      }
     }else{
-      thread = await prisma.$queryRaw`
-      SELECT
-        T.threadId, T.userId, T.threadTitle, T.thradBody, T.createdAt, T.threadShare,
-        U.name, U.profileImage,
-        (SELECT COUNT(*) FROM ThreadLike WHERE threadId = T.threadId) AS likeCount
-      FROM Thread AS T
-      JOIN User AS U ON T.userId = U.userId
-      JOIN SubjectMatch AS SM ON T.threadId = SM.threadId
-      WHERE T.type = ${type} AND SM.subjectId IN (${Prisma.join(threadSubject)})
-      GROUP BY T.threadId, T.userId, T.threadTitle, T.thradBody, T.createdAt, T.threadShare, U.name, U.profileImage
-      HAVING COUNT(DISTINCT SM.subjectId) = ${threadSubject.length}
-      ${orderClause}
-      ${paginationClause}
-    `;
+      if (dateCursor === undefined) {
+        thread = await prisma.thread.findMany({
+          take: limit,
+          where: {
+            type: type,
+            subjectMatch: {
+              some: {
+                subjectId: {
+                  in: threadSubject
+                }
+              }
+            }
+          },
+          select: {
+            threadId: true,
+            userId: true,
+            type: true,
+            threadTitle: true,
+            thradBody: true,
+            createdAt: true,
+            threadShare: true,
+            user: {
+              select: {
+                name: true,
+                profileImage: true,
+                studentId: true,
+                dept: true
+              }
+            },
+            subjectMatch: {
+              select: {
+                threadSubject: {
+                  select: {
+                    subjectName: true
+                  }
+                }
+              }
+            },
+            images: {
+              select: {
+                imageId: true
+              }
+            },
+            _count: {
+              select: {
+                comments: true,
+                likes: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        });
+      }else{
+        thread = await prisma.thread.findMany({
+          take: limit,
+          skip: 1,
+          cursor: {
+            createdAt: dateCursor
+          },
+          where: {
+            type: type,
+            subjectMatch: {
+              some: {
+                subjectId: {
+                  in: threadSubject
+                }
+              }
+            }
+          },
+          select: {
+            threadId: true,
+            userId: true,
+            type: true,
+            threadTitle: true,
+            thradBody: true,
+            createdAt: true,
+            threadShare: true,
+            user: {
+              select: {
+                name: true,
+                profileImage: true,
+                studentId: true,
+                dept: true
+              }
+            },
+            subjectMatch: {
+              select: {
+                threadSubject: {
+                  select: {
+                    subjectName: true
+                  }
+                }
+              }
+            },
+            images: {
+              select: {
+                imageId: true
+              }
+            },
+            _count: {
+              select: {
+                comments: true,
+                likes: true
+              }
+            }
+          },
+          orderBy: {
+            createdAt: 'desc'
+          }
+        });
+      }
     }
+    
 
-    let nextCursor = cursor + thread.length;
-    if(thread.length < limit) { // 마지막 게시글
-      nextCursor = -1;
-    }
+    console.log(thread);
+
+    const lastThread = thread[thread.length - 1];
+    const nextCursor = lastThread.createdAt;
 
     return {thread, nextCursor};
   };
@@ -349,7 +531,7 @@ export class ThreadModel {
     });
 
     return result.threadId;
-  }
+  };
 }
 
 export const checkThreadOwner = async (
