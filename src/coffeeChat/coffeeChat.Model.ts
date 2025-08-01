@@ -609,6 +609,9 @@ export class HomeModel {
       }
     });
 
+    console.log('getPastCoffeeChatModel - result count:', result.length);
+    console.log('getPastCoffeeChatModel - result:', result);
+
     // CoffeeChatRecord[] 생성
     const records: CoffeeChatRecord[] = result.map((chat: any) => {
       // 상대방 구분
