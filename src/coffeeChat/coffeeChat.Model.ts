@@ -568,10 +568,11 @@ export class HomeModel {
           lt: todayStart // 오늘 이전의 데이터만
         }
       },
-      orderBy: {
-        coffectDate: 'desc'
-      },
-      include: {
+      select: {
+        coffectId: true,
+        coffectDate: true,
+        firstUserId: true,
+        secondUserId: true,
         firstUser: {
           select: {
             userId: true,
@@ -606,6 +607,9 @@ export class HomeModel {
             }
           }
         }
+      },
+      orderBy: {
+        coffectDate: 'desc'
       }
     });
 
@@ -631,7 +635,7 @@ export class HomeModel {
       const color2 = (me?.categoryMatch?.[0]?.category?.categoryColor) || '';
       
       const coffeeDate = chat.coffectDate;
-      return new CoffeeChatRecord(opponentName, color1, color2, coffeeDate);
+      return new CoffeeChatRecord(chat.coffectId, opponentName, color1, color2, coffeeDate);
     });
 
     return records;
