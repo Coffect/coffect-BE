@@ -31,7 +31,8 @@ import {
   BodyToLookUpMainThread,
   ResponseFromThreadMainCursorToClient,
   ResponseFromPostComment,
-  ResponseFromGetComment
+  ResponseFromGetComment,
+  ResponseFromThreadMainCursor
 } from '../middleware/thread.DTO/thread.DTO';
 
 import { UserUnauthorizedError } from '../user/user.Message';
@@ -39,6 +40,7 @@ import { UserUnauthorizedError } from '../user/user.Message';
 import { ThreadService } from './thread.Service';
 import { ThreadInvalidOrderByError, ThreadNoID, ThreadUnauthorizedError } from './thread.Message';
 import { checkThreadOwner } from './thread.Model';
+import { Thread_type } from '@prisma/client';
 
 @Route('thread')
 @Tags('Thread Controller')
@@ -222,20 +224,21 @@ export class ThreadController extends Controller {
   })
   public async mainThread(
     @Body() body: {
-      type: ThreadType;
+      type?: Thread_type;
       threadSubject?: number[];
       orderBy: 'createdAt' | 'likeCount';
       ascend: boolean;
-      cursor: number;
+      likeCursor?: number;
+      dateCursor?: Date;
     }
-  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursorToClient>> {
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursor>> {
     if(body.orderBy !== 'createdAt' && body.orderBy !== 'likeCount') {
       throw new ThreadInvalidOrderByError(`정렬 기준은 createdAt 또는 likeCount 중 하나여야 합니다. orderBy: ${body.orderBy}`);
     }
 
     const result = await this.ThreadService.lookUpThreadMainService(new BodyToLookUpMainThread(body));
 
-    return new TsoaSuccessResponse<ResponseFromThreadMainCursorToClient>(result);
+    return new TsoaSuccessResponse<ResponseFromThreadMainCursor>(result);
   }
 
   /**
