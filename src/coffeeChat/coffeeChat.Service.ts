@@ -94,8 +94,8 @@ export class HomeService {
 
     const todayInterestArray = await this.homeModel.getTodayInterestArray(userId);
 
-    // CardCoffeeChatService와 동일한 로직 사용 (coffeeChatCount - 1)
-    const recommendIndex = coffeeChatCount - 1;
+    // 현재 coffeeChatCount를 인덱스로 사용 (감소된 값)
+    const recommendIndex = coffeeChatCount;
 
     if (recommendIndex >= todayInterestArray.length) {
       throw new Error(
