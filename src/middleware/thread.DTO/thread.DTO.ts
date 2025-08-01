@@ -221,4 +221,3 @@ export enum ThreadType {
   tip = '팁 공유',
   help = '도움 필요'
 }
-

@@ -11,7 +11,8 @@ import {
   Security,
   Patch,
   Query,
-  SuccessResponse
+  SuccessResponse,
+  Post
 } from 'tsoa';
 
 import {
@@ -28,6 +29,7 @@ import {
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
 import { ResponseFromSingleThreadWithLikes } from '../middleware/thread.DTO/thread.DTO';
 import { UserModel } from '../user/user.Model';
+import { UserIdNotFound } from './profile.Message';
 @Route('profile')
 @Tags('Profile Controller')
 export class ProfileController extends Controller {
@@ -235,6 +237,33 @@ export class ProfileController extends Controller {
   ): Promise<ITsoaSuccessResponse<DetailProfileBody[]>> {
     const userId = await new UserModel().selectUserInfo(id);
     const data = await this.profileService.getDetailProfile(userId!.userId);
+    return new TsoaSuccessResponse(data);
+  }
+
+  /**
+   * 유저의 아이디를 조회한다 userID를 기반으로 ID를 조회한다
+   * eg) userID : 66 -> ID : "seoki"
+   *
+   * @summary 유저 아이디 조회
+   * @param body 유저 아이디
+   */
+  @Post('/id')
+  @Security('jwt_token')
+  @SuccessResponse(200, '유저 아이디 조회 성공')
+  @Response<ITsoaErrorResponse>(404, '유저 아이디 조회 실패', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC404',
+      reason: '유저 아이디를 찾을 수 없습니다.',
+      data: '유저 아이디를 찾을 수 없습니다.'
+    },
+    success: null
+  })
+  public async getUserId(
+    @Request() req: Express.Request,
+    @Body() body: { userId: number }
+  ): Promise<ITsoaSuccessResponse<{ id: string }>> {
+    const data = await this.profileService.getUserId(body.userId);
     return new TsoaSuccessResponse(data);
   }
 }

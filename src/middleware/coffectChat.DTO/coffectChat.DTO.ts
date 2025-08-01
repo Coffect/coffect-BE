@@ -48,17 +48,20 @@ export class CoffeeChatSchedule {
 
 
 export class CoffeeChatRecord {
+  coffectId : number;
   opponentName : string;
   color1 : string;
   color2 : string;
   coffeeDate : Date;
 
   constructor (
+    coffectId : number,
     opponentName : string,
     color1 : string,
     color2 : string,
     coffeeDate : Date
   ) {
+    this.coffectId = coffectId;
     this.opponentName = opponentName;
     this.color1 = color1;
     this.color2 = color2;

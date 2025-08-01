@@ -2,6 +2,7 @@ import { Example } from 'tsoa';
 
 type UserInfo = {
   name: string;
+  id: string;
   introduce?: string;
   profileImage: string;
   dept: string;

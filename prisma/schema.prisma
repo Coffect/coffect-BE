@@ -174,8 +174,8 @@ model SubjectMatch {
 
 model Category {
   categoryId    Int             @id @default(autoincrement())
-  categoryName  CategoryEnum
   categoryColor String
+  categoryName  String          @db.VarChar(255)
   categoryMatch CategoryMatch[]
 }
 
@@ -266,23 +266,4 @@ enum SubjectEnum {
   취업
   창업
   학교
-}
-
-enum CategoryEnum {
-  창업
-  개발
-  디자인
-  기획
-  AI
-  글쓰기
-  독서
-  마케팅
-  여행
-  데이터
-  분석
-  하드웨어
-  영화
-  외국어
-  악기
-  네트워킹
 }

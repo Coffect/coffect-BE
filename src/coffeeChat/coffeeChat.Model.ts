@@ -463,7 +463,19 @@ export class HomeModel {
     userId : number
   ):Promise<CoffeeChatSchedule[]> {
 
-    const currentDate = KSTtime();
+    // 현재 날짜를 한국 시간으로 가져오기
+    const now = new Date();
+    const kstOffset = 9 * 60; // KST는 UTC+9
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const currentDate = new Date(utc + (kstOffset * 60000));
+    
+    // 오늘 날짜의 시작 시간 (00:00:00)
+    const todayStart = new Date(currentDate);
+    todayStart.setHours(0, 0, 0, 0);
+
+    console.log('GetCoffeeChatScheduleModel - userId:', userId);
+    console.log('GetCoffeeChatScheduleModel - currentDate:', currentDate);
+    console.log('GetCoffeeChatScheduleModel - todayStart:', todayStart);
 
     const result = await prisma.coffeeChat.findMany({
       where : { 
@@ -472,9 +484,9 @@ export class HomeModel {
           { secondUserId: userId }
         ],
         valid: true,
-        // 커피챗 일정이 오늘 이후인 경우만 조회
+        // 커피챗 일정이 오늘 이후인 경우만 조회 (오늘 포함)
         coffectDate: {
-          gte: currentDate
+          gte: todayStart
         }
       },
       include: {
@@ -495,6 +507,9 @@ export class HomeModel {
         coffectDate: 'asc'
       }
     });
+
+    console.log('GetCoffeeChatScheduleModel - result count:', result.length);
+    console.log('GetCoffeeChatScheduleModel - result:', result);
 
     const schedules: CoffeeChatSchedule[] = result.map((coffeeChat: any) => {
       const opponentId = coffeeChat.firstUserId === userId 
@@ -530,16 +545,34 @@ export class HomeModel {
   public async getPastCoffeeChatModel(
     userId: number
   ): Promise<CoffeeChatRecord[]> {
-    // 과거 커피챗 기록 조회
+    // 현재 날짜를 한국 시간으로 가져오기
+    const now = new Date();
+    const kstOffset = 9 * 60; // KST는 UTC+9
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const currentDate = new Date(utc + (kstOffset * 60000));
+    
+    // 오늘 날짜의 시작 시간 (00:00:00)
+    const todayStart = new Date(currentDate);
+    todayStart.setHours(0, 0, 0, 0);
+    
+    console.log('getPastCoffeeChatModel - userId:', userId);
+    console.log('getPastCoffeeChatModel - currentDate:', currentDate);
+    console.log('getPastCoffeeChatModel - todayStart:', todayStart);
+    
+    // 과거 커피챗 기록 조회 (오늘 이전의 데이터만)
     const result = await prisma.coffeeChat.findMany({
       where: {
         OR: [{ firstUserId: userId }, { secondUserId: userId }],
-        valid: true
+        valid: true,
+        coffectDate: {
+          lt: todayStart // 오늘 이전의 데이터만
+        }
       },
-      orderBy: {
-        coffectDate: 'desc'
-      },
-      include: {
+      select: {
+        coffectId: true,
+        coffectDate: true,
+        firstUserId: true,
+        secondUserId: true,
         firstUser: {
           select: {
             userId: true,
@@ -574,8 +607,14 @@ export class HomeModel {
             }
           }
         }
+      },
+      orderBy: {
+        coffectDate: 'desc'
       }
     });
+
+    console.log('getPastCoffeeChatModel - result count:', result.length);
+    console.log('getPastCoffeeChatModel - result:', result);
 
     // CoffeeChatRecord[] 생성
     const records: CoffeeChatRecord[] = result.map((chat: any) => {
@@ -596,23 +635,22 @@ export class HomeModel {
       const color2 = (me?.categoryMatch?.[0]?.category?.categoryColor) || '';
       
       const coffeeDate = chat.coffectDate;
-      return new CoffeeChatRecord(opponentName, color1, color2, coffeeDate);
+      return new CoffeeChatRecord(chat.coffectId, opponentName, color1, color2, coffeeDate);
     });
 
     return records;
-  }
+  };
 
   /** 커피챗 상세 보기 Model */
   public async getSpecifyCoffeeChatModel(
     userId : number,
     coffectId : number
   ):Promise<CoffeeChatRecordDetail> {
-    // 과거 커피챗 기록 조회
+    // 커피챗 상세 조회 (valid 조건 제거)
     const result = await prisma.coffeeChat.findFirstOrThrow({
       where: {
         coffectId : coffectId,
-        OR: [{ firstUserId: userId }, { secondUserId: userId }],
-        valid: true
+        OR: [{ firstUserId: userId }, { secondUserId: userId }]
       },
       orderBy: {
         coffectDate: 'desc'
@@ -694,6 +732,18 @@ export class HomeModel {
   ):Promise<void> {
     const combineDate = new Date(coffeeChat.getTime() + time.getTime());
 
+    // 먼저 레코드가 존재하는지 확인
+    const existingRecord = await prisma.coffeeChat.findFirst({
+      where: {
+        coffectId: coffectId,
+        OR: [{ firstUserId: userId }, { secondUserId: userId }]
+      }
+    });
+
+    if (!existingRecord) {
+      throw new Error(`CoffeeChat with id ${coffectId} not found for user ${userId}`);
+    }
+
     await prisma.coffeeChat.update({
       where : {
         coffectId : coffectId,
@@ -710,6 +760,18 @@ export class HomeModel {
     userId : number,
     coffectId : number
   ):Promise<void> {
+    // 먼저 레코드가 존재하는지 확인
+    const existingRecord = await prisma.coffeeChat.findFirst({
+      where: {
+        coffectId: coffectId,
+        OR: [{ firstUserId: userId }, { secondUserId: userId }]
+      }
+    });
+
+    if (!existingRecord) {
+      throw new Error(`CoffeeChat with id ${coffectId} not found for user ${userId}`);
+    }
+
     await prisma.coffeeChat.update({
       where : {
         OR : [{firstUserId : userId}, {secondUserId : userId}],
