@@ -349,7 +349,7 @@ export class ThreadModel {
     });
 
     return result.threadId;
-  }
+  };
 }
 
 export const checkThreadOwner = async (
