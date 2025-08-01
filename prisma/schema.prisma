@@ -173,8 +173,8 @@ model SubjectMatch {
 }
 
 model Category {
-  categoryId    Int             @id @default(autoincrement())
-  categoryName  CategoryEnum
+  categoryId    Int                   @id @default(autoincrement())
+  categoryName  Category_categoryName
   categoryColor String
   categoryMatch CategoryMatch[]
 }
@@ -268,21 +268,20 @@ enum SubjectEnum {
   학교
 }
 
-enum CategoryEnum {
-  창업
-  개발
-  디자인
-  기획
+enum Category_categoryName {
+  창업 @map("창업")
+  개발 @map("개발")
+  디자인 @map("디자인")
+  기획 @map("기획")
   AI
-  글쓰기
-  독서
-  마케팅
-  여행
-  데이터
-  분석
-  하드웨어
-  영화
-  외국어
-  악기
-  네트워킹
+  글쓰기 @map("글쓰기")
+  독서 @map("독서")
+  마케팅 @map("마케팅")
+  여행 @map("여행")
+  데이터분석 @map("데이터분석")
+  하드웨어 @map("하드웨어")
+  영화 @map("영화")
+  외국어 @map("외국어")
+  악기 @map("악기")
+  네트워킹 @map("네트워킹")
 }
