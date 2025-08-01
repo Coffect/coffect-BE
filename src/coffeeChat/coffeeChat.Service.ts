@@ -86,13 +86,16 @@ export class HomeService {
     userId : number
   ):Promise<coffectChatCardDTO> {
     
-    const recommendIndex = await this.homeModel.getCoffeeChatCount(userId) + 1;
+    const coffeeChatCount = await this.homeModel.getCoffeeChatCount(userId);
 
-    if(recommendIndex < 1) {
+    if(coffeeChatCount <= 0) {
       throw new exceedLimitError('오늘 하루 추천 커피챗 횟수를 초과 했습니다.');
     }
 
     const todayInterestArray = await this.homeModel.getTodayInterestArray(userId);
+
+    // CardCoffeeChatService와 동일한 로직 사용 (coffeeChatCount - 1)
+    const recommendIndex = coffeeChatCount - 1;
 
     if (recommendIndex >= todayInterestArray.length) {
       throw new Error(
