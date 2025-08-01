@@ -642,12 +642,11 @@ export class HomeModel {
     userId : number,
     coffectId : number
   ):Promise<CoffeeChatRecordDetail> {
-    // 과거 커피챗 기록 조회
+    // 커피챗 상세 조회 (valid 조건 제거)
     const result = await prisma.coffeeChat.findFirstOrThrow({
       where: {
         coffectId : coffectId,
-        OR: [{ firstUserId: userId }, { secondUserId: userId }],
-        valid: true
+        OR: [{ firstUserId: userId }, { secondUserId: userId }]
       },
       orderBy: {
         coffectDate: 'desc'
@@ -729,6 +728,18 @@ export class HomeModel {
   ):Promise<void> {
     const combineDate = new Date(coffeeChat.getTime() + time.getTime());
 
+    // 먼저 레코드가 존재하는지 확인
+    const existingRecord = await prisma.coffeeChat.findFirst({
+      where: {
+        coffectId: coffectId,
+        OR: [{ firstUserId: userId }, { secondUserId: userId }]
+      }
+    });
+
+    if (!existingRecord) {
+      throw new Error(`CoffeeChat with id ${coffectId} not found for user ${userId}`);
+    }
+
     await prisma.coffeeChat.update({
       where : {
         coffectId : coffectId,
@@ -745,6 +756,18 @@ export class HomeModel {
     userId : number,
     coffectId : number
   ):Promise<void> {
+    // 먼저 레코드가 존재하는지 확인
+    const existingRecord = await prisma.coffeeChat.findFirst({
+      where: {
+        coffectId: coffectId,
+        OR: [{ firstUserId: userId }, { secondUserId: userId }]
+      }
+    });
+
+    if (!existingRecord) {
+      throw new Error(`CoffeeChat with id ${coffectId} not found for user ${userId}`);
+    }
+
     await prisma.coffeeChat.update({
       where : {
         OR : [{firstUserId : userId}, {secondUserId : userId}],
