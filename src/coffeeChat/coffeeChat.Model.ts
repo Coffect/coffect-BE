@@ -463,11 +463,19 @@ export class HomeModel {
     userId : number
   ):Promise<CoffeeChatSchedule[]> {
 
-    const currentDate = KSTtime();
+    // 현재 날짜를 한국 시간으로 가져오기
+    const now = new Date();
+    const kstOffset = 9 * 60; // KST는 UTC+9
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const currentDate = new Date(utc + (kstOffset * 60000));
     
     // 오늘 날짜의 시작 시간 (00:00:00)
     const todayStart = new Date(currentDate);
     todayStart.setHours(0, 0, 0, 0);
+
+    console.log('GetCoffeeChatScheduleModel - userId:', userId);
+    console.log('GetCoffeeChatScheduleModel - currentDate:', currentDate);
+    console.log('GetCoffeeChatScheduleModel - todayStart:', todayStart);
 
     const result = await prisma.coffeeChat.findMany({
       where : { 
@@ -499,6 +507,9 @@ export class HomeModel {
         coffectDate: 'asc'
       }
     });
+
+    console.log('GetCoffeeChatScheduleModel - result count:', result.length);
+    console.log('GetCoffeeChatScheduleModel - result:', result);
 
     const schedules: CoffeeChatSchedule[] = result.map((coffeeChat: any) => {
       const opponentId = coffeeChat.firstUserId === userId 
@@ -534,11 +545,19 @@ export class HomeModel {
   public async getPastCoffeeChatModel(
     userId: number
   ): Promise<CoffeeChatRecord[]> {
-    const currentDate = KSTtime();
+    // 현재 날짜를 한국 시간으로 가져오기
+    const now = new Date();
+    const kstOffset = 9 * 60; // KST는 UTC+9
+    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+    const currentDate = new Date(utc + (kstOffset * 60000));
     
     // 오늘 날짜의 시작 시간 (00:00:00)
     const todayStart = new Date(currentDate);
     todayStart.setHours(0, 0, 0, 0);
+    
+    console.log('getPastCoffeeChatModel - userId:', userId);
+    console.log('getPastCoffeeChatModel - currentDate:', currentDate);
+    console.log('getPastCoffeeChatModel - todayStart:', todayStart);
     
     // 과거 커피챗 기록 조회 (오늘 이전의 데이터만)
     const result = await prisma.coffeeChat.findMany({
