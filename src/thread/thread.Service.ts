@@ -168,5 +168,5 @@ export class ThreadService {
     }
 
     return result;
-  }
+  };
 }

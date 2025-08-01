@@ -464,6 +464,10 @@ export class HomeModel {
   ):Promise<CoffeeChatSchedule[]> {
 
     const currentDate = KSTtime();
+    
+    // 오늘 날짜의 시작 시간 (00:00:00)
+    const todayStart = new Date(currentDate);
+    todayStart.setHours(0, 0, 0, 0);
 
     const result = await prisma.coffeeChat.findMany({
       where : { 
@@ -472,9 +476,9 @@ export class HomeModel {
           { secondUserId: userId }
         ],
         valid: true,
-        // 커피챗 일정이 오늘 이후인 경우만 조회
+        // 커피챗 일정이 오늘 이후인 경우만 조회 (오늘 포함)
         coffectDate: {
-          gte: currentDate
+          gte: todayStart
         }
       },
       include: {
@@ -530,11 +534,20 @@ export class HomeModel {
   public async getPastCoffeeChatModel(
     userId: number
   ): Promise<CoffeeChatRecord[]> {
-    // 과거 커피챗 기록 조회
+    const currentDate = KSTtime();
+    
+    // 오늘 날짜의 시작 시간 (00:00:00)
+    const todayStart = new Date(currentDate);
+    todayStart.setHours(0, 0, 0, 0);
+    
+    // 과거 커피챗 기록 조회 (오늘 이전의 데이터만)
     const result = await prisma.coffeeChat.findMany({
       where: {
         OR: [{ firstUserId: userId }, { secondUserId: userId }],
-        valid: true
+        valid: true,
+        coffectDate: {
+          lt: todayStart // 오늘 이전의 데이터만
+        }
       },
       orderBy: {
         coffectDate: 'desc'
@@ -600,7 +613,7 @@ export class HomeModel {
     });
 
     return records;
-  }
+  };
 
   /** 커피챗 상세 보기 Model */
   public async getSpecifyCoffeeChatModel(
