@@ -123,51 +123,58 @@ export class ThreadModel {
 
     let thread: ResponseFromThreadMain[] = [];
 
-    console.log(threadSubject);
     if(threadSubject === undefined) {
       throw new ThreadNotFoundError('게시글 주제가 유효하지 않습니다. type: undefined');
     }
-    if(threadSubject.length === 0){
+
+    const defaultSelect = {
+      threadId: true,
+      userId: true,
+      type: true,
+      threadTitle: true,
+      thradBody: true,
+      createdAt: true,
+      threadShare: true,
+      user: {
+        select: {
+          name: true,
+          profileImage: true,
+          studentId: true,
+          dept: true
+        }
+      },
+      subjectMatch: {
+        select: {
+          threadSubject: {
+            select: {
+              subjectName: true
+            }
+          }
+        }
+      },
+      images: {
+        select: {
+          imageId: true
+        }
+      },
+      _count: {
+        select: {
+          comments: true,
+          likes: true
+        }
+      }
+    };
+
+    // console.log(type);
+    // console.log(threadSubject);
+    // console.log(dateCursor);
+
+
+    if(threadSubject.length === 0 && type === undefined){
       if (dateCursor === undefined) {
         thread = await prisma.thread.findMany({
           take: limit,
-          select: {
-            threadId: true,
-            userId: true,
-            type: true,
-            threadTitle: true,
-            thradBody: true,
-            createdAt: true,
-            threadShare: true,
-            user: {
-              select: {
-                name: true,
-                profileImage: true,
-                studentId: true,
-                dept: true
-              }
-            },
-            subjectMatch: {
-              select: {
-                threadSubject: {
-                  select: {
-                    subjectName: true
-                  }
-                }
-              }
-            },
-            images: {
-              select: {
-                imageId: true
-              }
-            },
-            _count: {
-              select: {
-                comments: true,
-                likes: true
-              }
-            }
-          },
+          select: defaultSelect,
           orderBy: {
             createdAt: 'desc'
           }
@@ -179,99 +186,29 @@ export class ThreadModel {
           cursor: {
             createdAt: dateCursor
           },
-          select: {
-            threadId: true,
-            userId: true,
-            type: true,
-            threadTitle: true,
-            thradBody: true,
-            createdAt: true,
-            threadShare: true,
-            user: {
-              select: {
-                name: true,
-                profileImage: true,
-                studentId: true,
-                dept: true
-              }
-            },
-            subjectMatch: {
-              select: {
-                threadSubject: {
-                  select: {
-                    subjectName: true
-                  }
-                }
-              }
-            },
-            images: {
-              select: {
-                imageId: true
-              }
-            },
-            _count: {
-              select: {
-                comments: true,
-                likes: true
-              }
-            }
-          },
+          select: defaultSelect,
           orderBy: {
             createdAt: 'desc'
           }
         });
       }
-    }else{
+    } else{
       if (dateCursor === undefined) {
         thread = await prisma.thread.findMany({
           take: limit,
           where: {
-            type: type,
-            subjectMatch: {
-              some: {
-                subjectId: {
-                  in: threadSubject
-                }
-              }
-            }
-          },
-          select: {
-            threadId: true,
-            userId: true,
-            type: true,
-            threadTitle: true,
-            thradBody: true,
-            createdAt: true,
-            threadShare: true,
-            user: {
-              select: {
-                name: true,
-                profileImage: true,
-                studentId: true,
-                dept: true
-              }
-            },
-            subjectMatch: {
-              select: {
-                threadSubject: {
-                  select: {
-                    subjectName: true
+            AND: [
+              {type: type},
+              {subjectMatch: {
+                some: {
+                  subjectId: {
+                    in: threadSubject
                   }
                 }
-              }
-            },
-            images: {
-              select: {
-                imageId: true
-              }
-            },
-            _count: {
-              select: {
-                comments: true,
-                likes: true
-              }
-            }
+              }}
+            ]
           },
+          select: defaultSelect,
           orderBy: {
             createdAt: 'desc'
           }
@@ -284,64 +221,33 @@ export class ThreadModel {
             createdAt: dateCursor
           },
           where: {
-            type: type,
-            subjectMatch: {
-              some: {
-                subjectId: {
-                  in: threadSubject
-                }
-              }
-            }
-          },
-          select: {
-            threadId: true,
-            userId: true,
-            type: true,
-            threadTitle: true,
-            thradBody: true,
-            createdAt: true,
-            threadShare: true,
-            user: {
-              select: {
-                name: true,
-                profileImage: true,
-                studentId: true,
-                dept: true
-              }
-            },
-            subjectMatch: {
-              select: {
-                threadSubject: {
-                  select: {
-                    subjectName: true
+            AND: [
+              { type: type},
+              {subjectMatch: {
+                some: {
+                  subjectId: {
+                    in: threadSubject
                   }
                 }
-              }
-            },
-            images: {
-              select: {
-                imageId: true
-              }
-            },
-            _count: {
-              select: {
-                comments: true,
-                likes: true
-              }
-            }
+              }}
+            ]
           },
+          select: defaultSelect,
           orderBy: {
             createdAt: 'desc'
           }
         });
       }
     }
-    
 
-    console.log(thread);
+    //console.log(thread);
 
     const lastThread = thread[thread.length - 1];
-    const nextCursor = lastThread.createdAt;
+    let nextCursor: Date | null = lastThread.createdAt;
+
+    if(thread.length < limit) {
+      nextCursor = null;
+    }
 
     return {thread, nextCursor};
   };
