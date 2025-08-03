@@ -89,10 +89,10 @@ model Message {
 model Thread {
   threadId     String         @id @default(uuid())
   userId       Int
-  type         ThreadType     @default(아티클)
+  type         Thread_type    @default(dbgenerated("아티클"))
   threadTitle  String
   thradBody    String?
-  createdAt    DateTime       @default(now())
+  createdAt    DateTime       @unique(map: "ThreadCreatedAtUnique") @default(now())
   threadShare  Int
   comments     Comment[]
   scraps       ScrapMatch[]
@@ -157,8 +157,8 @@ model Comment {
 }
 
 model ThreadSubject {
-  subjectId    Int            @id @default(autoincrement())
-  subjectName  SubjectEnum
+  subjectId    Int                       @id @default(autoincrement())
+  subjectName  ThreadSubject_subjectName
   subjectMatch SubjectMatch[]
 }
 
@@ -251,19 +251,23 @@ model UnivDept {
   isMain   String @db.VarChar(5)
 }
 
-enum ThreadType {
-  아티클
-  팀원모집
-  질문
+enum ThreadSubject_subjectName {
+  프로덕트 @map("프로덕트")
+  개발 @map("개발")
+  디자인 @map("디자인")
+  기획 @map("기획")
+  인사이트 @map("인사이트")
+  취업 @map("취업")
+  창업 @map("창업")
+  학교 @map("학교")
+  기타 @map("기타")
 }
 
-enum SubjectEnum {
-  프로덕트
-  개발
-  디자인
-  기획
-  인사이트
-  취업
-  창업
-  학교
+enum Thread_type {
+  아티클 @map("아티클")
+  팀원모집 @map("팀원모집")
+  질문 @map("질문")
+  도움_필요 @map("도움 필요")
+  후기글 @map("후기글")
+  팁_공유 @map("팁 공유")
 }

@@ -22,6 +22,15 @@ export class FollowService {
     
     return result;
   };
+
+  public async isFollowService(
+    userId: number,
+    oppentUserId: number
+  ):Promise<boolean> {
+    const result = await this.FollowModel.isFollowModel(userId, oppentUserId);
+
+    return result;
+  }
 };
 
 export class specifyProfileService {

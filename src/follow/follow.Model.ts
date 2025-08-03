@@ -63,6 +63,25 @@ export class FollowModel {
 
     return [followerCount, followingCount];
   };
+
+  public async isFollowModel (
+    userId : number,
+    oppentUserId : number
+  ):Promise<boolean> {
+    const result = await prisma.follow.findFirst({
+      where : {
+        followerId : userId,
+        followingId : oppentUserId
+      }
+    });
+
+    if(!result) {
+      return false;
+    }
+
+    return true;
+  };
+
 };
 
 export class specifyProfileModel {
