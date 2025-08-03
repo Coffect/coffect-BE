@@ -2,7 +2,7 @@ import { Body, Controller, Get, Middlewares, Post, Query, Request, Response, Rou
 import { ITsoaErrorResponse, TsoaSuccessResponse } from '../config/tsoaResponse';
 import verify from '../middleware/verifyJWT';
 import { Request as ExpressRequest } from 'express';
-import { nonProfile, nonUser } from './follow.Message';
+import { followMySelf, nonProfile, nonUser } from './follow.Message';
 import { FollowService, specifyProfileService } from './follow.Service';
 import { specifyFeedDTO, specifyProfileDTO } from '../middleware/follow.DTO/follow.DTO';
 
@@ -38,6 +38,18 @@ export class FollowController extends Controller {
         },
         success: null
       })
+    @Response<ITsoaErrorResponse> (
+      400,
+      'Bad Request',
+      {
+        resultType : 'FAIL',
+        error: {
+          errorCode: 'FE401',
+          reason: '자기 자신을 팔로우 할 수 없습니다',
+          data: null
+        },
+        success: null
+      })
     @Response<ITsoaErrorResponse>(
       500,
       'Internal Server Error',
@@ -61,6 +73,10 @@ export class FollowController extends Controller {
 
     if(oppentUserId == undefined || !oppentUserId) {
       throw new nonUser('상대방 Id가 존재하지 않거나 누락되었습니다.');
+    }
+
+    if(oppentUserId === userId) {
+      throw new followMySelf('자기 자신을 팔로우 할 수 없습니다.');
     }
 
     await this.FollowService.FollowRequestService(userId, oppentUserId);
