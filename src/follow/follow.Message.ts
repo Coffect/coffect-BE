@@ -11,3 +11,9 @@ export class nonProfile extends BasicError {
     super(400, 'PE400', '프로필 조회에 실패하였습니다.', description);
   }
 };
+
+export class followMySelf extends BasicError {
+  constructor(description : string) {
+    super(400, 'FE401', '자기 자신을 팔로우 할 수 없습니다.', description);
+  }
+}
