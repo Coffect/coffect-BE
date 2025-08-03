@@ -25,7 +25,8 @@ import {
   ProfileDTO,
   ProfileUpdateDTO,
   DetailProfileBody,
-  UpdateProfileBody
+  UpdateProfileBody,
+  AllProfileDTO
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
 import { ResponseFromSingleThreadWithLikes } from '../middleware/thread.DTO/thread.DTO';
 import { UserModel } from '../user/user.Model';
@@ -60,7 +61,7 @@ export class ProfileController extends Controller {
   @Security('jwt_token')
   public async myProfile(
     @Request() req: Express.Request
-  ): Promise<ITsoaSuccessResponse<ProfileDTO>> {
+  ): Promise<ITsoaSuccessResponse<AllProfileDTO>> {
     const userId = req.user.index;
     const data = await this.profileService.myProfile(userId);
     return new TsoaSuccessResponse(data);
