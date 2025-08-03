@@ -2,7 +2,8 @@ import { deleteFromS3, uploadToS3 } from '../config/s3';
 import {
   ProfileDTO,
   ProfileUpdateDTO,
-  DetailProfileBody
+  DetailProfileBody,
+  AllProfileDTO
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
 import { ResponseFromSingleThreadWithLikes } from '../middleware/thread.DTO/thread.DTO';
 import { UserModel } from '../user/user.Model';
@@ -19,13 +20,13 @@ export class ProfileService {
 
   public async myProfile(userId: number) {
     const data = await this.profileModel.selectUserProfile(userId);
-    return new ProfileDTO(data as [number, number, number, object, object[]]);
+    return new AllProfileDTO(data as [number, number, number, object, object[], object[]]);
   }
 
   public async getProfile(id: string) {
     const user = await new UserModel().selectUserInfo(id);
     const data = await this.profileModel.selectUserProfile(user?.userId!);
-    return new ProfileDTO(data as [number, number, number, object, object[]]);
+    return new AllProfileDTO(data as [number, number, number, object, object[], object[]]);
   }
 
   public async getThread(id?: string, userIndex?: number) {

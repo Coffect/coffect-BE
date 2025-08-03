@@ -21,6 +21,7 @@ export class ProfileModel {
         prisma.user.findFirst({
           where: { userId: userId },
           select: {
+            userId: true,
             id: true,
             name: true,
             introduce: true,
@@ -44,6 +45,12 @@ export class ProfileModel {
                 categoryColor: true
               }
             }
+          }
+        }),
+        prisma.specifyInfo.findFirst({
+          where: { userId: userId },
+          select: {
+            info: true
           }
         })
       ]);
@@ -77,7 +84,8 @@ export class ProfileModel {
             }
           }
         }),
-        [] // 카테고리 대신 빈 배열 반환
+        [], // 카테고리 대신 빈 배열 반환
+        [] // 특정 정보 대신 빈 배열 반환
       ]);
       return data;
     }

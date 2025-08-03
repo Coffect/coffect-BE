@@ -1,4 +1,5 @@
 import { Example } from 'tsoa';
+import { specifyProfileDTO } from '../follow.DTO/follow.DTO';
 
 type UserInfo = {
   name: string;
@@ -29,6 +30,24 @@ export class ProfileDTO {
     this.follower = data[2];
     this.userInfo = data[3] as UserInfo;
     this.interest = data[4] as Category[];
+  }
+}
+
+export class AllProfileDTO {
+  threadCount: number;
+  following: number;
+  follower: number;
+  userInfo: UserInfo;
+  interest: Category[];
+  specifyProfile: { question: string; answer: string; isMain: boolean }[];
+
+  constructor(data: [number, number, number, object, object[], object[]]) {
+    this.threadCount = data[0];
+    this.following = data[1];
+    this.follower = data[2];
+    this.userInfo = data[3] as UserInfo;
+    this.interest = data[4] as Category[];
+    this.specifyProfile = data[5] as { question: string; answer: string; isMain: boolean }[];
   }
 }
 
