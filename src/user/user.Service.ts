@@ -29,7 +29,9 @@ export class UserService {
     this.userModel = new UserModel();
   }
 
-  public async loginService(userLogin: UserLoginRequest) {
+  public async loginService(
+    userLogin: UserLoginRequest
+  ): Promise<UserLoginResponse> {
     const userInfo = await this.userModel.selectUserInfo(userLogin.id);
     if (userInfo) {
       const hashedData = [userLogin.password, userInfo.salt, userInfo.password];
@@ -47,7 +49,7 @@ export class UserService {
     throw new UserNotExist('존재하지 않는 아이디입니다');
   }
 
-  public async refreshService(req: Request) {
+  public async refreshService(req: Request): Promise<UserLoginResponse> {
     const userToken = req.headers['authorization'];
     const userAgent = req.headers['user-agent'] || '';
     if (userToken === '') {
@@ -79,14 +81,14 @@ export class UserService {
   public async signUpService(
     info: UserSignUpRequest,
     img: Express.Multer.File
-  ) {
+  ): Promise<void> {
     await this.idCheckService(info.id);
     const { hashedPassword, userSalt } = await createHashedPassword(
       info.password
     );
     info.hashed = hashedPassword;
     info.salt = userSalt;
-    info.profile = await uploadToS3(img); //TODO:프로필 사진을 업로드 하지 않으면 어떻게 처리할지 고민
+    info.profile = await uploadToS3(img);
 
     try {
       await this.userModel.insertUser(info);
@@ -96,7 +98,7 @@ export class UserService {
     }
   }
 
-  public async idCheckService(id: string) {
+  public async idCheckService(id: string): Promise<void> {
     const isDup =
       (await this.userModel.selectUserInfo(id)) === null ? false : true;
     if (isDup) {

@@ -1,14 +1,20 @@
 import { deleteFromS3, uploadToS3 } from '../config/s3';
 import {
-  ProfileDTO,
   ProfileUpdateDTO,
   DetailProfileBody,
   AllProfileDTO
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
-import { ResponseFromSingleThreadWithLikes } from '../middleware/thread.DTO/thread.DTO';
+import {
+  ResponseFromSingleThreadWithLikes,
+  ResponseFromThreadMainToClient
+} from '../middleware/thread.DTO/thread.DTO';
 import { UserModel } from '../user/user.Model';
 import { UserService } from '../user/user.Service';
-import { UserIdNotFound, UserTimeTableDuplicateError, UserTimeTableError } from './profile.Message';
+import {
+  UserIdNotFound,
+  UserTimeTableDuplicateError,
+  UserTimeTableError
+} from './profile.Message';
 import { ProfileModel } from './profile.Model';
 
 export class ProfileService {
@@ -18,41 +24,44 @@ export class ProfileService {
     this.profileModel = new ProfileModel();
   }
 
-  public async myProfile(userId: number) {
+  public async myProfile(userId: number): Promise<AllProfileDTO> {
     const data = await this.profileModel.selectUserProfile(userId);
-    return new AllProfileDTO(data as [number, number, number, object, object[], object[]]);
+    return new AllProfileDTO(
+      data as [number, number, number, object, object[], object[]]
+    );
   }
 
-  public async getProfile(id: string) {
+  public async getProfile(id: string): Promise<AllProfileDTO> {
     const user = await new UserModel().selectUserInfo(id);
-    const data = await this.profileModel.selectUserProfile(user?.userId!);
-    return new AllProfileDTO(data as [number, number, number, object, object[], object[]]);
-  }
-
-  public async getThread(id?: string, userIndex?: number) {
-    const threads: ResponseFromSingleThreadWithLikes[] = [];
-    if (id) {
-      const userId = await new UserModel().selectUserInfo(id);
-      const data = await this.profileModel.selectUserThread(userId?.userId!);
-      for (const item of data.data) {
-        threads.push({
-          result: item,
-          likes: data.likes[data.data.indexOf(item)]
-        });
-      }
-    } else {
-      const data = await this.profileModel.selectUserThread(userIndex!);
-      for (const item of data.data) {
-        threads.push({
-          result: item,
-          likes: data.likes[data.data.indexOf(item)]
-        });
-      }
+    if (!user) {
+      throw new UserIdNotFound('유저 아이디를 찾을 수 없습니다.');
     }
-    return threads;
+    const data = await this.profileModel.selectUserProfile(user?.userId!);
+    return new AllProfileDTO(
+      data as [number, number, number, object, object[], object[]]
+    );
   }
 
-  public async updateProfile(info: ProfileUpdateDTO) {
+  public async getThread(
+    id?: string,
+    userIndex?: number
+  ): Promise<ResponseFromThreadMainToClient[]> {
+    if (id) {
+      // ID로 조회할때
+      const userId = await new UserModel().selectUserInfo(id);
+      if (!userId) {
+        throw new UserIdNotFound('유저 아이디를 찾을 수 없습니다.');
+      }
+      const data = await this.profileModel.selectUserThread(userId.userId);
+      return data;
+    } else {
+      // 유저 인덱스로 조회할때
+      const data = await this.profileModel.selectUserThread(userIndex!);
+      return data;
+    }
+  }
+
+  public async updateProfile(info: ProfileUpdateDTO): Promise<void> {
     await new UserService().idCheckService(info.id);
     if (info.img) {
       info.profileImage = await uploadToS3(info.img);
@@ -63,44 +72,55 @@ export class ProfileService {
     await this.profileModel.updataUserProfile(info);
   }
 
-  public async updateInterest(userId: number, interest: number[]) {
+  public async updateInterest(
+    userId: number,
+    interest: number[]
+  ): Promise<void> {
     await this.profileModel.deleteInterest(userId);
     await this.profileModel.insertInterest(userId, interest);
   }
 
-  public async updateDetailProfile(userId: number, body: DetailProfileBody[]) {
+  public async updateDetailProfile(
+    userId: number,
+    body: DetailProfileBody[]
+  ): Promise<void> {
     await this.profileModel.updateSpecificInfo(userId, body);
   }
 
-  public async getDetailProfile(userId: number) {
-    const data = await this.profileModel.selectSpecificInfo(userId);
-    if (!data || !Array.isArray(data)) {
-      return [];
-    }
-    const temp: DetailProfileBody[] = [];
-    for (const item of data as {
-      question: string;
-      answer: string;
-      isMain: boolean;
-    }[]) {
-      const element = new DetailProfileBody(item);
-      temp.push(element);
-    }
-    return temp;
-  }
+  // public async getDetailProfile(userId: number): Promise<DetailProfileBody[]> {
+  //   const data = await this.profileModel.selectSpecificInfo(userId);
+  //   if (!data || !Array.isArray(data)) {
+  //     return [];
+  //   }
+  //   const temp: DetailProfileBody[] = [];
+  //   for (const item of data as {
+  //     question: string;
+  //     answer: string;
+  //     isMain: boolean;
+  //   }[]) {
+  //     const element = new DetailProfileBody(item);
+  //     temp.push(element);
+  //   }
+  //   return temp;
+  // }
 
-  public async getUserId(userId: number) {
-    const data = await this.profileModel.selectUserId(userId);
-    if (!data) {
-      throw new UserIdNotFound('유저 아이디를 찾을 수 없습니다.');
-    }
-    return data;
-  }
+  // public async getUserId(userId: number) {
+  //   const data = await this.profileModel.selectUserId(userId);
+  //   if (!data) {
+  //     throw new UserIdNotFound('유저 아이디를 찾을 수 없습니다.');
+  //   }
+  //   return data;
+  // }
 
-  public async postTimeLineService(userId: number, timeLine: string): Promise<string> {
+  public async postTimeLineService(
+    userId: number,
+    timeLine: string
+  ): Promise<string> {
     const result = await this.profileModel.postTimeLine(userId, timeLine);
-    if(result === null) {
-      throw new UserTimeTableDuplicateError(`이미 시간표가 존재합니다. ID: ${userId}`);
+    if (result === null) {
+      throw new UserTimeTableDuplicateError(
+        `이미 시간표가 존재합니다. ID: ${userId}`
+      );
     }
 
     return result;
@@ -109,17 +129,20 @@ export class ProfileService {
   public async getTimeLineService(userId: number): Promise<string> {
     const result = await this.profileModel.getTimeLine(userId);
 
-    if(result === null) {
+    if (result === null) {
       throw new UserTimeTableError(`시간표가 존재하지 않습니다. ID: ${userId}`);
     }
 
     return result;
   }
 
-  public async fixTimeLineService(userId: number, timeLine: string): Promise<string> {
+  public async fixTimeLineService(
+    userId: number,
+    timeLine: string
+  ): Promise<string> {
     const result = await this.profileModel.fixTimeLine(userId, timeLine);
 
-    if(result === null) {
+    if (result === null) {
       throw new UserTimeTableError(`시간표 수정에 실패했습니다. ID: ${userId}`);
     }
 

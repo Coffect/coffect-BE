@@ -29,10 +29,8 @@ import {
   UpdateProfileBody,
   AllProfileDTO
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
-import { ResponseFromSingleThreadWithLikes } from '../middleware/thread.DTO/thread.DTO';
-import { UserModel } from '../user/user.Model';
-import { UserIdNotFound } from './profile.Message';
 import { UserUnauthorizedError } from '../user/user.Message';
+import { ResponseFromThreadMainToClient } from '../middleware/thread.DTO/thread.DTO';
 @Route('profile')
 @Tags('Profile Controller')
 export class ProfileController extends Controller {
@@ -88,6 +86,15 @@ export class ProfileController extends Controller {
     },
     success: null
   })
+  @Response<ITsoaErrorResponse>(409, '이미 중복된 아이디', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC409',
+      reason: '이미 중복된 아이디입니다.',
+      data: '아이디가 중복됨'
+    },
+    success: null
+  })
   public async updateInterest(
     @Request() req: Express.Request,
     @Body() body: UpdateProfileBody
@@ -107,7 +114,7 @@ export class ProfileController extends Controller {
   @SuccessResponse(200, '게시글 조회 성공')
   public async getMyThread(
     @Request() req: Express.Request
-  ): Promise<ITsoaSuccessResponse<ResponseFromSingleThreadWithLikes[]>> {
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainToClient[]>> {
     const userId = req.user.index;
     const data = await this.profileService.getThread(undefined, userId);
     return new TsoaSuccessResponse(data);
@@ -131,21 +138,21 @@ export class ProfileController extends Controller {
     return new TsoaSuccessResponse('상세 프로필 수정 성공');
   }
 
-  /**
-   * 본인의 상세 프로필을 조회한다
-   *
-   * @summary 본인 상세 프로필 조회
-   */
-  @Get('/detail')
-  @Security('jwt_token')
-  @SuccessResponse(200, '상세 프로필 조회 성공')
-  public async getDetailProfile(
-    @Request() req: Express.Request
-  ): Promise<ITsoaSuccessResponse<DetailProfileBody[]>> {
-    const userId = req.user.index;
-    const data = await this.profileService.getDetailProfile(userId);
-    return new TsoaSuccessResponse(data);
-  }
+  // /**
+  //  * 본인의 상세 프로필을 조회한다
+  //  *
+  //  * @summary 본인 상세 프로필 조회
+  //  */
+  // @Get('/detail')
+  // @Security('jwt_token')
+  // @SuccessResponse(200, '상세 프로필 조회 성공')
+  // public async getDetailProfile(
+  //   @Request() req: Express.Request
+  // ): Promise<ITsoaSuccessResponse<DetailProfileBody[]>> {
+  //   const userId = req.user.index;
+  //   const data = await this.profileService.getDetailProfile(userId);
+  //   return new TsoaSuccessResponse(data);
+  // }
 
   /**
    * 본인의 프로필을 수정한다
@@ -202,6 +209,15 @@ export class ProfileController extends Controller {
   @Get('/search')
   @SuccessResponse(200, '조회성공')
   @Security('jwt_token')
+  @Response<ITsoaErrorResponse>(404, '유저 아이디 조회 실패', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC404',
+      reason: '유저 아이디를 찾을 수 없습니다.',
+      data: '유저 아이디를 찾을 수 없습니다.'
+    },
+    success: null
+  })
   public async getProfile(
     @Request() req: Express.Request,
     @Query() id: string
@@ -219,40 +235,6 @@ export class ProfileController extends Controller {
   @Get('/thread/search')
   @Security('jwt_token')
   @SuccessResponse(200, '게시글 조회 성공')
-  public async getThread(
-    @Query() id: string
-  ): Promise<ITsoaSuccessResponse<ResponseFromSingleThreadWithLikes[]>> {
-    const data = await this.profileService.getThread(id);
-    return new TsoaSuccessResponse(data);
-  }
-
-  /**
-   * 다른유저의 상세 프로필을 조회한다
-   *
-   * @summary 다른유저 상세 프로필 조회
-   */
-  @Get('/detail/search')
-  @Security('jwt_token')
-  @SuccessResponse(200, '상세 프로필 조회 성공')
-  public async getDetailProfileSearch(
-    @Request() req: Express.Request,
-    @Query() id: string
-  ): Promise<ITsoaSuccessResponse<DetailProfileBody[]>> {
-    const userId = await new UserModel().selectUserInfo(id);
-    const data = await this.profileService.getDetailProfile(userId!.userId);
-    return new TsoaSuccessResponse(data);
-  }
-
-  /**
-   * 유저의 아이디를 조회한다 userID를 기반으로 ID를 조회한다
-   * eg) userID : 66 -> ID : "seoki"
-   *
-   * @summary 유저 아이디 조회
-   * @param body 유저 아이디
-   */
-  @Post('/id')
-  @Security('jwt_token')
-  @SuccessResponse(200, '유저 아이디 조회 성공')
   @Response<ITsoaErrorResponse>(404, '유저 아이디 조회 실패', {
     resultType: 'FAIL',
     error: {
@@ -262,17 +244,16 @@ export class ProfileController extends Controller {
     },
     success: null
   })
-  public async getUserId(
-    @Request() req: Express.Request,
-    @Body() body: { userId: number }
-  ): Promise<ITsoaSuccessResponse<{ id: string }>> {
-    const data = await this.profileService.getUserId(body.userId);
+  public async getThread(
+    @Query() id: string
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainToClient[]>> {
+    const data = await this.profileService.getThread(id, undefined);
     return new TsoaSuccessResponse(data);
   }
 
   /**
    * 유저의 시간표를 업로드한다.
-   * 
+   *
    * @param timeLine - 시간표 데이터
    * @returns 업로드 성공
    */
@@ -292,18 +273,21 @@ export class ProfileController extends Controller {
     @Request() req: Express.Request,
     @Query() timeLine: string
   ): Promise<ITsoaSuccessResponse<string>> {
-    if(!req.user || !req.user.index) {
+    if (!req.user || !req.user.index) {
       throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
     }
 
-    const result = await this.profileService.postTimeLineService(req.user.index, timeLine);
+    const result = await this.profileService.postTimeLineService(
+      req.user.index,
+      timeLine
+    );
 
     return new TsoaSuccessResponse<string>(result);
   }
 
   /**
    * 유저의 시간표를 조회한다.
-   * 
+   *
    * @param userId - 조회할 유저의 ID
    * @summary 유저 시간표 조회
    * @description userId 없이 요청되면 본인의 시간표 조회.
@@ -325,14 +309,14 @@ export class ProfileController extends Controller {
     @Request() req: Express.Request,
     @Query() userId?: number
   ): Promise<ITsoaSuccessResponse<string>> {
-    if(!req.user || !req.user.index) {
+    if (!req.user || !req.user.index) {
       throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
     }
 
     let requestId: number;
-    if(userId === undefined){
+    if (userId === undefined) {
       requestId = req.user.index;
-    }else{
+    } else {
       requestId = userId;
     }
 
@@ -343,7 +327,7 @@ export class ProfileController extends Controller {
 
   /**
    * 유저의 시간표를 수정한다.
-   * 
+   *
    * @param timeLine - 수정할 시간표 정보
    * @returns 수정 결과
    * @summary 유저 시간표 수정
@@ -364,11 +348,14 @@ export class ProfileController extends Controller {
     @Request() req: Express.Request,
     @Query() timeLine: string
   ): Promise<ITsoaSuccessResponse<string>> {
-    if(!req.user || !req.user.index){
+    if (!req.user || !req.user.index) {
       throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
     }
 
-    const result = await this.profileService.fixTimeLineService(req.user.index, timeLine);
+    const result = await this.profileService.fixTimeLineService(
+      req.user.index,
+      timeLine
+    );
 
     return new TsoaSuccessResponse<string>(result);
   }
