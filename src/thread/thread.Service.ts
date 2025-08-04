@@ -13,7 +13,8 @@ import {
   ResponseFromPostComment, 
   ResponseFromSingleThreadWithLikes, 
   ResponseFromThreadMainCursor, 
-  ResponseFromThreadMainCursorToClient 
+  ResponseFromThreadMainCursorToClient, 
+  ResponseFromThreadMainToClient
 } from '../middleware/thread.DTO/thread.DTO';
 
 import { ThreadModel } from './thread.Model';
@@ -74,26 +75,22 @@ export class ThreadService {
 
   public lookUpThreadMainService = async (
     body: BodyToLookUpMainThread
-  ): Promise<ResponseFromThreadMainCursor> => {
-    const results: ResponseFromThreadMainCursor = await this.ThreadModel.lookUpThreadMainRepository(body);
+  ): Promise<ResponseFromThreadMainCursorToClient> => {
+    let results: ResponseFromThreadMainCursor;
+
+    results = await this.ThreadModel.lookUpThreadMainRepository(body);
+
+    const thread: ResponseFromThreadMainToClient[] = results.thread.map((thread: any) => {
+      return new ResponseFromThreadMainToClient(thread);
+    });
+
+    console.log(thread);
 
     if (!results || results.thread.length === 0) {
       throw new ThreadNotFoundError(`필터링 된 게시글이 없습니다. type: ${body.type}, subjects: ${body.threadSubject}`);
     }
 
-    // bigint 변환
-    // const serializedResults = results.thread.map((thread: any) => ({
-    //   ...thread,
-    //   commentCount: Number(thread.commentCount), // BigInt를 Number로 변환
-    //   likeCount: Number(thread.likeCount) // BigInt를 Number로 변환
-    // }));
-
-    // const responseToClient: ResponseFromThreadMainCursorToClient = {
-    //   thread: serializedResults,
-    //   nextCursor: results.nextCursor
-    // };
-
-    return results;
+    return {thread, nextCursor: results.nextCursor};
   };
 
   public threadEditService = async (
