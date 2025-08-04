@@ -30,7 +30,8 @@ model User {
   coffeeChats1       CoffeeChat[]    @relation("FirstUser")
   coffeeChats2       CoffeeChat[]    @relation("SecondUser")
   comments           Comment[]
-  Follow             Follow?
+  followers          Follow[]        @relation("UserFollows")
+  following          Follow[]        @relation("UserFollowings")
   messages           Message[]
   refreshTokens      RefeshToken?
   specifyInfo        SpecifyInfo?
@@ -48,10 +49,17 @@ model UserTimetable {
 }
 
 model Follow {
-  userId      Int  @id
+  id          Int  @id @default(autoincrement())
   followingId Int
   followerId  Int
-  User        User @relation(fields: [userId], references: [userId])
+  follower    User @relation("UserFollows", fields: [followerId], references: [userId], onDelete: Cascade, map: "fk_follow_follower")
+  following   User @relation("UserFollowings", fields: [followingId], references: [userId], onDelete: Cascade, map: "fk_follow_following")
+
+  @@unique([followerId, followingId], map: "unique_follow")
+  @@index([followerId])
+  @@index([followingId])
+  @@index([followerId], map: "idx_follow_follower")
+  @@index([followingId], map: "idx_follow_following")
 }
 
 model ChatRoom {
@@ -89,7 +97,7 @@ model Message {
 model Thread {
   threadId     String         @id @default(uuid())
   userId       Int
-  type         Thread_type    @default(dbgenerated("아티클"))
+  type         Thread_type    @default(아티클)
   threadTitle  String
   thradBody    String?
   createdAt    DateTime       @unique(map: "ThreadCreatedAtUnique") @default(now())

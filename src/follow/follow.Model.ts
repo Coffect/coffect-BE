@@ -1,5 +1,6 @@
 import { prisma } from '../config/prisma.config';
 import { specifyFeedDTO, specifyProfileDTO } from '../middleware/follow.DTO/follow.DTO';
+import { notExsistUser } from './follow.Message';
 
 // 시간 차이를 계산하는 유틸리티 함수
 function getTimeDifference(createdAt: Date): string {
@@ -26,23 +27,29 @@ export class FollowModel {
   public async FollowRequestModel(
     userId: number,
     oppentUserId: number
-  ):Promise<void> {
+  ): Promise<void> {
+    // 사용자 존재 여부 확인
+    const [follower, following] = await Promise.all([
+      prisma.user.findUnique({ where: { userId } }),
+      prisma.user.findUnique({ where: { userId: oppentUserId } })
+    ]);
+
+    if (!follower || !following) {
+      throw new notExsistUser('사용자를 찾을 수 없습니다.');
+    }
+
+    // User 필드는 prisma.follow.create의 data에 존재하지 않으므로 제거
     await prisma.follow.create({
       data: {
         followerId: userId,
-        followingId: oppentUserId,
-        User:{
-          connect: {
-            userId : userId
-          }
-        }
+        followingId: oppentUserId
       }
     });
   };
 
   public async ShowUpFollowCountModel(
-    userId : number
-  ):Promise<number[]> {
+    userId: number
+  ): Promise<number[]> {
     /* 이거 개헷갈리는데...
      userId에 해당하는 follower 수 => follwingId의 수를 count (userId가 아닌)
                     followerId가 userId인 것들의 수를 count
@@ -51,31 +58,31 @@ export class FollowModel {
     */
     const followerCount = await prisma.follow.count({
       where: {
-        followerId : userId
+        followerId: userId
       }
     });
 
     const followingCount = await prisma.follow.count({
-      where : {
-        followingId : userId
+      where: {
+        followingId: userId
       }
     });
 
     return [followerCount, followingCount];
   };
 
-  public async isFollowModel (
-    userId : number,
-    oppentUserId : number
-  ):Promise<boolean> {
+  public async isFollowModel(
+    userId: number,
+    oppentUserId: number
+  ): Promise<boolean> {
     const result = await prisma.follow.findFirst({
-      where : {
-        followerId : userId,
-        followingId : oppentUserId
+      where: {
+        followerId: userId,
+        followingId: oppentUserId
       }
     });
 
-    if(!result) {
+    if (!result) {
       return false;
     }
 
@@ -88,20 +95,20 @@ export class specifyProfileModel {
 
   /** 프로필 조회 */
   public async showProfileModel(
-    userId : number
-  ):Promise<specifyProfileDTO> {
+    userId: number
+  ): Promise<specifyProfileDTO> {
     const result = await prisma.user.findUniqueOrThrow({
-      where : {
-        userId : userId
+      where: {
+        userId: userId
       },
-      select : {
-        name : true,
-        introduce : true,
-        profileImage : true
+      select: {
+        name: true,
+        introduce: true,
+        profileImage: true
       }
     });
 
-    if(result.introduce == null) {
+    if (result.introduce == null) {
       result.introduce = '';
     }
     return new specifyProfileDTO(result.name, result.introduce, result.profileImage);
@@ -109,14 +116,14 @@ export class specifyProfileModel {
 
   /** feed 조회 */
   public async showAllFeedModel(
-    profile : specifyProfileDTO,
-    userId : number
-  ):Promise<specifyFeedDTO[]> {
+    profile: specifyProfileDTO,
+    userId: number
+  ): Promise<specifyFeedDTO[]> {
     const result = await prisma.thread.findMany({
-      where : { userId : userId},
-      select : {
-        thradBody : true,
-        createdAt : true
+      where: { userId: userId },
+      select: {
+        thradBody: true,
+        createdAt: true
       }
     });
 
@@ -131,10 +138,10 @@ export class specifyProfileModel {
 
   /** feed 갯수 세는 API */
   public async ShowFeedCountModel(
-    userId : number
-  ):Promise<number> {
+    userId: number
+  ): Promise<number> {
     const result = await prisma.thread.count({
-      where : { userId : userId }
+      where: { userId: userId }
     });
 
     return result;

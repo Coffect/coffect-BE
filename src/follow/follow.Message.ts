@@ -6,6 +6,12 @@ export class nonUser extends BasicError {
   }
 };
 
+export class notExsistUser extends BasicError {
+  constructor(description: string) {
+    super(404, 'FE404', '상대방 UserId가 존재하지 않습니다.', description);
+  }
+};
+
 export class nonProfile extends BasicError {
   constructor(description: string) {
     super(400, 'PE400', '프로필 조회에 실패하였습니다.', description);
