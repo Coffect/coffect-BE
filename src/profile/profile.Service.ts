@@ -1,6 +1,5 @@
 import { deleteFromS3, uploadToS3 } from '../config/s3';
 import {
-  ProfileDTO,
   ProfileUpdateDTO,
   DetailProfileBody,
   AllProfileDTO
@@ -20,19 +19,29 @@ export class ProfileService {
 
   public async myProfile(userId: number) {
     const data = await this.profileModel.selectUserProfile(userId);
-    return new AllProfileDTO(data as [number, number, number, object, object[], object[]]);
+    return new AllProfileDTO(
+      data as [number, number, number, object, object[], object[]]
+    );
   }
 
   public async getProfile(id: string) {
     const user = await new UserModel().selectUserInfo(id);
+    if (!user) {
+      throw new UserIdNotFound('유저 아이디를 찾을 수 없습니다.');
+    }
     const data = await this.profileModel.selectUserProfile(user?.userId!);
-    return new AllProfileDTO(data as [number, number, number, object, object[], object[]]);
+    return new AllProfileDTO(
+      data as [number, number, number, object, object[], object[]]
+    );
   }
 
   public async getThread(id?: string, userIndex?: number) {
     const threads: ResponseFromSingleThreadWithLikes[] = [];
     if (id) {
       const userId = await new UserModel().selectUserInfo(id);
+      if (!userId) {
+        throw new UserIdNotFound('유저 아이디를 찾을 수 없습니다.');
+      }
       const data = await this.profileModel.selectUserThread(userId?.userId!);
       for (const item of data.data) {
         threads.push({
