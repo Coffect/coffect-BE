@@ -91,9 +91,13 @@ export class FollowController extends Controller {
       throw new followMySelf('자기 자신을 팔로우 할 수 없습니다.');
     }
 
-    await this.FollowService.FollowRequestService(userId, oppentUserId);
+    const result = await this.FollowService.FollowRequestService(userId, oppentUserId);
 
-    return new TsoaSuccessResponse<string>('Follow를 걸었습니다!');
+    if(result === true) {
+      return new TsoaSuccessResponse<string>('Follow를 걸었습니다!');
+    } else {
+      return new TsoaSuccessResponse<string>('Follow를 취소했습니다!');
+    }
   };
 
 

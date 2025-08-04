@@ -27,7 +27,7 @@ export class FollowModel {
   public async FollowRequestModel(
     userId: number,
     oppentUserId: number
-  ): Promise<void> {
+  ): Promise<boolean> {
     // 사용자 존재 여부 확인
     const [follower, following] = await Promise.all([
       prisma.user.findUnique({ where: { userId } }),
@@ -38,13 +38,36 @@ export class FollowModel {
       throw new notExsistUser('사용자를 찾을 수 없습니다.');
     }
 
-    // User 필드는 prisma.follow.create의 data에 존재하지 않으므로 제거
-    await prisma.follow.create({
-      data: {
-        followerId: userId,
-        followingId: oppentUserId
+    // 팔로우 여부
+    const isFollow = await prisma.follow.findFirst({
+      where : {
+        followerId : userId,
+        followingId : oppentUserId
+      },
+      select : {
+        id : true
       }
     });
+
+    if (!isFollow?.id) {
+      // User 필드는 prisma.follow.create의 data에 존재하지 않으므로 제거
+      await prisma.follow.create({
+        data: {
+          followerId: userId,
+          followingId: oppentUserId
+        }
+      });  
+      
+      return true;
+    } else {
+      await prisma.follow.delete({
+        where : {
+          id : isFollow.id
+        }
+      });
+
+      return false;
+    }
   };
 
   public async ShowUpFollowCountModel(
