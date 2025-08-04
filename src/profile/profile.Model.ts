@@ -210,4 +210,56 @@ export class ProfileModel {
     });
     return data;
   }
+
+  public async postTimeLine(userId: number, timeLine: string): Promise<string | null> {
+    const isExistTimeTable = await prisma.userTimetable.findFirst({
+      where: {
+        userId: userId
+      }
+    });
+
+    if(isExistTimeTable) {
+      return null;
+    }
+    
+    const result = await prisma.userTimetable.create({
+      data: {
+        userId: userId,
+        timetable: timeLine
+      }
+    });
+
+    return result.timetable;
+  }
+
+  public async getTimeLine(userId: number): Promise<string | null> {
+    const result = await prisma.userTimetable.findFirst({
+      where: {
+        userId: userId
+      }
+    });
+
+    if(!result) {
+      return null;
+    }
+
+    return result.timetable;
+  }
+
+  public async fixTimeLine(userId: number, timeLine: string): Promise<string | null> {
+    const result = await prisma.userTimetable.update({
+      where: {
+        userId: userId
+      },
+      data: {
+        timetable: timeLine
+      }
+    });
+
+    if(!result){
+      return null;
+    }
+
+    return result.timetable;
+  }
 }
