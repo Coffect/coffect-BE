@@ -231,14 +231,14 @@ export class ThreadController extends Controller {
       likeCursor?: number;
       dateCursor?: Date;
     }
-  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursor>> {
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursorToClient>> {
     if(body.orderBy !== 'createdAt' && body.orderBy !== 'likeCount') {
       throw new ThreadInvalidOrderByError(`정렬 기준은 createdAt 또는 likeCount 중 하나여야 합니다. orderBy: ${body.orderBy}`);
     }
 
     const result = await this.ThreadService.lookUpThreadMainService(new BodyToLookUpMainThread(body));
 
-    return new TsoaSuccessResponse<ResponseFromThreadMainCursor>(result);
+    return new TsoaSuccessResponse<ResponseFromThreadMainCursorToClient>(result);
   }
 
   /**

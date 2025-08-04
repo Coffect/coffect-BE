@@ -182,12 +182,12 @@ export class ResponseFromThreadMainToClient {
 
 export interface ResponseFromThreadMainCursor{
   thread: ResponseFromThreadMain[];
-  nextCursor: number | Date;
+  nextCursor: number | Date | null;
 }
 
 export interface ResponseFromThreadMainCursorToClient{
   thread: ResponseFromThreadMainToClient[];
-  nextCursor: number;
+  nextCursor: number | Date | null;
 }
 
 export interface ResponseFromPostComment {

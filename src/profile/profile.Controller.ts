@@ -12,7 +12,8 @@ import {
   Patch,
   Query,
   SuccessResponse,
-  Post
+  Post,
+  Example
 } from 'tsoa';
 
 import {
@@ -28,10 +29,8 @@ import {
   UpdateProfileBody,
   AllProfileDTO
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
-import {
-  ResponseFromSingleThreadWithLikes,
-  ResponseFromThreadMainToClient
-} from '../middleware/thread.DTO/thread.DTO';
+import { UserUnauthorizedError } from '../user/user.Message';
+import { ResponseFromThreadMainToClient } from '../middleware/thread.DTO/thread.DTO';
 @Route('profile')
 @Tags('Profile Controller')
 export class ProfileController extends Controller {
@@ -252,47 +251,112 @@ export class ProfileController extends Controller {
     return new TsoaSuccessResponse(data);
   }
 
-  // /**
-  //  * 다른유저의 상세 프로필을 조회한다
-  //  *
-  //  * @summary 다른유저 상세 프로필 조회
-  //  */
-  // @Get('/detail/search')
-  // @Security('jwt_token')
-  // @SuccessResponse(200, '상세 프로필 조회 성공')
-  // public async getDetailProfileSearch(
-  //   @Request() req: Express.Request,
-  //   @Query() id: string
-  // ): Promise<ITsoaSuccessResponse<DetailProfileBody[]>> {
-  //   const userId = await new UserModel().selectUserInfo(id);
-  //   const data = await this.profileService.getDetailProfile(userId!.userId);
-  //   return new TsoaSuccessResponse(data);
-  // }
+  /**
+   * 유저의 시간표를 업로드한다.
+   *
+   * @param timeLine - 시간표 데이터
+   * @returns 업로드 성공
+   */
+  @Post('/postTimeLine')
+  @Security('jwt_token')
+  @SuccessResponse(200, '시간표 업로드 성공')
+  @Response<ITsoaErrorResponse>(409, '시간표 업로드 실패', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'PR-04',
+      reason: '이미 시간표가 존재합니다.',
+      data: null
+    },
+    success: null
+  })
+  public async postTimeLine(
+    @Request() req: Express.Request,
+    @Query() timeLine: string
+  ): Promise<ITsoaSuccessResponse<string>> {
+    if (!req.user || !req.user.index) {
+      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+    }
 
-  // /**
-  //  * 유저의 아이디를 조회한다 userID를 기반으로 ID를 조회한다
-  //  * eg) userID : 66 -> ID : "seoki"
-  //  *
-  //  * @summary 유저 아이디 조회
-  //  * @param body 유저 아이디
-  //  */
-  // @Post('/id')
-  // @Security('jwt_token')
-  // @SuccessResponse(200, '유저 아이디 조회 성공')
-  // @Response<ITsoaErrorResponse>(404, '유저 아이디 조회 실패', {
-  //   resultType: 'FAIL',
-  //   error: {
-  //     errorCode: 'EC404',
-  //     reason: '유저 아이디를 찾을 수 없습니다.',
-  //     data: '유저 아이디를 찾을 수 없습니다.'
-  //   },
-  //   success: null
-  // })
-  // public async getUserId(
-  //   @Request() req: Express.Request,
-  //   @Body() body: { userId: number }
-  // ): Promise<ITsoaSuccessResponse<{ id: string }>> {
-  //   const data = await this.profileService.getUserId(body.userId);
-  //   return new TsoaSuccessResponse(data);
-  // }
+    const result = await this.profileService.postTimeLineService(
+      req.user.index,
+      timeLine
+    );
+
+    return new TsoaSuccessResponse<string>(result);
+  }
+
+  /**
+   * 유저의 시간표를 조회한다.
+   *
+   * @param userId - 조회할 유저의 ID
+   * @summary 유저 시간표 조회
+   * @description userId 없이 요청되면 본인의 시간표 조회.
+   * @returns 시간표 문자열
+   */
+  @Get('/getTimeLine')
+  @Security('jwt_token')
+  @SuccessResponse(200, '시간표 조회 성공')
+  @Response<ITsoaErrorResponse>(404, '시간표 조회 실패', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'PR-03',
+      reason: '시간표가 존재하지 않습니다.',
+      data: null
+    },
+    success: null
+  })
+  public async getTimeLine(
+    @Request() req: Express.Request,
+    @Query() userId?: number
+  ): Promise<ITsoaSuccessResponse<string>> {
+    if (!req.user || !req.user.index) {
+      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+    }
+
+    let requestId: number;
+    if (userId === undefined) {
+      requestId = req.user.index;
+    } else {
+      requestId = userId;
+    }
+
+    const result = await this.profileService.getTimeLineService(requestId);
+
+    return new TsoaSuccessResponse<string>(result);
+  }
+
+  /**
+   * 유저의 시간표를 수정한다.
+   *
+   * @param timeLine - 수정할 시간표 정보
+   * @returns 수정 결과
+   * @summary 유저 시간표 수정
+   */
+  @Patch('/fixTimeLine')
+  @Security('jwt_token')
+  @SuccessResponse(200, '시간표 수정 성공')
+  @Response<ITsoaErrorResponse>('500', '시간표 수정에 실패했습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'PR-03',
+      reason: '시간표 수정에 실패했습니다.',
+      data: null
+    },
+    success: null
+  })
+  public async fixTimeLine(
+    @Request() req: Express.Request,
+    @Query() timeLine: string
+  ): Promise<ITsoaSuccessResponse<string>> {
+    if (!req.user || !req.user.index) {
+      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+    }
+
+    const result = await this.profileService.fixTimeLineService(
+      req.user.index,
+      timeLine
+    );
+
+    return new TsoaSuccessResponse<string>(result);
+  }
 }

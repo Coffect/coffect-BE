@@ -9,38 +9,38 @@ datasource db {
 }
 
 model User {
-  userId             Int             @id @default(autoincrement())
-  id                 String          @unique
-  password           String
-  mail               String
-  name               String
-  introduce          String?
-  salt               String
-  createdAt          DateTime        @default(now())
-  profileImage       String
-  questionIndex      Json?
-  coffeeChatCount    Int             @default(4)
-  todayInterest      Int?            @default(0)
-  todayInterestArray Json?
-  dept               String?         @db.VarChar(20)
-  studentId          Int?
-  univId             Int?
-  categoryMatch      CategoryMatch[]
-  chatJoins          ChatJoin[]
-  coffeeChats1       CoffeeChat[]    @relation("FirstUser")
-  coffeeChats2       CoffeeChat[]    @relation("SecondUser")
-  comments           Comment[]
-  followers          Follow[]        @relation("UserFollows")
-  following          Follow[]        @relation("UserFollowings")
-  messages           Message[]
-  Notification       Notification[]
-  refreshTokens      RefeshToken?
-  specifyInfo        SpecifyInfo?
-  threads            Thread[]
-  threadLikes        ThreadLike[]
-  threadScraps       ThreadScrap[]
-  UnivList           UnivList?       @relation(fields: [univId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "User_UnivList__fk")
-  UserFCMToken       UserFCMToken?
+  userId                          Int             @id @default(autoincrement())
+  id                              String          @unique
+  password                        String
+  mail                            String
+  name                            String
+  introduce                       String?
+  salt                            String
+  createdAt                       DateTime        @default(now())
+  profileImage                    String
+  questionIndex                   Json?
+  coffeeChatCount                 Int             @default(4)
+  todayInterest                   Int?            @default(0)
+  todayInterestArray              Json?
+  dept                            String?         @db.VarChar(20)
+  studentId                       Int?
+  univId                          Int?
+  categoryMatch                   CategoryMatch[]
+  chatJoins                       ChatJoin[]
+  coffeeChats1                    CoffeeChat[]    @relation("FirstUser")
+  coffeeChats2                    CoffeeChat[]    @relation("SecondUser")
+  comments                        Comment[]
+  Follow_Follow_followerIdToUser  Follow[]        @relation("Follow_followerIdToUser")
+  Follow_Follow_followingIdToUser Follow[]        @relation("Follow_followingIdToUser")
+  messages                        Message[]
+  Notification                    Notification[]
+  refreshTokens                   RefeshToken?
+  specifyInfo                     SpecifyInfo?
+  threads                         Thread[]
+  threadLikes                     ThreadLike[]
+  threadScraps                    ThreadScrap[]
+  UnivList                        UnivList?       @relation(fields: [univId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "User_UnivList__fk")
+  UserFCMToken                    UserFCMToken?
 
   @@index([univId], map: "User_UnivList__fk")
 }
@@ -51,11 +51,11 @@ model UserTimetable {
 }
 
 model Follow {
-  id          Int  @id @default(autoincrement())
-  followingId Int
-  followerId  Int
-  follower    User @relation("UserFollows", fields: [followerId], references: [userId], onDelete: Cascade, map: "fk_follow_follower")
-  following   User @relation("UserFollowings", fields: [followingId], references: [userId], onDelete: Cascade, map: "fk_follow_following")
+  id                            Int  @id @default(autoincrement())
+  followingId                   Int
+  followerId                    Int
+  User_Follow_followerIdToUser  User @relation("Follow_followerIdToUser", fields: [followerId], references: [userId], onDelete: Cascade, map: "fk_follow_follower")
+  User_Follow_followingIdToUser User @relation("Follow_followingIdToUser", fields: [followingId], references: [userId], onDelete: Cascade, map: "fk_follow_following")
 
   @@unique([followerId, followingId], map: "unique_follow")
   @@index([followerId])

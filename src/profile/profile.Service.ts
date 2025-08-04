@@ -10,7 +10,11 @@ import {
 } from '../middleware/thread.DTO/thread.DTO';
 import { UserModel } from '../user/user.Model';
 import { UserService } from '../user/user.Service';
-import { UserIdNotFound } from './profile.Message';
+import {
+  UserIdNotFound,
+  UserTimeTableDuplicateError,
+  UserTimeTableError
+} from './profile.Message';
 import { ProfileModel } from './profile.Model';
 
 export class ProfileService {
@@ -107,4 +111,41 @@ export class ProfileService {
   //   }
   //   return data;
   // }
+
+  public async postTimeLineService(
+    userId: number,
+    timeLine: string
+  ): Promise<string> {
+    const result = await this.profileModel.postTimeLine(userId, timeLine);
+    if (result === null) {
+      throw new UserTimeTableDuplicateError(
+        `이미 시간표가 존재합니다. ID: ${userId}`
+      );
+    }
+
+    return result;
+  }
+
+  public async getTimeLineService(userId: number): Promise<string> {
+    const result = await this.profileModel.getTimeLine(userId);
+
+    if (result === null) {
+      throw new UserTimeTableError(`시간표가 존재하지 않습니다. ID: ${userId}`);
+    }
+
+    return result;
+  }
+
+  public async fixTimeLineService(
+    userId: number,
+    timeLine: string
+  ): Promise<string> {
+    const result = await this.profileModel.fixTimeLine(userId, timeLine);
+
+    if (result === null) {
+      throw new UserTimeTableError(`시간표 수정에 실패했습니다. ID: ${userId}`);
+    }
+
+    return result;
+  }
 }
