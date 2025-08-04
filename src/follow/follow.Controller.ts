@@ -50,6 +50,18 @@ export class FollowController extends Controller {
         },
         success: null
       })
+      @Response<ITsoaErrorResponse> (
+        404,
+        'Bad Request',
+        {
+          resultType : 'FAIL',
+          error: {
+            errorCode: 'FE404',
+            reason: '상대방 UserId가 존재하지 않습니다.',
+            data: null
+          },
+          success: null
+        })
     @Response<ITsoaErrorResponse>(
       500,
       'Internal Server Error',
