@@ -11,8 +11,9 @@ export class FollowService {
   public async FollowRequestService(
     userId: number,
     oppentUserId: number
-  ):Promise<void> {
-    await this.FollowModel.FollowRequestModel(userId, oppentUserId);
+  ):Promise<boolean> {
+    const result = await this.FollowModel.FollowRequestModel(userId, oppentUserId);
+    return result;
   };
 
   public async ShowUpFollowCountService(
