@@ -28,7 +28,10 @@ import {
   UpdateProfileBody,
   AllProfileDTO
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
-import { ResponseFromSingleThreadWithLikes } from '../middleware/thread.DTO/thread.DTO';
+import {
+  ResponseFromSingleThreadWithLikes,
+  ResponseFromThreadMainToClient
+} from '../middleware/thread.DTO/thread.DTO';
 @Route('profile')
 @Tags('Profile Controller')
 export class ProfileController extends Controller {
@@ -112,7 +115,7 @@ export class ProfileController extends Controller {
   @SuccessResponse(200, '게시글 조회 성공')
   public async getMyThread(
     @Request() req: Express.Request
-  ): Promise<ITsoaSuccessResponse<ResponseFromSingleThreadWithLikes[]>> {
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainToClient[]>> {
     const userId = req.user.index;
     const data = await this.profileService.getThread(undefined, userId);
     return new TsoaSuccessResponse(data);
@@ -244,7 +247,7 @@ export class ProfileController extends Controller {
   })
   public async getThread(
     @Query() id: string
-  ): Promise<ITsoaSuccessResponse<ResponseFromSingleThreadWithLikes[]>> {
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainToClient[]>> {
     const data = await this.profileService.getThread(id, undefined);
     return new TsoaSuccessResponse(data);
   }

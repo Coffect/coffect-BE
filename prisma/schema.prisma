@@ -33,12 +33,14 @@ model User {
   followers          Follow[]        @relation("UserFollows")
   following          Follow[]        @relation("UserFollowings")
   messages           Message[]
+  Notification       Notification[]
   refreshTokens      RefeshToken?
   specifyInfo        SpecifyInfo?
   threads            Thread[]
   threadLikes        ThreadLike[]
   threadScraps       ThreadScrap[]
   UnivList           UnivList?       @relation(fields: [univId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "User_UnivList__fk")
+  UserFCMToken       UserFCMToken?
 
   @@index([univId], map: "User_UnivList__fk")
 }
@@ -257,6 +259,32 @@ model UnivDept {
   college  String @db.VarChar(20)
   dept     String @db.VarChar(30)
   isMain   String @db.VarChar(5)
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model Notification {
+  notificationId Int      @id @default(autoincrement())
+  userId         Int
+  type           String
+  title          String
+  body           String
+  data           Json?
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  User           User     @relation(fields: [userId], references: [userId])
+
+  @@index([isRead])
+  @@index([type])
+  @@index([userId])
+}
+
+model UserFCMToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  fcmToken  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [userId], references: [userId])
 }
 
 enum ThreadSubject_subjectName {
