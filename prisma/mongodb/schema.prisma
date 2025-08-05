@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../node_modules/.prisma/client2"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URL")
+}
+
+model Message {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId  Int
+  chatRoodId String
+  messageBody   String
+  createdAt DateTime @default(now())
+  check Boolean @default(false)
+  
+  @@index([userId], map: "Message_senderId_idx")
+  @@index([chatRoodId], map: "Message_chatRoomId_idx")
+}
