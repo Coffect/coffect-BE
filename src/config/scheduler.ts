@@ -6,8 +6,12 @@
 
 import cron from 'node-cron';
 import { prisma } from './prisma.config';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
-// 스케줄러 함수 정의
+const execAsync = promisify(exec);
+
+// 스케줄러 함수 정의 - 한국 시간 오전 9시에 실행
 const resetDailyFields = async () => {
   console.log('Daily reset job started at:', new Date().toISOString());
   
@@ -37,6 +41,32 @@ const resetDailyFields = async () => {
   }
 };
 
+// npm cache clean 함수 - 한국 시간 00시에 실행
+const cleanNpmCache = async () => {
+  console.log('NPM cache clean job started at:', new Date().toISOString());
+  
+  try {
+    console.log('Running npm cache clean --force...');
+    const { stdout, stderr } = await execAsync('npm cache clean --force');
+    
+    if (stdout) {
+      console.log('NPM cache clean stdout:', stdout);
+    }
+    
+    if (stderr) {
+      console.log('NPM cache clean stderr:', stderr);
+    }
+    
+    console.log('NPM cache clean completed successfully');
+  } catch (error) {
+    console.error('Failed to clean NPM cache:', error);
+  }
+};
+
+// 매일 한국 시간 오전 9시에 실행 (UTC 00시)
+cron.schedule('0 0 * * *', resetDailyFields);
+console.log('Scheduler started - will run daily at 09:00 KST (00:00 UTC)');
+
 // 매일 한국 시간 00시에 실행 (UTC 15시)
-cron.schedule('0 15 * * *', resetDailyFields);
-console.log('Scheduler started - will run daily at 00:00 KST (15:00 UTC)');
+cron.schedule('0 15 * * *', cleanNpmCache);
+console.log('NPM cache clean scheduler started - will run daily at 00:00 KST (15:00 UTC)');
