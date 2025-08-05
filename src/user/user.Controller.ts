@@ -10,7 +10,9 @@ import {
   Get,
   FormField,
   UploadedFile,
-  Example
+  Example,
+  Security,
+  Delete
 } from 'tsoa';
 import { Request as ExpressRequest } from 'express';
 
