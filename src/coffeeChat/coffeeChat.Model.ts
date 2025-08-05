@@ -443,10 +443,10 @@ export class HomeModel {
     myUserId : number,
     otherUserId : number,
     suggestion : string
-  ):Promise<void> {
+  ):Promise<number> {
     const currentDate = KSTtime();
 
-    await prisma.coffeeChat.create({
+    const coffeeChat = await prisma.coffeeChat.create({
       data: {
         firstUserId: myUserId,   
         secondUserId: otherUserId,
@@ -456,6 +456,8 @@ export class HomeModel {
         valid: false
       }
     });
+
+    return coffeeChat.coffectId;
   }
 
   /** 커피챗 일정 가져오는 Model */
