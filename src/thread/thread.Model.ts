@@ -10,6 +10,7 @@ import {
   BodyToEditThread,
   BodyToLookUpMainThread,
   BodyToPostComment,
+  defaultThreadSelect,
   ResponseFromGetComment,
   ResponseFromPostComment,
   ResponseFromSingleThreadWithLikes,
@@ -127,124 +128,106 @@ export class ThreadModel {
       throw new ThreadNotFoundError('게시글 주제가 유효하지 않습니다. type: undefined');
     }
 
-    const defaultSelect = {
-      threadId: true,
-      userId: true,
-      type: true,
-      threadTitle: true,
-      thradBody: true,
-      createdAt: true,
-      threadShare: true,
-      user: {
-        select: {
-          name: true,
-          profileImage: true,
-          studentId: true,
-          dept: true
-        }
-      },
-      subjectMatch: {
-        select: {
-          threadSubject: {
-            select: {
-              subjectName: true
-            }
-          }
-        }
-      },
-      images: {
-        select: {
-          imageId: true
-        }
-      },
-      _count: {
-        select: {
-          comments: true,
-          likes: true
-        }
-      }
-    };
-
     // console.log(type);
     // console.log(threadSubject);
     // console.log(dateCursor);
 
-
-    if(threadSubject.length === 0 && type === undefined){
-      if (dateCursor === undefined) {
-        thread = await prisma.thread.findMany({
-          take: limit,
-          select: defaultSelect,
-          orderBy: {
-            createdAt: 'desc'
-          }
-        });
-      }else{
-        thread = await prisma.thread.findMany({
-          take: limit,
-          skip: 1,
-          cursor: {
-            createdAt: dateCursor
-          },
-          select: defaultSelect,
-          orderBy: {
-            createdAt: 'desc'
-          }
-        });
-      }
-    } else{
-      if (dateCursor === undefined) {
-        thread = await prisma.thread.findMany({
-          take: limit,
-          where: {
-            AND: [
-              {type: type},
-              {subjectMatch: {
-                some: {
-                  subjectId: {
-                    in: threadSubject
-                  }
+    if (dateCursor === undefined) {
+      thread = await prisma.thread.findMany({
+        take: limit,
+        where: {
+          AND: [
+            {type: type},
+            {subjectMatch: {
+              some: {
+                subjectId: {
+                  in: threadSubject
                 }
-              }}
-            ]
-          },
-          select: defaultSelect,
-          orderBy: {
-            createdAt: 'desc'
-          }
-        });
-      }else{
-        thread = await prisma.thread.findMany({
-          take: limit,
-          skip: 1,
-          cursor: {
-            createdAt: dateCursor
-          },
-          where: {
-            AND: [
-              { type: type},
-              {subjectMatch: {
-                some: {
-                  subjectId: {
-                    in: threadSubject
-                  }
+              }
+            }}
+          ]
+        },
+        select: defaultThreadSelect,
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+    }else{
+      thread = await prisma.thread.findMany({
+        take: limit,
+        skip: 1,
+        cursor: {
+          createdAt: dateCursor
+        },
+        where: {
+          AND: [
+            { type: type},
+            {subjectMatch: {
+              some: {
+                subjectId: {
+                  in: threadSubject
                 }
-              }}
-            ]
-          },
-          select: defaultSelect,
-          orderBy: {
-            createdAt: 'desc'
-          }
-        });
-      }
+              }
+            }}
+          ]
+        },
+        select: defaultThreadSelect,
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
     }
 
     //console.log(thread);
+    if(thread.length === 0) {
+      throw new ThreadNotFoundError(`필터링 된 게시글이 없습니다. type: ${type}, subjects: ${threadSubject}`);
+    }
 
     const lastThread = thread[thread.length - 1];
     let nextCursor: Date | null = lastThread.createdAt;
 
+    if(thread.length < limit) {
+      nextCursor = null;
+    }
+
+    return {thread, nextCursor};
+  };
+
+  public lookUpLatestThreadMainRepository = async (
+    dateCursor?: Date
+  ): Promise<ResponseFromThreadMainCursor> => {
+    const limit = 10;
+
+    let thread: ResponseFromThreadMain[] = [];
+
+    if (dateCursor === undefined) {
+      thread = await prisma.thread.findMany({
+        take: limit,
+        select: defaultThreadSelect,
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+    } else {
+      thread = await prisma.thread.findMany({
+        take: limit,
+        skip: 1,
+        cursor: {
+          createdAt: dateCursor
+        },
+        select: defaultThreadSelect,
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+    }
+
+    if(thread.length === 0) {
+      throw new ThreadNotFoundError('최신 게시글이 없습니다.');
+    }
+
+    const lastThread = thread[thread.length - 1];
+    let nextCursor: Date | null = lastThread.createdAt;
     if(thread.length < limit) {
       nextCursor = null;
     }

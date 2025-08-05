@@ -119,6 +119,8 @@ jobs:
           S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
           S3_NAME=${{ secrets.S3_NAME }}
           ENV=3002
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
           EOF"
 
       - name: Build on Backup

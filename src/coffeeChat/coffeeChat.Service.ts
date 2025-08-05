@@ -116,11 +116,26 @@ export class HomeService {
     otherUserid: number,
     suggestion: string
   ): Promise<void> {
-    await this.homeModel.postSuggestCoffeeChatModel(
+    // CoffeeChat 생성
+    const coffectId = await this.homeModel.postSuggestCoffeeChatModel(
       myUserId,
       otherUserid,
       suggestion
     );
+
+    // 알림 전송
+    try {
+      const { AlertService } = await import('../alert/alert.Service');
+      const alertService = new AlertService();
+      await alertService.sendCoffeeChatProposalNotification(
+        otherUserid, // secondUserId (받는 사람)
+        myUserId,    // firstUserId (보내는 사람)
+        coffectId
+      );
+    } catch (error) {
+      console.error('알림 전송 실패:', error);
+      // 알림 전송 실패해도 커피챗 제안은 성공으로 처리
+    }
   };
 
   public async GetCoffeeChatScheduleService(

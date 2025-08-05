@@ -12,6 +12,7 @@ import {
   ResponseFromGetComment, 
   ResponseFromPostComment, 
   ResponseFromSingleThreadWithLikes, 
+  ResponseFromThreadMain, 
   ResponseFromThreadMainCursor, 
   ResponseFromThreadMainCursorToClient, 
   ResponseFromThreadMainToClient
@@ -88,6 +89,22 @@ export class ThreadService {
 
     if (!results || results.thread.length === 0) {
       throw new ThreadNotFoundError(`필터링 된 게시글이 없습니다. type: ${body.type}, subjects: ${body.threadSubject}`);
+    }
+
+    return {thread, nextCursor: results.nextCursor};
+  };
+
+  public lookUpLatestThreadMainService = async (
+    dateCursor?: Date
+  ): Promise<ResponseFromThreadMainCursorToClient> => {
+    const results: ResponseFromThreadMainCursor = await this.ThreadModel.lookUpLatestThreadMainRepository(dateCursor);
+
+    const thread: ResponseFromThreadMainToClient[] = results.thread.map((thread: any) => {
+      return new ResponseFromThreadMainToClient(thread);
+    });
+
+    if (!results || results.thread.length === 0) {
+      throw new ThreadNotFoundError('최신 게시글이 없습니다.');
     }
 
     return {thread, nextCursor: results.nextCursor};

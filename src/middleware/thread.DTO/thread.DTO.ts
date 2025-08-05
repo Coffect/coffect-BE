@@ -25,19 +25,15 @@ export class BodyToAddThread {
 }
 
 export class BodyToLookUpMainThread {
-  type?: Thread_type;
-  threadSubject?: number[];
-  ascend: boolean;
+  type: Thread_type;
+  threadSubject: number[];
   orderBy: 'createdAt' | 'likeCount';
-  likeCursor?: number;
   dateCursor?: Date;
 
   constructor(
     body: {
-      type?: Thread_type;
-      threadSubject?: number[];
-      ascend?: boolean;
-      likeCursor?: number;
+      type: Thread_type;
+      threadSubject: number[];
       dateCursor?: Date;
       orderBy?: 'createdAt' | 'likeCount';
     }
@@ -45,8 +41,6 @@ export class BodyToLookUpMainThread {
     this.type = body.type;
     this.orderBy = body.orderBy ?? 'createdAt'; // 기본값은 createdAt
     this.threadSubject = body.threadSubject ?? []; // 기본값은 빈 배열
-    this.ascend = body.ascend ?? true; // 기본값은 오름차순
-    this.likeCursor = body.likeCursor;
     this.dateCursor = body.dateCursor;
   }
 }
@@ -212,6 +206,44 @@ export interface ResponseFromGetComment {
     studentId: number | null;
   }
 }
+
+export const defaultThreadSelect = {
+  threadId: true,
+  userId: true,
+  type: true,
+  threadTitle: true,
+  thradBody: true,
+  createdAt: true,
+  threadShare: true,
+  user: {
+    select: {
+      name: true,
+      profileImage: true,
+      studentId: true,
+      dept: true
+    }
+  },
+  subjectMatch: {
+    select: {
+      threadSubject: {
+        select: {
+          subjectName: true
+        }
+      }
+    }
+  },
+  images: {
+    select: {
+      imageId: true
+    }
+  },
+  _count: {
+    select: {
+      comments: true,
+      likes: true
+    }
+  }
+};
 
 export enum ThreadType {
   article = '아티클',

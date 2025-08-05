@@ -9,38 +9,38 @@ datasource db {
 }
 
 model User {
-  userId                          Int             @id @default(autoincrement())
-  id                              String          @unique
-  password                        String
-  mail                            String
-  name                            String
-  introduce                       String?
-  salt                            String
-  createdAt                       DateTime        @default(now())
-  profileImage                    String
-  questionIndex                   Json?
-  coffeeChatCount                 Int             @default(4)
-  todayInterest                   Int?            @default(0)
-  todayInterestArray              Json?
-  dept                            String?         @db.VarChar(20)
-  studentId                       Int?
-  univId                          Int?
-  categoryMatch                   CategoryMatch[]
-  chatJoins                       ChatJoin[]
-  coffeeChats1                    CoffeeChat[]    @relation("FirstUser")
-  coffeeChats2                    CoffeeChat[]    @relation("SecondUser")
-  comments                        Comment[]
-  Follow_Follow_followerIdToUser  Follow[]        @relation("Follow_followerIdToUser")
-  Follow_Follow_followingIdToUser Follow[]        @relation("Follow_followingIdToUser")
-  messages                        Message[]
-  Notification                    Notification[]
-  refreshTokens                   RefeshToken?
-  specifyInfo                     SpecifyInfo?
-  threads                         Thread[]
-  threadLikes                     ThreadLike[]
-  threadScraps                    ThreadScrap[]
-  UnivList                        UnivList?       @relation(fields: [univId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "User_UnivList__fk")
-  UserFCMToken                    UserFCMToken?
+  userId             Int             @id @default(autoincrement())
+  id                 String          @unique
+  password           String
+  mail               String
+  name               String
+  introduce          String?
+  salt               String
+  createdAt          DateTime        @default(now())
+  profileImage       String
+  questionIndex      Json?
+  coffeeChatCount    Int             @default(4)
+  todayInterest      Int?            @default(0)
+  todayInterestArray Json?
+  dept               String?         @db.VarChar(20)
+  studentId          Int?
+  univId             Int?
+  categoryMatch      CategoryMatch[]
+  ChatRoomUser       ChatRoomUser[]
+  coffeeChats1       CoffeeChat[]    @relation("FirstUser")
+  coffeeChats2       CoffeeChat[]    @relation("SecondUser")
+  comments           Comment[]
+  followers          Follow[]        @relation("UserFollows")
+  following          Follow[]        @relation("UserFollowings")
+  messages           Message[]
+  notifications      Notification[]
+  refreshTokens      RefeshToken?
+  specifyInfo        SpecifyInfo?
+  threads            Thread[]
+  threadLikes        ThreadLike[]
+  threadScraps       ThreadScrap[]
+  UnivList           UnivList?       @relation(fields: [univId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "User_UnivList__fk")
+  userFCMToken       UserFCMToken?
 
   @@index([univId], map: "User_UnivList__fk")
 }
@@ -51,11 +51,11 @@ model UserTimetable {
 }
 
 model Follow {
-  id                            Int  @id @default(autoincrement())
-  followingId                   Int
-  followerId                    Int
-  User_Follow_followerIdToUser  User @relation("Follow_followerIdToUser", fields: [followerId], references: [userId], onDelete: Cascade, map: "fk_follow_follower")
-  User_Follow_followingIdToUser User @relation("Follow_followingIdToUser", fields: [followingId], references: [userId], onDelete: Cascade, map: "fk_follow_following")
+  id          Int  @id @default(autoincrement())
+  followingId Int
+  followerId  Int
+  follower    User @relation("UserFollows", fields: [followerId], references: [userId], onDelete: Cascade, map: "fk_follow_follower")
+  following   User @relation("UserFollowings", fields: [followingId], references: [userId], onDelete: Cascade, map: "fk_follow_following")
 
   @@unique([followerId, followingId], map: "unique_follow")
   @@index([followerId])
@@ -65,35 +65,25 @@ model Follow {
 }
 
 model ChatRoom {
-  chatRoomId  Int        @id @default(autoincrement())
-  createdAt   DateTime   @default(now())
-  createdTime DateTime
-  chatJoins   ChatJoin[]
-  messages    Message[]
-}
-
-model ChatJoin {
-  userId     Int
-  chatRoomId Int
-  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId])
-  user       User     @relation(fields: [userId], references: [userId])
-
-  @@id([userId, chatRoomId])
-  @@index([chatRoomId], map: "ChatJoin_chatRoomId_fkey")
+  chatroomId   String         @id @db.VarChar(100)
+  createdAt    DateTime       @default(now())
+  createdTime  DateTime
+  ChatRoomUser ChatRoomUser[]
+  Message      Message[]
 }
 
 model Message {
   messageId   Int      @id @default(autoincrement())
-  chatRoomId  Int
   userId      Int
   messageBody String
   createdAt   DateTime
   check       Boolean  @default(false)
-  chatRoom    ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId])
+  chatroomId  String   @db.VarChar(100)
+  ChatRoom    ChatRoom @relation(fields: [chatroomId], references: [chatroomId], onDelete: NoAction, onUpdate: NoAction, map: "Message_ChatRoom_chatroomId_fk")
   user        User     @relation(fields: [userId], references: [userId])
 
-  @@index([chatRoomId], map: "Message_chatRoomId_fkey")
   @@index([userId], map: "Message_userId_fkey")
+  @@index([chatroomId], map: "Message_ChatRoom_chatroomId_fk")
 }
 
 model Thread {
@@ -227,6 +217,31 @@ model CoffeeChat {
   @@index([secondUserId], map: "CoffeeChat_secondUserId_fkey")
 }
 
+model Notification {
+  notificationId Int      @id @default(autoincrement())
+  userId         Int
+  type           String
+  title          String
+  body           String
+  data           Json?
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [userId])
+
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+}
+
+model UserFCMToken {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  fcmToken  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [userId])
+}
+
 model SpecifyInfo {
   userId Int   @id
   info   Json?
@@ -261,30 +276,16 @@ model UnivDept {
   isMain   String @db.VarChar(5)
 }
 
-/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
-model Notification {
-  notificationId Int      @id @default(autoincrement())
-  userId         Int
-  type           String
-  title          String
-  body           String
-  data           Json?
-  isRead         Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  User           User     @relation(fields: [userId], references: [userId])
+model ChatRoomUser {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  chatroomId        String   @db.VarChar(100)
+  lastReadMessageId Int?
+  User              User     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "ChatRoomUser_User_userId_fk")
+  ChatRoom          ChatRoom @relation(fields: [chatroomId], references: [chatroomId], onDelete: Cascade, onUpdate: NoAction, map: "fk_chatroomuser_chatroom")
 
-  @@index([isRead])
-  @@index([type])
-  @@index([userId])
-}
-
-model UserFCMToken {
-  id        Int      @id @default(autoincrement())
-  userId    Int      @unique
-  fcmToken  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime
-  User      User     @relation(fields: [userId], references: [userId])
+  @@index([userId], map: "ChatRoomUser_User_userId_fk")
+  @@index([chatroomId], map: "fk_chatroomuser_chatroom")
 }
 
 enum ThreadSubject_subjectName {
