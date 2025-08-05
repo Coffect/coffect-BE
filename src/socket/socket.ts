@@ -2,8 +2,6 @@ import { Server } from 'socket.io';
 import { instrument } from '@socket.io/admin-ui';
 import SocketService from './socket.service';
 
-const roomDumy = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-
 export default function initSocket(io: Server) {
   const socketService = new SocketService();
   //socket.io 관리자 페이지 설정
@@ -14,16 +12,7 @@ export default function initSocket(io: Server) {
 
   io.on('connection', async (socket) => {
     console.log(`${socket.data.decoded.index} connected`);
-    socketService.joinRoom(socket);
-
-    socket.on('message', (message) => {
-      console.log(message, ' from ', socket.id);
-      socket.emit('message', message);
-    });
-
-    for (const room of roomDumy) {
-      await socket.join(room);
-    }
+    await socketService.joinRoom(socket);
 
     socket.on('send', ({ message, roomId }) => {
       console.log(message, ' from ', socket.id);

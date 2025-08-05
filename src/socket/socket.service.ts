@@ -9,6 +9,8 @@ export default class SocketService {
   public async joinRoom(socket: Socket) {
     const userId = socket.data.decoded.index;
     const rooms = await this.SocketModel.getRooms(userId);
-    console.log(rooms);
+    for (const room of rooms) {
+      await socket.join(room.toString());
+    }
   }
 }
