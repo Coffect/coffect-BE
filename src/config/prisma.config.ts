@@ -1,7 +1,21 @@
 import { PrismaClient } from '@prisma/client';
+import {PrismaClient as mongoPrisma} from '../../node_modules/.prisma/client2';
 // const { PrismaClient } = pkg;
 
-const prisma = new PrismaClient({});
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_HOST || 'mysql://root:password@localhost:3306/coffect'
+    }
+  }
+});
+const mongo = new mongoPrisma({
+  datasources: {
+    db: {
+      url: process.env.MONGODB_URL || 'mongodb://localhost:27017/coffect'
+    }
+  }
+});
 
 // async function testConnection() {
 //   try {
@@ -19,4 +33,4 @@ const prisma = new PrismaClient({});
 // })();
 // connection test code
 
-export { prisma };
+export { prisma, mongo };
