@@ -224,11 +224,9 @@ export class ThreadController extends Controller {
   })
   public async mainThread(
     @Body() body: {
-      type?: Thread_type;
-      threadSubject?: number[];
+      type: Thread_type;
+      threadSubject: number[];
       orderBy: 'createdAt' | 'likeCount';
-      ascend: boolean;
-      likeCursor?: number;
       dateCursor?: Date;
     }
   ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursorToClient>> {
@@ -237,6 +235,22 @@ export class ThreadController extends Controller {
     }
 
     const result = await this.ThreadService.lookUpThreadMainService(new BodyToLookUpMainThread(body));
+
+    return new TsoaSuccessResponse<ResponseFromThreadMainCursorToClient>(result);
+  }
+
+  /**
+   * 게시글 최신순조회 API
+   * @param dateCursor - 최신순 커서 페이지네이션
+   * @summary 게시글 최신순조회
+   * @returns 게시글 목록
+   */
+  @Get('latest')
+  @SuccessResponse('200', '게시글 최신순조회 성공')
+  public async getLatest(
+    @Query() dateCursor?: Date
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursorToClient>>{
+    const result = await this.ThreadService.lookUpLatestThreadMainService(dateCursor);
 
     return new TsoaSuccessResponse<ResponseFromThreadMainCursorToClient>(result);
   }
