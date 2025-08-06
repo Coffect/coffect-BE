@@ -53,7 +53,7 @@ export class ChatController extends Controller {
   public async makeChatRoom(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       userId: number;
     }
   ): Promise<ITsoaSuccessResponse<{ chatRoomId: string }>> {
@@ -106,7 +106,7 @@ export class ChatController extends Controller {
   /**
    * 채팅방에 메시지를 전송한다.
    * chatRoomId를 기반으로 message를 받아 전송한다.
-   * @summary 채팅방 메시지 조회
+   * @summary 채팅방 메시지 전송
    */
   @Post('/message')
   @Security('jwt_token')
