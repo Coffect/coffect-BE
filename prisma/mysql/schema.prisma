@@ -259,7 +259,7 @@ model UserFCMToken {
   userId    Int      @unique
   fcmToken  String
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
   User      User     @relation(fields: [userId], references: [userId])
 }
 
