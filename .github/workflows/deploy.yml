@@ -46,9 +46,13 @@ jobs:
           CHANGED_FILES=$(git diff HEAD^1 --name-only | tr '\n' ' ')
           echo "changed-files=${CHANGED_FILES}" >> $GITHUB_OUTPUT
 
-          # package.json/package-lock.json 변경 확인
-          PACKAGE_CHANGED=$(git diff HEAD^1 --name-only | grep -E "(package\.json|package-lock\.json)" || echo "")
-          echo "package-changed=${PACKAGE_CHANGED}" >> $GITHUB_OUTPUT
+          # package.json/package-lock.json 변경 확인 (수정된 부분)
+          PACKAGE_CHANGED=$(git diff HEAD^1 --name-only | grep -E "(package\.json|package-lock\.json)" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+          if [ ! -z "$PACKAGE_CHANGED" ]; then
+            echo "package-changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "package-changed=false" >> $GITHUB_OUTPUT
+          fi
 
           # 소스 코드 변경 확인
           SOURCE_CHANGED=$(git diff HEAD^1 --name-only | grep -E "\.(ts|js)$" || echo "")
@@ -72,7 +76,7 @@ jobs:
 
           # package-lock.json 해시 비교
           DEPS_INSTALL_NEEDED="false"
-          if [ "$REMOTE_DEPS_EXISTS" = "false" ] || [ ! -z "$PACKAGE_CHANGED" ]; then
+          if [ "$REMOTE_DEPS_EXISTS" = "false" ] || [ "$PACKAGE_CHANGED" = "true" ]; then
             DEPS_INSTALL_NEEDED="true"
           else
             REMOTE_LOCK_HASH=$(ssh playground-umc-8th "test -f /home/ubuntu/coffect-BE/package-lock.json && md5sum /home/ubuntu/coffect-BE/package-lock.json | cut -d' ' -f1 || echo 'none'")
@@ -85,7 +89,7 @@ jobs:
 
           echo "=== 변경 분석 결과 ==="
           echo "Dependencies 설치 필요: ${DEPS_INSTALL_NEEDED}"
-          echo "Package 변경: ${PACKAGE_CHANGED:-없음}"
+          echo "Package 변경: ${PACKAGE_CHANGED}"
           echo "소스 변경: $([ ! -z "$SOURCE_CHANGED" ] && echo '있음' || echo '없음')"
           echo "Prisma 변경: $([ ! -z "$PRISMA_CHANGED" ] && echo '있음' || echo '없음')"
 
@@ -148,7 +152,7 @@ jobs:
           '
 
       - name: Generate Prisma Client
-        if: steps.analyze.outputs.prisma-changed != '' || steps.analyze.outputs.deps-install-needed == 'true'
+        if: steps.analyze.outputs.prisma-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
@@ -161,7 +165,7 @@ jobs:
           '
 
       - name: Fix Source Code Imports
-        if: steps.analyze.outputs.source-changed != '' || steps.analyze.outputs.deps-install-needed == 'true'
+        if: steps.analyze.outputs.source-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
@@ -370,3 +374,4 @@ jobs:
             echo ""
             echo "⏰ 배포 완료: $(date)"
           '
+
