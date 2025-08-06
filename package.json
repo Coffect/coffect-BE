@@ -1,376 +1,64 @@
-name: deploy-main
-
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-
-      - name: Configure SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          cat > ~/.ssh/config << EOF
-          Host playground-umc-8th
-            HostName ${{ secrets.EC2_HOST }}
-            User ubuntu
-            IdentityFile ~/.ssh/id_rsa
-            StrictHostKeyChecking no
-            UserKnownHostsFile /dev/null
-            LogLevel ERROR
-          EOF
-
-      - name: Test SSH Connection
-        run: ssh playground-umc-8th "echo '✅ SSH Connection Successful'"
-
-      - name: Analyze Changes and Dependencies
-        id: analyze
-        run: |
-          # 변경된 파일들 분석 (안전한 방식)
-          CHANGED_FILES=$(git diff HEAD^1 --name-only | tr '\n' ' ')
-          echo "changed-files=${CHANGED_FILES}" >> $GITHUB_OUTPUT
-
-          # package.json/package-lock.json 변경 확인 (수정된 부분)
-          PACKAGE_CHANGED=$(git diff HEAD^1 --name-only | grep -E "(package\.json|package-lock\.json)" | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-          if [ ! -z "$PACKAGE_CHANGED" ]; then
-            echo "package-changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "package-changed=false" >> $GITHUB_OUTPUT
-          fi
-
-          # 소스 코드 변경 확인
-          SOURCE_CHANGED=$(git diff HEAD^1 --name-only | grep -E "\.(ts|js)$" || echo "")
-          if [ ! -z "$SOURCE_CHANGED" ]; then
-            echo "source-changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "source-changed=false" >> $GITHUB_OUTPUT
-          fi
-
-          # Prisma 스키마 변경 확인
-          PRISMA_CHANGED=$(git diff HEAD^1 --name-only | grep "prisma/" || echo "")
-          if [ ! -z "$PRISMA_CHANGED" ]; then
-            echo "prisma-changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "prisma-changed=false" >> $GITHUB_OUTPUT
-          fi
-
-          # 원격 dependencies 상태 확인
-          REMOTE_DEPS_EXISTS=$(ssh playground-umc-8th "test -d /home/ubuntu/coffect-BE/node_modules && echo 'true' || echo 'false'")
-          echo "remote-deps-exists=${REMOTE_DEPS_EXISTS}" >> $GITHUB_OUTPUT
-
-          # package-lock.json 해시 비교
-          DEPS_INSTALL_NEEDED="false"
-          if [ "$REMOTE_DEPS_EXISTS" = "false" ] || [ "$PACKAGE_CHANGED" = "true" ]; then
-            DEPS_INSTALL_NEEDED="true"
-          else
-            REMOTE_LOCK_HASH=$(ssh playground-umc-8th "test -f /home/ubuntu/coffect-BE/package-lock.json && md5sum /home/ubuntu/coffect-BE/package-lock.json | cut -d' ' -f1 || echo 'none'")
-            LOCAL_LOCK_HASH=$(md5sum package-lock.json | cut -d' ' -f1)
-            if [ "$REMOTE_LOCK_HASH" != "$LOCAL_LOCK_HASH" ]; then
-              DEPS_INSTALL_NEEDED="true"
-            fi
-          fi
-          echo "deps-install-needed=${DEPS_INSTALL_NEEDED}" >> $GITHUB_OUTPUT
-
-          echo "=== 변경 분석 결과 ==="
-          echo "Dependencies 설치 필요: ${DEPS_INSTALL_NEEDED}"
-          echo "Package 변경: ${PACKAGE_CHANGED}"
-          echo "소스 변경: $([ ! -z "$SOURCE_CHANGED" ] && echo '있음' || echo '없음')"
-          echo "Prisma 변경: $([ ! -z "$PRISMA_CHANGED" ] && echo '있음' || echo '없음')"
-
-      - name: Efficient File Sync
-        run: |
-          ssh playground-umc-8th '
-            # 백업 및 디렉토리 준비
-            mkdir -p /home/ubuntu/coffect-BE-backup /home/ubuntu/coffect-BE
-            
-            # 빠른 백업 (중요 파일만)
-            if [ -d /home/ubuntu/coffect-BE ]; then
-              cp /home/ubuntu/coffect-BE/.env /home/ubuntu/coffect-BE-backup/ 2>/dev/null || true
-              cp /home/ubuntu/coffect-BE/package-lock.json /home/ubuntu/coffect-BE-backup/ 2>/dev/null || true
-            fi
-          '
-
-          # 변경된 파일이 있는지 확인
-          CHANGED_COUNT=$(git diff HEAD^1 --name-only | wc -l)
-          if [ "$CHANGED_COUNT" -gt 0 ]; then
-            echo "📁 변경된 파일들을 효율적으로 동기화 중... (${CHANGED_COUNT}개 파일)"
-            rsync -avz --progress \
-              --exclude 'node_modules' \
-              --exclude '.git' \
-              --exclude 'logs' \
-              --exclude 'dist' \
-              --exclude '.env' \
-              ./ playground-umc-8th:/home/ubuntu/coffect-BE/
-          else
-            echo "📁 변경된 파일이 없어 동기화를 건너뜁니다."
-          fi
-
-      - name: Smart Dependencies Installation
-        if: steps.analyze.outputs.deps-install-needed == 'true'
-        run: |
-          ssh playground-umc-8th '
-            cd /home/ubuntu/coffect-BE
-            
-            echo "📦 Dependencies 효율적 설치 중..."
-            
-            # CPU 과부하 방지를 위한 설정
-            export NODE_OPTIONS="--max-old-space-size=768"
-            export NPM_CONFIG_AUDIT=false
-            export NPM_CONFIG_FUND=false
-            export NPM_CONFIG_PROGRESS=false
-            export NPM_CONFIG_PREFER_OFFLINE=true
-            
-            # npm 설치 최적화
-            if [ -d node_modules ] && [ -f package-lock.json ]; then
-              echo "🔄 기존 dependencies 증분 업데이트..."
-              # 증분 설치로 CPU 부하 감소
-              npm install --no-audit --no-fund --prefer-offline --no-optional
-            else
-              echo "🆕 Dependencies 최초 설치..."
-              # 클린 설치
-              rm -rf node_modules package-lock.json 2>/dev/null || true
-              npm ci --no-audit --no-fund --prefer-offline --no-optional
-            fi
-            
-            echo "✅ Dependencies 설치 완료"
-          '
-
-      - name: Generate Prisma Client
-        if: steps.analyze.outputs.prisma-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
-        run: |
-          ssh playground-umc-8th '
-            cd /home/ubuntu/coffect-BE
-            
-            echo "🔧 Prisma 클라이언트 생성 중..."
-            export NODE_OPTIONS="--max-old-space-size=512"
-            
-            npx prisma generate --schema=prisma/schema.prisma
-            echo "✅ Prisma 클라이언트 생성 완료"
-          '
-
-      - name: Fix Source Code Imports
-        if: steps.analyze.outputs.source-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
-        run: |
-          ssh playground-umc-8th '
-            cd /home/ubuntu/coffect-BE
-            
-            echo "🔍 Prisma import 경로 수정 중..."
-            
-            # 효율적인 파일 수정 (안전한 sed 패턴 사용)
-            find src/ -name "*.ts" -type f | while read file; do
-              if grep -q "generated/prisma" "$file" 2>/dev/null; then
-                echo "수정: $file"
-                # from import 수정
-                sed -i "s|from [\"'\''].*generated/prisma[\"'\'']|from '\''@prisma/client'\''|g" "$file"
-                # require 수정 (안전한 패턴)
-                sed -i "s|require([\"'\''].*generated/prisma[\"'\''])|require('\''@prisma/client'\'')|g" "$file"
-              fi
-            done
-            
-            echo "✅ Import 경로 수정 완료"
-          '
-
-      - name: Create Environment File
-        run: |
-          ssh playground-umc-8th "cat > /home/ubuntu/coffect-BE/.env << 'EOF'
-          DATABASE_NAME=${{ secrets.DATABASE_NAME }}
-          DATABASE_Endpoint=${{ secrets.DATABASE_Endpoint }}
-          DATABASE_HOST=${{ secrets.DATABASE_HOST }}
-          DATABASE_PORT=${{ secrets.DATABASE_PORT }}
-          DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
-          DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-          EC2_PORT=${{ secrets.EC2_PORT }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          JWT_REFRESH=${{ secrets.JWT_REFRESH }}
-          S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
-          S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
-          S3_NAME=${{ secrets.S3_NAME }}
-          ENV=${{ secrets.ENV }}
-          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
-          FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
-          EOF"
-
-      - name: Smart Build Process
-        if: steps.analyze.outputs.source-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
-        run: |
-          ssh playground-umc-8th '
-            cd /home/ubuntu/coffect-BE
-            
-            echo "🏗️ 효율적 빌드 프로세스 시작..."
-            export NODE_OPTIONS="--max-old-space-size=1024"
-            
-            # 기존 dist 제거 (필요시에만)
-            if [ -d dist ]; then
-              rm -rf dist
-            fi
-            
-            # 빌드 실행 (package.json의 build 스크립트 사용)
-            echo "📋 빌드 시작..."
-            if npm run build; then
-              echo "✅ 빌드 성공"
-              ls -la dist/ | head -3
-            else
-              echo "❌ 빌드 실패"
-              exit 1
-            fi
-          '
-
-      - name: Stop Existing Application
-        run: |
-          ssh playground-umc-8th '
-            cd /home/ubuntu/coffect-BE
-            
-            echo "🛑 기존 애플리케이션 정리 중..."
-            
-            # PID 파일 기반 종료
-            if [ -f app.pid ]; then
-              PID=$(cat app.pid)
-              if kill -0 $PID 2>/dev/null; then
-                echo "애플리케이션 종료 중 (PID: $PID)..."
-                kill -TERM $PID
-                sleep 2
-                kill -0 $PID 2>/dev/null && kill -KILL $PID || true
-              fi
-              rm -f app.pid
-            fi
-            
-            # 포트 기반 프로세스 정리
-            if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
-              PORT_PIDS=$(lsof -ti:${{ secrets.EC2_PORT }} 2>/dev/null || true)
-              if [ ! -z "$PORT_PIDS" ]; then
-                echo "포트 프로세스 종료: $PORT_PIDS"
-                echo "$PORT_PIDS" | xargs -r kill -TERM
-                sleep 1
-                echo "$PORT_PIDS" | xargs -r kill -KILL 2>/dev/null || true
-              fi
-            fi
-            
-            echo "✅ 정리 완료"
-          '
-
-      - name: Start Application Efficiently
-        run: |
-          ssh playground-umc-8th '
-            cd /home/ubuntu/coffect-BE
-            
-            # 로그 디렉토리 생성
-            mkdir -p logs
-            
-            echo "🚀 애플리케이션 시작 중..."
-            
-            # package.json의 start 스크립트 확인
-            START_SCRIPT="npm run start"
-            echo "📋 사용할 시작 명령어: $START_SCRIPT"
-            
-            # 백그라운드에서 애플리케이션 시작
-            nohup bash -c "
-              export NODE_ENV=production
-              $START_SCRIPT >> logs/app.log 2>> logs/app.error.log
-            " > /dev/null 2>&1 &
-            
-            APP_PID=$!
-            echo $APP_PID > app.pid
-            
-            echo "✅ 애플리케이션 시작됨 (PID: $APP_PID)"
-            
-            # 초기 상태 확인
-            sleep 3
-            if kill -0 $APP_PID 2>/dev/null; then
-              echo "✅ 프로세스 정상 실행 중"
-            else
-              echo "❌ 프로세스 실행 실패"
-              cat logs/app.error.log 2>/dev/null | tail -10
-              exit 1
-            fi
-          '
-
-      - name: Quick Health Check
-        run: |
-          ssh playground-umc-8th '
-            cd /home/ubuntu/coffect-BE
-            
-            echo "🏥 빠른 헬스 체크..."
-            
-            # 15초 동안만 체크 (시간 단축)
-            for i in {1..3}; do
-              if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
-                if curl -f -s http://localhost:${{ secrets.EC2_PORT }}/ > /dev/null 2>&1; then
-                  echo "✅ 서버 응답 확인 (시도 $i/3)"
-                  break
-                elif [ $i -eq 3 ]; then
-                  echo "⚠️ HTTP 응답 없음 - 프로세스 상태 확인"
-                  if [ -f app.pid ] && kill -0 $(cat app.pid) 2>/dev/null; then
-                    echo "✅ 프로세스는 실행 중 (포트 바인딩 대기 중일 수 있음)"
-                  else
-                    echo "❌ 프로세스 실행 실패"
-                    tail -10 logs/app.error.log 2>/dev/null || echo "에러 로그 없음"
-                    exit 1
-                  fi
-                else
-                  echo "⏳ 응답 대기 중... (시도 $i/3)"
-                  sleep 5
-                fi
-              else
-                echo "⚠️ 포트 미설정 - 프로세스 상태만 확인"
-                if [ -f app.pid ] && kill -0 $(cat app.pid) 2>/dev/null; then
-                  echo "✅ 프로세스 실행 중"
-                  break
-                fi
-              fi
-            done
-          '
-
-      - name: Deployment Summary
-        if: always()
-        run: |
-          ssh playground-umc-8th '
-            cd /home/ubuntu/coffect-BE
-            
-            echo "📊 배포 완료 요약"
-            echo "===================="
-            
-            # 프로세스 상태
-            if [ -f app.pid ]; then
-              PID=$(cat app.pid)
-              if kill -0 $PID 2>/dev/null; then
-                echo "✅ 애플리케이션 실행 중 (PID: $PID)"
-              else
-                echo "❌ 애플리케이션 중지됨"
-              fi
-            else
-              echo "❌ PID 파일 없음"
-            fi
-            
-            # 포트 상태 (빠른 확인)
-            if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
-              if netstat -ln 2>/dev/null | grep -q ":${{ secrets.EC2_PORT }}"; then
-                echo "✅ 포트 ${{ secrets.EC2_PORT }} 리스닝 중"
-              else
-                echo "⚠️ 포트 ${{ secrets.EC2_PORT }} 대기 중"
-              fi
-            fi
-            
-            # 간단한 로그 (마지막 3줄만)
-            echo ""
-            echo "=== 최근 로그 ==="
-            tail -3 logs/app.log 2>/dev/null || echo "앱 로그 없음"
-            
-            echo ""
-            echo "⏰ 배포 완료: $(date)"
-          '
+{
+  "name": "coffect-be",
+  "version": "1.0.0",
+  "description": "Coffect BackEnd Repository",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsoa spec-and-routes && tsc",
+    "start": "npx prisma generate && npm run build && node ./dist/index.js",
+    "lint": "eslint src/**/*.ts --fix --ext .ts",
+    "prisma": "npx prisma generate --schema=prisma/mysql/schema.prisma && npx prisma generate --schema=prisma/mongodb/schema.prisma",
+    "dev": "npm run prisma && npm run lint && npm run build && nodemon --watch *.ts --exec ts-node src/index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.10.1",
+    "@socket.io/admin-ui": "^0.5.1",
+    "aws-sdk": "^2.1692.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.5.0",
+    "es-hangul": "^2.3.5",
+    "express": "^5.1.0",
+    "firebase": "^12.0.0",
+    "firebase-admin": "^13.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.18.0",
+    "morgan": "^1.10.0",
+    "multer": "^2.0.1",
+    "multer-s3": "^3.0.1",
+    "mysql2": "^3.14.1",
+    "node-cron": "^4.2.1",
+    "nodemon": "^3.1.10",
+    "prisma": "^6.10.1",
+    "socket.io": "^4.8.1",
+    "swagger-autogen": "^2.23.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
+    "tsoa": "^6.6.0",
+    "tunnel-ssh": "^5.2.0",
+    "uuid": "^11.1.0",
+    "v4": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/multer-s3": "^3.0.3",
+    "@types/nodemailer": "^6.4.17",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.5.0",
+    "prettier": "^3.6.0",
+    "prisma-erd-generator": "^2.0.4",
+    "ts-node": "^10.9.2"
+  }
+}
