@@ -49,7 +49,14 @@ export class ChatModel {
     message: string
   ): Promise<ChatDataDTO> {
     const data = await mongo.message.create({
-      data: { userId, chatRoomId: chatRoomId, messageBody: message }
+      data: {
+        userId,
+        chatRoomId: chatRoomId,
+        messageBody: message,
+        createdAt: KSTtime(),
+        isPhoto: false,
+        check: false
+      }
     });
     return data;
   }
