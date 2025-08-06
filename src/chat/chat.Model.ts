@@ -1,6 +1,6 @@
 import { KSTtime } from '../config/KSTtime';
 import { mongo, prisma } from '../config/prisma.config';
-import { ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
+import { ChatDataDTO, ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
 
 export class ChatModel {
   public async makeChatRoom(
@@ -36,7 +36,8 @@ export class ChatModel {
       select: {
         chatroomId: true,
         userId: true,
-        lastReadMessageId: true
+        lastMessage: true,
+        check: true
       }
     });
     return roomsInfo;
@@ -46,9 +47,39 @@ export class ChatModel {
     userId: number,
     chatRoomId: string,
     message: string
-  ): Promise<void> {
-    await mongo.message.create({
+  ): Promise<ChatDataDTO> {
+    const data = await mongo.message.create({
       data: { userId, chatRoomId: chatRoomId, messageBody: message }
     });
+    return data;
+  }
+
+  public async getChatRoomInfo(chatRoomId: string): Promise<ChatDataDTO[]> {
+    const result = await mongo.message.findMany({
+      where: { chatRoomId: chatRoomId },
+      select: {
+        id: true,
+        chatRoomId: true,
+        userId: true,
+        messageBody: true,
+        createdAt: true,
+        isPhoto: true,
+        check: true
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+    return result;
+  }
+
+  public async updateLastSendMessage(chating: ChatDataDTO) {
+    const result = await prisma.chatRoomUser.updateMany({
+      where: {
+        chatroomId: chating.chatRoomId
+      },
+      data: { lastMessage: chating.messageBody, check: chating.check }
+    });
+    return result;
   }
 }

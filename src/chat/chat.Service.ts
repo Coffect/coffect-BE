@@ -1,4 +1,4 @@
-import { ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
+import { ChatDataDTO, ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
 import { ChatModel } from './chat.Model';
 import { pbkdf2Promise } from '../config/crypto';
 import { ChatRoomAlreadyExists, ChatRoomNotFound } from './chat.Message';
@@ -42,6 +42,7 @@ export class ChatService {
   ): Promise<string> {
     const chatRoom = await this.chatModel.getChatRoom(userId);
     if (!chatRoom.some((room) => room.chatroomId === chatRoomId)) {
+      // 내 채팅방 목록중에 존재하지 않는경우
       throw new ChatRoomNotFound(chatRoomId);
     }
     const result = await this.chatModel.sendMessage(
@@ -49,6 +50,13 @@ export class ChatService {
       chatRoomId,
       message
     );
+    await this.chatModel.updateLastSendMessage(result); // 해당 채팅방의 마지막 메시지 업데이트
     return '메시지 전송 성공';
+  }
+
+  public async getChatRoomInfo(chatRoomId: string): Promise<ChatDataDTO[]> {
+    // 채팅방에 존재하는 메시지들을 배열로 조회
+    const result = await this.chatModel.getChatRoomInfo(chatRoomId);
+    return result;
   }
 }
