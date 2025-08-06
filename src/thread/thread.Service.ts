@@ -43,8 +43,7 @@ export class ThreadService {
   };
 
   public addThreadImageService = async (
-    image: Express.Multer.File[],
-    threadId: string
+    image: Express.Multer.File[]
   ): Promise<string[]> => {
     const imageUrls: string[] = [];
     while (image.length > 0) {
@@ -56,9 +55,7 @@ export class ThreadService {
       imageUrls.push(imageUrl);
     }
 
-    const result = await this.ThreadModel.addThreadImageRepository(imageUrls, threadId);
-
-    return result;
+    return imageUrls;
   };
 
   // 게시글 단일 조회 서비스

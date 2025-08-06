@@ -41,6 +41,16 @@ export class ThreadModel {
             subjectId: subjectId
           }))
         });
+
+        if(newThread.imageUrls && newThread.imageUrls.length > 0) {
+          await prisma.threadImage.createMany({
+            data: newThread.imageUrls.map((imageUrl) => ({
+              threadId: thread.threadId,
+              imageId: imageUrl
+            }))
+          });
+        }
+
         return thread;
       })
       .catch((error: any) => {
