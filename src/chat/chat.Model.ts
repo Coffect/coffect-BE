@@ -1,5 +1,5 @@
 import { KSTtime } from '../config/KSTtime';
-import { prisma } from '../config/prisma.config';
+import { mongo, prisma } from '../config/prisma.config';
 import { ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
 
 export class ChatModel {
@@ -39,7 +39,16 @@ export class ChatModel {
         lastReadMessageId: true
       }
     });
-
     return roomsInfo;
+  }
+
+  public async sendMessage(
+    userId: number,
+    chatRoomId: string,
+    message: string
+  ): Promise<void> {
+    await mongo.message.create({
+      data: { userId, chatRoomId: chatRoomId, messageBody: message }
+    });
   }
 }

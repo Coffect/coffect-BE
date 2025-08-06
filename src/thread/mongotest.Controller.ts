@@ -1,29 +1,19 @@
-import {mongo} from '../config/prisma.config';
-import {
-  Body,
-  Controller,
-  Post,
-  Route,
-  SuccessResponse
-} from 'tsoa';
+import { mongo } from '../config/prisma.config';
+import { Body, Controller, Post, Route, SuccessResponse } from 'tsoa';
 
 @Route('mongotest')
 export class MongoTestController extends Controller {
   @Post('create')
   @SuccessResponse('200', 'created')
   public async createTestData(
-    @Body() body: {
-      userId: number;
-      chatRoomId: string;
-      messageBody: string;
-    }
+    @Body() body: { userId: number; chatRoomId: string; messageBody: string }
   ): Promise<string> {
     const { userId, chatRoomId, messageBody } = body;
 
     const newMessage = await mongo.message.create({
       data: {
         userId,
-        chatRoodId: chatRoomId,
+        chatRoomId: chatRoomId,
         messageBody
       }
     });

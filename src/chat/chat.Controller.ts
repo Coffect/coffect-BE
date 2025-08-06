@@ -102,4 +102,21 @@ export class ChatController extends Controller {
     const result = await this.chatService.getChatRoom(userId);
     return new TsoaSuccessResponse<ChatRoomsDTO[]>(result);
   }
+
+  @Post('/:chatRoomId/message')
+  @Security('jwt_token')
+  @SuccessResponse(200, '메시지 전송 성공')
+  public async sendMessage(
+    @Request() req: ExpressRequest,
+    @Query() chatRoomId: string,
+    @Body() body: { message: string }
+  ): Promise<ITsoaSuccessResponse<string>> {
+    const userId = req.user.index;
+    const result = await this.chatService.sendMessage(
+      userId,
+      chatRoomId,
+      body.message
+    );
+    return new TsoaSuccessResponse<string>('메시지 전송 성공');
+  }
 }
