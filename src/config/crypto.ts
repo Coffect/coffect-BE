@@ -30,4 +30,4 @@ const verifyPassword = async (cryptoData: string[]) => {
   if (hashedPassword === cryptoData[2]) return true;
   return false;
 };
-export { createHashedPassword, verifyPassword };
+export { createHashedPassword, verifyPassword, pbkdf2Promise };
