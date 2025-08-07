@@ -123,33 +123,10 @@ jobs:
           ENV=${{ secrets.ENV }}
           FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY="${{ secrets.FIREBASE_PRIVATE_KEY }}"
           EOF
-            
-            # FIREBASE_PRIVATE_KEY 디버깅
-            echo "=== FIREBASE_PRIVATE_KEY 디버깅 ==="
-            FIREBASE_PRIVATE_KEY="${{ secrets.FIREBASE_PRIVATE_KEY }}"
-            echo "원본 길이: ${#FIREBASE_PRIVATE_KEY}"
-            echo "첫 50자: ${FIREBASE_PRIVATE_KEY:0:50}"
-            echo "마지막 50자: ${FIREBASE_PRIVATE_KEY: -50}"
-            
-            # GitHub Secrets가 비어있으면 기본값 사용 (임시)
-            if [ -z "$FIREBASE_PRIVATE_KEY" ]; then
-              echo "⚠️ GitHub Secrets에서 FIREBASE_PRIVATE_KEY를 찾을 수 없습니다"
-              echo "⚠️ GitHub Secrets 설정을 확인해주세요"
-              # 임시로 빈 값 설정
-              FIREBASE_PRIVATE_KEY=""
-            fi
-            
-            # FIREBASE_PRIVATE_KEY에서 n 문자를 \n으로 변환
-            FIREBASE_PRIVATE_KEY=$(echo "$FIREBASE_PRIVATE_KEY" | tr 'n' '\n')
-            echo "변환 후 길이: ${#FIREBASE_PRIVATE_KEY}"
-            echo "FIREBASE_PRIVATE_KEY=\"$FIREBASE_PRIVATE_KEY\"" >> /home/ubuntu/coffect-BE-backup/.env
-            
-            # 최종 확인
-            echo "=== 최종 .env 파일 확인 ==="
-            tail -5 /home/ubuntu/coffect-BE-backup/.env
-          '
 
+            
       - name: Build on Backup
         run: |
           ssh backup-server '
