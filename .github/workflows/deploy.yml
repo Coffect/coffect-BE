@@ -384,7 +384,7 @@ jobs:
             fi
             
             # 애플리케이션 시작 (더 안전한 방법)
-            echo "�� 애플리케이션 시작 명령어: npm run start"
+            echo "🚀 애플리케이션 시작 명령어: npm run dev"
             
             # 환경 변수 설정과 함께 시작
             nohup bash -c "
@@ -415,7 +415,7 @@ jobs:
               echo \"npm 버전: \$(npm --version)\"
               
               # 애플리케이션 시작
-              npm run start >> logs/app.log 2>> logs/app.error.log
+              npm run dev >> logs/app.log 2>> logs/app.error.log
             " > /dev/null 2>&1 &
             
             # PID 설정 (실행 방법에 따라 다름)
