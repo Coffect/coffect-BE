@@ -264,12 +264,13 @@ model UserFCMToken {
 }
 
 model ChatRoomUser {
-  id                Int      @id @default(autoincrement())
-  userId            Int
-  chatroomId        String   @db.VarChar(100)
-  lastReadMessageId Int?
-  User              User     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "ChatRoomUser_User_userId_fk")
-  ChatRoom          ChatRoom @relation(fields: [chatroomId], references: [chatroomId], onDelete: Cascade, onUpdate: NoAction, map: "fk_chatroomuser_chatroom")
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  chatroomId  String   @db.VarChar(100)
+  lastMessage String?  @db.VarChar(50)
+  check       Boolean?
+  User        User     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction, map: "ChatRoomUser_User_userId_fk")
+  ChatRoom    ChatRoom @relation(fields: [chatroomId], references: [chatroomId], onDelete: Cascade, onUpdate: NoAction, map: "fk_chatroomuser_chatroom")
 
   @@index([userId], map: "ChatRoomUser_User_userId_fk")
   @@index([chatroomId], map: "fk_chatroomuser_chatroom")
