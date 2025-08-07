@@ -189,8 +189,8 @@ jobs:
 
       - name: Create Environment File
         run: |
-          ssh playground-umc-8th '
-            cat > /home/ubuntu/coffect-BE/.env << EOF
+          ssh playground-umc-8th "
+            cat > /home/ubuntu/coffect-BE/.env << 'EOF'
           DATABASE_NAME=${{ secrets.DATABASE_NAME }}
           DATABASE_Endpoint=${{ secrets.DATABASE_Endpoint }}
           DATABASE_HOST=${{ secrets.DATABASE_HOST }}
@@ -206,8 +206,9 @@ jobs:
           ENV=${{ secrets.ENV }}
           FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
-          FIREBASE_PRIVATE_KEY="${{ secrets.FIREBASE_PRIVATE_KEY }}"
+          FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
           EOF
+          "
             
       - name: Smart Build Process
         if: steps.analyze.outputs.source-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
