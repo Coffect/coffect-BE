@@ -6,11 +6,17 @@ const prisma = new PrismaClient();
 // Firebase Admin SDK 초기화 함수
 function initializeFirebase() {
   if (!admin.apps.length) {
+    // Private key 처리 - n 문자를 줄바꿈으로 변환
+    let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+    if (privateKey) {
+      privateKey = privateKey.replace(/n/g, '\n');
+    }
+    
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY
+        privateKey: privateKey
       })
     });
   }
@@ -138,4 +144,5 @@ export class FCMService {
       where: { userId }
     });
   }
+
 } 
