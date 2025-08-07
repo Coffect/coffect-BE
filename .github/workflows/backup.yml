@@ -56,11 +56,6 @@ jobs:
           ssh backup-server '
             # 백업 디렉토리 준비
             mkdir -p /home/ubuntu/coffect-BE-backup
-            
-            # 기존 .env 백업
-            if [ -f /home/ubuntu/coffect-BE-backup/.env ]; then
-              cp /home/ubuntu/coffect-BE-backup/.env /home/ubuntu/coffect-BE-backup/.env.backup.$(date +%Y%m%d_%H%M%S) 2>/dev/null || true
-            fi
           '
 
       - name: Install Dependencies on Backup
@@ -151,4 +146,5 @@ jobs:
           echo "✅ 메인 브랜치 변경사항이 백업 서버에 반영되었습니다"
           echo "✅ PM2로 coffect-backup 프로세스가 실행 중입니다"
           echo "⏰ 배포 완료: $(date)"
+
 
