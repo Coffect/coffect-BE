@@ -5,69 +5,13 @@ const prisma = new PrismaClient();
 
 // Firebase Admin SDK 초기화 함수
 function initializeFirebase() {
-  try {
-    // 이미 초기화된 경우 스킵
-    if (admin.apps.length) {
-      console.log('Firebase가 이미 초기화되어 있습니다.');
-      return;
-    }
-
-    // 필수 환경 변수 확인
-    const projectId = process.env.FIREBASE_PROJECT_ID;
-    const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-    if (!projectId || !clientEmail || !privateKey) {
-      console.error('Firebase 환경 변수가 누락되었습니다:');
-      console.error(`- FIREBASE_PROJECT_ID: ${projectId ? '설정됨' : '누락'}`);
-      console.error(`- FIREBASE_CLIENT_EMAIL: ${clientEmail ? '설정됨' : '누락'}`);
-      console.error(`- FIREBASE_PRIVATE_KEY: ${privateKey ? '설정됨' : '누락'}`);
-      console.log('FCM 기능이 비활성화됩니다.');
-      return;
-    }
-
-    // Private key 처리 - \\n을 \n으로 변환
-    let processedPrivateKey = privateKey;
-    
-    // 1. 따옴표 처리 - 양끝에 따옴표가 없으면 추가
-    if (processedPrivateKey && !processedPrivateKey.startsWith('"') && !processedPrivateKey.endsWith('"')) {
-      processedPrivateKey = `"${processedPrivateKey}"`;
-      console.log('FIREBASE_PRIVATE_KEY에 따옴표를 추가했습니다.');
-    }
-    
-    // 2. 따옴표 제거 (내부 처리용)
-    if (processedPrivateKey.startsWith('"') && processedPrivateKey.endsWith('"')) {
-      processedPrivateKey = processedPrivateKey.slice(1, -1);
-    }
-    
-    // 3. \\n을 \n으로 변환 (환경 변수에서 이스케이프된 경우)
-    processedPrivateKey = processedPrivateKey.replace(/\\n/g, '\n');
-    
-    // 4. n 문자를 \n으로 변환 (GitHub Actions에서 발생하는 경우)
-    processedPrivateKey = processedPrivateKey.replace(/n/g, '\n');
-    
-    // 5. Private key 형식 검증
-    if (!processedPrivateKey.includes('-----BEGIN PRIVATE KEY-----') || 
-        !processedPrivateKey.includes('-----END PRIVATE KEY-----')) {
-      console.error('Firebase Private Key 형식이 올바르지 않습니다.');
-      console.log('FCM 기능이 비활성화됩니다.');
-      return;
-    }
-
-    // Firebase Admin SDK 초기화
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId,
-        clientEmail,
-        privateKey: processedPrivateKey
-      })
-    });
-
-    console.log('Firebase Admin SDK 초기화 성공');
-  } catch (error) {
-    console.error('Firebase Admin SDK 초기화 실패:', error);
-    console.log('FCM 기능이 비활성화됩니다.');
-  }
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID, // I get no error here
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL, // I get no error here
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') // NOW THIS WORKS!!!
+    })
+  });
 }
 
 // Firebase 초기화 실행
