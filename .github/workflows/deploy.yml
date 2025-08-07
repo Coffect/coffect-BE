@@ -302,6 +302,42 @@ jobs:
             echo "✅ 정리 완료"
           '
 
+      - name: Install Required Tools
+        run: |
+          ssh playground-umc-8th '
+            echo "🔧 필수 도구 설치 확인 중..."
+            
+            # nohup 설치 확인 및 설치
+            if ! command -v nohup &> /dev/null; then
+              echo "📦 nohup이 설치되지 않았습니다. 설치 중..."
+              sudo apt-get update -qq
+              sudo apt-get install -y coreutils
+              echo "✅ nohup 설치 완료"
+            else
+              echo "✅ nohup이 이미 설치되어 있습니다"
+            fi
+            
+            # netstat 설치 확인 및 설치
+            if ! command -v netstat &> /dev/null; then
+              echo "📦 netstat이 설치되지 않았습니다. 설치 중..."
+              sudo apt-get install -y net-tools
+              echo "✅ netstat 설치 완료"
+            else
+              echo "✅ netstat이 이미 설치되어 있습니다"
+            fi
+            
+            # lsof 설치 확인 및 설치
+            if ! command -v lsof &> /dev/null; then
+              echo "📦 lsof가 설치되지 않았습니다. 설치 중..."
+              sudo apt-get install -y lsof
+              echo "✅ lsof 설치 완료"
+            else
+              echo "✅ lsof가 이미 설치되어 있습니다"
+            fi
+            
+            echo "✅ 모든 필수 도구 설치 완료"
+          '
+
       - name: Start Application Efficiently
         run: |
           ssh playground-umc-8th '
@@ -382,10 +418,28 @@ jobs:
               npm run start >> logs/app.log 2>> logs/app.error.log
             " > /dev/null 2>&1 &
             
-            APP_PID=$!
-            echo $APP_PID > app.pid
-            
-            echo "✅ 애플리케이션 시작됨 (PID: $APP_PID)"
+            # PID 설정 (실행 방법에 따라 다름)
+            if command -v nohup &> /dev/null && [ "$?" -eq 0 ]; then
+              APP_PID=$!
+              echo $APP_PID > app.pid
+              echo "✅ 애플리케이션 시작됨 (nohup PID: $APP_PID)"
+            elif command -v screen &> /dev/null && [ "$?" -eq 0 ]; then
+              # screen 세션에서 PID 찾기
+              sleep 2
+              SCREEN_PID=$(pgrep -f "screen.*app")
+              if [ ! -z "$SCREEN_PID" ]; then
+                echo $SCREEN_PID > app.pid
+                echo "✅ 애플리케이션 시작됨 (screen PID: $SCREEN_PID)"
+              else
+                echo "⚠️ screen 세션 PID를 찾을 수 없습니다"
+                echo "0" > app.pid
+              fi
+            else
+              # 직접 실행한 경우
+              APP_PID=$!
+              echo $APP_PID > app.pid
+              echo "✅ 애플리케이션 시작됨 (직접 실행 PID: $APP_PID)"
+            fi
             
             # 프로세스 상태 확인 (더 긴 대기 시간)
             echo "⏳ 프로세스 상태 확인 중..."
