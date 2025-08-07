@@ -348,7 +348,7 @@ jobs:
             fi
             
             # 애플리케이션 시작 (더 안전한 방법)
-            echo "�� 애플리케이션 시작 명령어: npm run dev"
+            echo "�� 애플리케이션 시작 명령어: npm run start"
             
             # 환경 변수 설정과 함께 시작
             nohup bash -c "
