@@ -92,6 +92,7 @@ jobs:
           echo "Package 변경: ${PACKAGE_CHANGED}"
           echo "소스 변경: $([ ! -z "$SOURCE_CHANGED" ] && echo '있음' || echo '없음')"
           echo "Prisma 변경: $([ ! -z "$PRISMA_CHANGED" ] && echo '있음' || echo '없음')"
+          echo "Prisma Client 생성 조건: $([ "$PRISMA_CHANGED" != "" ] || [ "$DEPS_INSTALL_NEEDED" = "true" ] || [ "$SOURCE_CHANGED" != "" ] && echo '실행됨' || echo '건너뜀')"
 
       - name: Efficient File Sync
         run: |
@@ -178,7 +179,7 @@ jobs:
           '
 
       - name: Generate Prisma Client
-        if: steps.analyze.outputs.prisma-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
+        if: steps.analyze.outputs.prisma-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true' || steps.analyze.outputs.source-changed == 'true'
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
@@ -186,8 +187,14 @@ jobs:
             echo "🔧 Prisma 클라이언트 생성 중..."
             export NODE_OPTIONS="--max-old-space-size=512"
             
+            # MySQL Prisma 클라이언트 생성
+            echo "📋 MySQL Prisma 클라이언트 생성..."
             npx prisma generate --schema=prisma/mysql/schema.prisma
+            
+            # MongoDB Prisma 클라이언트 생성
+            echo "📋 MongoDB Prisma 클라이언트 생성..."
             npx prisma generate --schema=prisma/mongodb/schema.prisma
+            
             echo "✅ Prisma 클라이언트 생성 완료"
           '
 
@@ -372,7 +379,7 @@ jobs:
               echo \"npm 버전: \$(npm --version)\"
               
               # 애플리케이션 시작
-              npm run dev >> logs/app.log 2>> logs/app.error.log
+              npm run start >> logs/app.log 2>> logs/app.error.log
             " > /dev/null 2>&1 &
             
             APP_PID=$!
