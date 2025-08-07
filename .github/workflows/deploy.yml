@@ -208,10 +208,21 @@ jobs:
           FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
           EOF
             
-            # FIREBASE_PRIVATE_KEY에서 n 문자를 \n으로 변환
+            # FIREBASE_PRIVATE_KEY 디버깅
+            echo "=== FIREBASE_PRIVATE_KEY 디버깅 ==="
             FIREBASE_PRIVATE_KEY="${{ secrets.FIREBASE_PRIVATE_KEY }}"
+            echo "원본 길이: ${#FIREBASE_PRIVATE_KEY}"
+            echo "첫 50자: ${FIREBASE_PRIVATE_KEY:0:50}"
+            echo "마지막 50자: ${FIREBASE_PRIVATE_KEY: -50}"
+            
+            # FIREBASE_PRIVATE_KEY에서 n 문자를 \n으로 변환
             FIREBASE_PRIVATE_KEY=$(echo "$FIREBASE_PRIVATE_KEY" | tr 'n' '\n')
+            echo "변환 후 길이: ${#FIREBASE_PRIVATE_KEY}"
             echo "FIREBASE_PRIVATE_KEY=\"$FIREBASE_PRIVATE_KEY\"" >> /home/ubuntu/coffect-BE/.env
+            
+            # 최종 확인
+            echo "=== 최종 .env 파일 확인 ==="
+            tail -5 /home/ubuntu/coffect-BE/.env
           '
 
       - name: Smart Build Process
