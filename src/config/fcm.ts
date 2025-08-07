@@ -12,15 +12,28 @@ function initializeFirebase() {
       if (privateKey) {
         // 환경 변수에서 가져온 private key의 이스케이프 문자 처리
         privateKey = privateKey.replace(/\\n/g, '\n');
-        // 'n' 문자를 줄바꿈으로 변환 (GitHub Secrets에서 발생하는 문제)
+        
+        // 환경 변수에서 'n' 문자를 줄바꿈으로 변환
+        // BEGIN과 END 부분만 정확히 변환
         privateKey = privateKey.replace(/n-----BEGIN PRIVATE KEY-----n/g, '\n-----BEGIN PRIVATE KEY-----\n');
         privateKey = privateKey.replace(/n-----END PRIVATE KEY-----n/g, '\n-----END PRIVATE KEY-----\n');
+        
         // 따옴표로 감싸진 경우 제거
         if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
           privateKey = privateKey.slice(1, -1);
         }
+        
         // 추가적인 공백 제거
         privateKey = privateKey.trim();
+        
+        // 디버깅을 위한 로그 (민감한 정보는 마스킹)
+        console.log('Private key 처리 완료:', privateKey.substring(0, 50) + '...');
+        
+        // Private key 유효성 검사
+        if (!privateKey.includes('-----BEGIN PRIVATE KEY-----') || !privateKey.includes('-----END PRIVATE KEY-----')) {
+          console.error('Private key 형식이 올바르지 않습니다.');
+          return;
+        }
       }
 
       // 필수 환경 변수 확인
