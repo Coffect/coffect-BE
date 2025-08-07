@@ -10,6 +10,11 @@ function initializeFirebase() {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
+  console.log('Firebase 초기화 시작...');
+  console.log('Project ID 존재:', !!projectId);
+  console.log('Client Email 존재:', !!clientEmail);
+  console.log('Private Key 존재:', !!privateKey);
+
   if (!projectId || !clientEmail || !privateKey) {
     console.error('Firebase 환경 변수가 설정되지 않았습니다.');
     console.error('필요한 환경 변수: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
@@ -17,9 +22,31 @@ function initializeFirebase() {
   }
 
   try {
-    // Private Key 개행 문자 처리
-    const processedPrivateKey = Buffer.from(privateKey, 'base64').toString('utf-8');
+    // Private Key 처리 - base64 디코딩 시도
+    let processedPrivateKey = privateKey;
+    
+    try {
+      // base64로 인코딩된 경우 디코딩
+      const decoded = Buffer.from(privateKey, 'base64').toString('utf-8');
+      if (decoded.includes('-----BEGIN PRIVATE KEY-----')) {
+        processedPrivateKey = decoded;
+        console.log('Private Key base64 디코딩 성공');
+      } else {
+        console.log('Private Key가 이미 일반 텍스트 형태입니다');
+      }
+    } catch (decodeError: unknown) {
+      const errorMessage = decodeError instanceof Error ? decodeError.message : 'Unknown error';
+      console.log('Private Key base64 디코딩 실패, 원본 사용:', errorMessage);
+    }
 
+    // 개행 문자 처리
+    processedPrivateKey = processedPrivateKey
+      .replace(/\\n/g, '\n')
+      .replace(/\\r/g, '\r')
+      .replace(/\\t/g, '\t');
+
+    console.log('Firebase Admin SDK 초기화 시도...');
+    
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: projectId,
@@ -28,8 +55,17 @@ function initializeFirebase() {
       })
     });
     console.log('Firebase Admin SDK 초기화 성공');
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Firebase Admin SDK 초기화 실패:', error);
+    if (error instanceof Error) {
+      console.error('에러 상세 정보:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+    } else {
+      console.error('알 수 없는 에러 타입:', error);
+    }
   }
 }
 
