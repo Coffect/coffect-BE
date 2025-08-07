@@ -17,11 +17,14 @@ function initializeFirebase() {
   }
 
   try {
+    // Private Key 개행 문자 처리
+    const processedPrivateKey = Buffer.from(privateKey, 'base64').toString('utf-8');
+
     admin.initializeApp({
       credential: admin.credential.cert({
         projectId: projectId,
         clientEmail: clientEmail,
-        privateKey: privateKey.replace(/\\n/g, '\n') // 개행 문자 처리
+        privateKey: processedPrivateKey
       })
     });
     console.log('Firebase Admin SDK 초기화 성공');
