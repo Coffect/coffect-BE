@@ -361,7 +361,7 @@ jobs:
               export ENV=${{ secrets.ENV }}
               export FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
               export FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
-              export FIREBASE_PRIVATE_KEY=\"${{ secrets.FIREBASE_PRIVATE_KEY }}\"
+              export FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
               export MONGODB_URL=${{ secrets.MONGODB_URL }}
               
               echo \"=== 애플리케이션 시작 ===\"
