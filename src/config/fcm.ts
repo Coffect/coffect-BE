@@ -5,13 +5,29 @@ const prisma = new PrismaClient();
 
 // Firebase Admin SDK 초기화 함수
 function initializeFirebase() {
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID, // I get no error here
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL, // I get no error here
-      privateKey: process.env.FIREBASE_PRIVATE_KEY // NOW THIS WORKS!!!
-    })
-  });
+  // 환경 변수 확인
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  if (!projectId || !clientEmail || !privateKey) {
+    console.error('Firebase 환경 변수가 설정되지 않았습니다.');
+    console.error('필요한 환경 변수: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
+    return;
+  }
+
+  try {
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: projectId,
+        clientEmail: clientEmail,
+        privateKey: privateKey.replace(/\\n/g, '\n') // 개행 문자 처리
+      })
+    });
+    console.log('Firebase Admin SDK 초기화 성공');
+  } catch (error) {
+    console.error('Firebase Admin SDK 초기화 실패:', error);
+  }
 }
 
 // Firebase 초기화 실행
