@@ -13,10 +13,8 @@ function initializeFirebase() {
         // 환경 변수에서 가져온 private key의 이스케이프 문자 처리
         privateKey = privateKey.replace(/\\n/g, '\n');
         
-        // 환경 변수에서 'n' 문자를 줄바꿈으로 변환
-        // BEGIN과 END 부분만 정확히 변환
-        privateKey = privateKey.replace(/n-----BEGIN PRIVATE KEY-----n/g, '\n-----BEGIN PRIVATE KEY-----\n');
-        privateKey = privateKey.replace(/n-----END PRIVATE KEY-----n/g, '\n-----END PRIVATE KEY-----\n');
+        // 모든 'n' 문자를 줄바꿈으로 변환
+        privateKey = privateKey.replace(/n/g, '\n');
         
         // 따옴표로 감싸진 경우 제거
         if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
