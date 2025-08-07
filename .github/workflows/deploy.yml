@@ -160,7 +160,8 @@ jobs:
             echo "🔧 Prisma 클라이언트 생성 중..."
             export NODE_OPTIONS="--max-old-space-size=512"
             
-            npx prisma generate --schema=prisma/schema.prisma
+            npx prisma generate --schema=prisma/mysql/schema.prisma
+            npx prisma generate --schema=prisma/mongodb/schema.prisma
             echo "✅ Prisma 클라이언트 생성 완료"
           '
 
