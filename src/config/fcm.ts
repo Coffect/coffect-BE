@@ -5,7 +5,6 @@ const prisma = new PrismaClient();
 
 // Firebase Admin SDK 초기화 함수
 function initializeFirebase() {
-  console.log(process.env.FIREBASE_PRIVATE_KEY);
 
   // no undefined private key
   if(process.env.FIREBASE_PRIVATE_KEY === undefined) {
@@ -13,8 +12,9 @@ function initializeFirebase() {
   }
 
   // parsing private key from env
-  const privateKey = JSON.parse(process.env.FIREBASE_PRIVATE_KEY);
-  //console.log(privateKey);
+  const decoded = Buffer.from(process.env.FIREBASE_PRIVATE_KEY, 'base64').toString('utf-8');
+  const privateKey = JSON.parse(decoded);
+  console.log(privateKey);
 
   admin.initializeApp({
     credential: admin.credential.cert({
