@@ -1,7 +1,7 @@
 import { prisma } from '../config/prisma.config';
 
 export class SocketModel {
-  public async getRooms(userId: number): Promise<{}[]> {
+  public async getRooms(userId: number): Promise<string[]> {
     const data = await prisma.chatRoomUser.findMany({
       where: { userId: userId },
       select: { chatroomId: true }

@@ -10,7 +10,7 @@ export default class SocketService {
     const userId = socket.data.decoded.index;
     const rooms = await this.SocketModel.getRooms(userId);
     for (const room of rooms) {
-      await socket.join(room.toString());
+      await socket.join(room);
     }
   }
 }

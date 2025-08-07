@@ -23,7 +23,7 @@ import {
   TsoaSuccessResponse
 } from '../config/tsoaResponse';
 import { ChatService } from './chat.Service';
-import { ChatRoomDTO } from '../middleware/chat.DTO/chat.DTO';
+import { ChatDataDTO, ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
 
 @Route('chat')
 @Tags('Chat Controller')
@@ -53,7 +53,7 @@ export class ChatController extends Controller {
   public async makeChatRoom(
     @Request() req: ExpressRequest,
     @Body()
-    body: {
+      body: {
       userId: number;
     }
   ): Promise<ITsoaSuccessResponse<{ chatRoomId: string }>> {
@@ -63,8 +63,24 @@ export class ChatController extends Controller {
     return new TsoaSuccessResponse<{ chatRoomId: string }>(chatRoomId);
   }
 
+  // /**
+  //  * 채팅방의 메시지를 조회한다.
+  //  * @summary 채팅방 메시지 조회
+  //  */
+  // @Get('/:chatRoomId/messages')
+  // @Security('jwt_token')
+  // public async getMessages(
+  //   @Request() req: ExpressRequest,
+  //   @Query() chatRoomId: string
+  // ): Promise<ITsoaSuccessResponse<string[]>> {
+  //   const userId = req.user.index;
+  //   const result = await this.chatService.getMessages(userId, chatRoomId);
+  //   return new TsoaSuccessResponse<string[]>(result);
+  // }
+
   /**
    * 유저가 속해있는 모든 채팅방 목록을 조회한다.
+   * 해당 chatRoomId, 상대방 유저의 userId, 마지막으로 보낸 메시지의 lastReadMessageId를 반환한다.
    * @summary 채팅방 목록 조회
    */
   @Get('/rooms')
@@ -81,9 +97,47 @@ export class ChatController extends Controller {
   })
   public async getChatRoom(
     @Request() req: ExpressRequest
-  ): Promise<ITsoaSuccessResponse<string[]>> {
+  ): Promise<ITsoaSuccessResponse<ChatRoomsDTO[]>> {
     const userId = req.user.index;
     const result = await this.chatService.getChatRoom(userId);
-    return new TsoaSuccessResponse<string[]>(result);
+    return new TsoaSuccessResponse<ChatRoomsDTO[]>(result);
+  }
+
+  /**
+   * 채팅방에 메시지를 전송한다.
+   * chatRoomId를 기반으로 message를 받아 전송한다.
+   * @summary 채팅방 메시지 전송
+   */
+  @Post('/message')
+  @Security('jwt_token')
+  @SuccessResponse(200, '메시지 전송 성공')
+  public async sendMessage(
+    @Query() chatRoomId: string,
+    @Request() req: ExpressRequest,
+    @Body() body: { message: string }
+  ): Promise<ITsoaSuccessResponse<string>> {
+    const userId = req.user.index;
+    const result = await this.chatService.sendMessage(
+      userId,
+      chatRoomId,
+      body.message
+    );
+    return new TsoaSuccessResponse<string>('메시지 전송 성공');
+  }
+
+  /**
+   * 채팅방의 메시지를 조회한다.
+   * 특정 chatRoomId에 있는 메시지를 조회한다.
+   * @summary 채팅방 메시지 조회
+   */
+  @Get('/')
+  @Security('jwt_token')
+  @SuccessResponse(200, '채팅방 정보 조회 성공')
+  public async getChatRoomInfo(
+    @Request() req: ExpressRequest,
+    @Query() chatRoomId: string
+  ): Promise<ITsoaSuccessResponse<ChatDataDTO[]>> {
+    const result = await this.chatService.getChatRoomInfo(chatRoomId);
+    return new TsoaSuccessResponse<ChatDataDTO[]>(result);
   }
 }
