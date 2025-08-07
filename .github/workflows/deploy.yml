@@ -302,6 +302,42 @@ jobs:
             echo "✅ 정리 완료"
           '
 
+      - name: Install Required Tools
+        run: |
+          ssh playground-umc-8th '
+            echo "🔧 필수 도구 설치 확인 중..."
+            
+            # nohup 설치 확인 및 설치
+            if ! command -v nohup &> /dev/null; then
+              echo "📦 nohup이 설치되지 않았습니다. 설치 중..."
+              sudo apt-get update -qq
+              sudo apt-get install -y coreutils
+              echo "✅ nohup 설치 완료"
+            else
+              echo "✅ nohup이 이미 설치되어 있습니다"
+            fi
+            
+            # netstat 설치 확인 및 설치
+            if ! command -v netstat &> /dev/null; then
+              echo "📦 netstat이 설치되지 않았습니다. 설치 중..."
+              sudo apt-get install -y net-tools
+              echo "✅ netstat 설치 완료"
+            else
+              echo "✅ netstat이 이미 설치되어 있습니다"
+            fi
+            
+            # lsof 설치 확인 및 설치
+            if ! command -v lsof &> /dev/null; then
+              echo "📦 lsof가 설치되지 않았습니다. 설치 중..."
+              sudo apt-get install -y lsof
+              echo "✅ lsof 설치 완료"
+            else
+              echo "✅ lsof가 이미 설치되어 있습니다"
+            fi
+            
+            echo "✅ 모든 필수 도구 설치 완료"
+          '
+
       - name: Start Application Efficiently
         run: |
           ssh playground-umc-8th '
@@ -382,16 +418,45 @@ jobs:
               npm run start >> logs/app.log 2>> logs/app.error.log
             " > /dev/null 2>&1 &
             
-            APP_PID=$!
-            echo $APP_PID > app.pid
-            
-            echo "✅ 애플리케이션 시작됨 (PID: $APP_PID)"
+            # PID 설정 (실행 방법에 따라 다름)
+            if command -v nohup &> /dev/null && [ "$?" -eq 0 ]; then
+              APP_PID=$!
+              echo $APP_PID > app.pid
+              echo "✅ 애플리케이션 시작됨 (nohup PID: $APP_PID)"
+            elif command -v screen &> /dev/null && [ "$?" -eq 0 ]; then
+              # screen 세션에서 PID 찾기
+              sleep 2
+              SCREEN_PID=$(pgrep -f "screen.*app")
+              if [ ! -z "$SCREEN_PID" ]; then
+                echo $SCREEN_PID > app.pid
+                echo "✅ 애플리케이션 시작됨 (screen PID: $SCREEN_PID)"
+              else
+                echo "⚠️ screen 세션 PID를 찾을 수 없습니다"
+                echo "0" > app.pid
+              fi
+            else
+              # 직접 실행한 경우
+              APP_PID=$!
+              echo $APP_PID > app.pid
+              echo "✅ 애플리케이션 시작됨 (직접 실행 PID: $APP_PID)"
+            fi
             
             # 프로세스 상태 확인 (더 긴 대기 시간)
             echo "⏳ 프로세스 상태 확인 중..."
             for i in {1..10}; do
               if kill -0 $APP_PID 2>/dev/null; then
                 echo "✅ 프로세스 정상 실행 중 (확인 $i/10)"
+                
+                # 실시간 로그 모니터링 추가
+                echo "📋 실시간 로그 확인 중..."
+                if [ -f logs/app.error.log ]; then
+                  echo "=== 최근 에러 로그 (실시간) ==="
+                  tail -5 logs/app.error.log 2>/dev/null || echo "에러 로그 읽기 실패"
+                fi
+                if [ -f logs/app.log ]; then
+                  echo "=== 최근 앱 로그 (실시간) ==="
+                  tail -3 logs/app.log 2>/dev/null || echo "앱 로그 읽기 실패"
+                fi
                 
                 # 포트 바인딩 확인
                 if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
@@ -407,10 +472,50 @@ jobs:
                 fi
               else
                 echo "❌ 프로세스 실행 실패 (확인 $i/10)"
-                echo "=== 에러 로그 ==="
-                cat logs/app.error.log 2>/dev/null | tail -20 || echo "에러 로그 없음"
-                echo "=== 앱 로그 ==="
-                cat logs/app.log 2>/dev/null | tail -10 || echo "앱 로그 없음"
+                echo "=== 상세 에러 분석 ==="
+                
+                # 프로세스 종료 이유 분석
+                echo "🔍 프로세스 종료 이유 분석:"
+                ps -p $APP_PID -o pid,ppid,cmd,etime 2>/dev/null || echo "프로세스 정보 없음"
+                
+                # 에러 로그 상세 출력
+                echo "=== 에러 로그 (상세) ==="
+                if [ -f logs/app.error.log ]; then
+                  echo "📄 에러 로그 파일 크기: $(wc -l < logs/app.error.log) 줄"
+                  echo "📄 에러 로그 전체 내용:"
+                  cat logs/app.error.log 2>/dev/null || echo "에러 로그 읽기 실패"
+                else
+                  echo "❌ 에러 로그 파일이 존재하지 않습니다"
+                  echo "📁 logs 디렉토리 내용:"
+                  ls -la logs/ 2>/dev/null || echo "logs 디렉토리 없음"
+                  
+                  # nohup 출력 확인
+                  echo "📄 nohup.out 확인:"
+                  if [ -f nohup.out ]; then
+                    cat nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
+                  else
+                    echo "nohup.out 파일 없음"
+                  fi
+                fi
+                
+                # 앱 로그 상세 출력
+                echo "=== 앱 로그 (상세) ==="
+                if [ -f logs/app.log ]; then
+                  echo "📄 앱 로그 파일 크기: $(wc -l < logs/app.log) 줄"
+                  cat logs/app.log 2>/dev/null || echo "앱 로그 읽기 실패"
+                else
+                  echo "❌ 앱 로그 파일이 존재하지 않습니다"
+                fi
+                
+                # 시스템 로그 확인
+                echo "=== 시스템 로그 확인 ==="
+                dmesg | tail -5 2>/dev/null || echo "시스템 로그 확인 불가"
+                
+                # 메모리 및 디스크 상태
+                echo "=== 시스템 상태 ==="
+                free -h 2>/dev/null || echo "메모리 정보 없음"
+                df -h . 2>/dev/null || echo "디스크 정보 없음"
+                
                 exit 1
               fi
               sleep 2
@@ -421,10 +526,58 @@ jobs:
               echo "✅ 애플리케이션 성공적으로 시작됨"
               echo "📊 프로세스 정보:"
               ps -p $APP_PID -o pid,ppid,cmd,etime
+              
+              # 성공 시에도 로그 확인
+              echo "=== 최근 로그 확인 ==="
+              if [ -f logs/app.log ]; then
+                echo "📄 앱 로그 (마지막 5줄):"
+                tail -5 logs/app.log 2>/dev/null || echo "앱 로그 읽기 실패"
+              fi
+              if [ -f logs/app.error.log ]; then
+                echo "📄 에러 로그 (마지막 3줄):"
+                tail -3 logs/app.error.log 2>/dev/null || echo "에러 로그 읽기 실패"
+              fi
             else
               echo "❌ 애플리케이션 시작 실패"
-              echo "=== 최종 에러 로그 ==="
-              cat logs/app.error.log 2>/dev/null | tail -30 || echo "에러 로그 없음"
+              echo "=== 최종 상세 에러 분석 ==="
+              
+              # 프로세스 상태 확인
+              echo "🔍 프로세스 상태:"
+              ps -p $APP_PID -o pid,ppid,cmd,etime 2>/dev/null || echo "프로세스 정보 없음"
+              
+              # 상세 에러 로그 출력
+              echo "=== 최종 에러 로그 (전체) ==="
+              if [ -f logs/app.error.log ]; then
+                echo "📄 에러 로그 파일 크기: $(wc -l < logs/app.error.log) 줄"
+                echo "📄 에러 로그 전체 내용:"
+                cat logs/app.error.log 2>/dev/null || echo "에러 로그 읽기 실패"
+              else
+                echo "❌ 에러 로그 파일이 존재하지 않습니다"
+                echo "📁 현재 디렉토리 내용:"
+                ls -la 2>/dev/null || echo "디렉토리 내용 확인 불가"
+                echo "📁 logs 디렉토리 내용:"
+                ls -la logs/ 2>/dev/null || echo "logs 디렉토리 없음"
+              fi
+              
+              # 앱 로그도 확인
+              echo "=== 최종 앱 로그 ==="
+              if [ -f logs/app.log ]; then
+                echo "📄 앱 로그 파일 크기: $(wc -l < logs/app.log) 줄"
+                echo "📄 앱 로그 전체 내용:"
+                cat logs/app.log 2>/dev/null || echo "앱 로그 읽기 실패"
+              else
+                echo "❌ 앱 로그 파일이 존재하지 않습니다"
+              fi
+              
+              # 시스템 상태 확인
+              echo "=== 시스템 상태 ==="
+              echo "💾 메모리 사용량:"
+              free -h 2>/dev/null || echo "메모리 정보 없음"
+              echo "💾 디스크 사용량:"
+              df -h . 2>/dev/null || echo "디스크 정보 없음"
+              echo "🔧 시스템 로그:"
+              dmesg | tail -10 2>/dev/null || echo "시스템 로그 확인 불가"
+              
               exit 1
             fi
           '
