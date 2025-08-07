@@ -208,7 +208,10 @@ jobs:
           FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
           EOF
             
-            echo -e "FIREBASE_PRIVATE_KEY=\"${{ secrets.FIREBASE_PRIVATE_KEY }}\"" >> /home/ubuntu/coffect-BE/.env
+            # FIREBASE_PRIVATE_KEY에서 n 문자를 \n으로 변환
+            FIREBASE_PRIVATE_KEY="${{ secrets.FIREBASE_PRIVATE_KEY }}"
+            FIREBASE_PRIVATE_KEY=$(echo "$FIREBASE_PRIVATE_KEY" | sed "s/n/\n/g")
+            echo "FIREBASE_PRIVATE_KEY=\"$FIREBASE_PRIVATE_KEY\"" >> /home/ubuntu/coffect-BE/.env
           '
 
       - name: Smart Build Process

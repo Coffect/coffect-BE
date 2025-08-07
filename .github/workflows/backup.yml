@@ -80,7 +80,8 @@ jobs:
             cd /home/ubuntu/coffect-BE-backup
             
             echo "🔧 백업 서버 Prisma 클라이언트 생성 중..."
-            npx prisma generate --schema=prisma/schema.prisma
+            npx prisma generate --schema=prisma/mysql/schema.prisma
+            npx prisma generate --schema=prisma/mongodb/schema.prisma
             echo "✅ 백업 서버 Prisma 클라이언트 생성 완료"
           '
 
@@ -124,7 +125,10 @@ jobs:
           FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
           EOF
             
-            echo -e "FIREBASE_PRIVATE_KEY=\"${{ secrets.FIREBASE_PRIVATE_KEY }}\"" >> /home/ubuntu/coffect-BE-backup/.env
+            # FIREBASE_PRIVATE_KEY에서 n 문자를 \n으로 변환
+            FIREBASE_PRIVATE_KEY="${{ secrets.FIREBASE_PRIVATE_KEY }}"
+            FIREBASE_PRIVATE_KEY=$(echo "$FIREBASE_PRIVATE_KEY" | sed "s/n/\n/g")
+            echo "FIREBASE_PRIVATE_KEY=\"$FIREBASE_PRIVATE_KEY\"" >> /home/ubuntu/coffect-BE-backup/.env
           '
 
       - name: Build on Backup
