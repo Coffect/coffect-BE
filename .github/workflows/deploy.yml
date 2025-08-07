@@ -282,8 +282,11 @@ jobs:
               if kill -0 $PID 2>/dev/null; then
                 echo "애플리케이션 종료 중 (PID: $PID)..."
                 kill -TERM $PID
-                sleep 2
-                kill -0 $PID 2>/dev/null && kill -KILL $PID || true
+                sleep 3
+                if kill -0 $PID 2>/dev/null; then
+                  echo "강제 종료 실행..."
+                  kill -KILL $PID
+                fi
               fi
               rm -f app.pid
             fi
@@ -294,11 +297,18 @@ jobs:
               if [ ! -z "$PORT_PIDS" ]; then
                 echo "포트 프로세스 종료: $PORT_PIDS"
                 echo "$PORT_PIDS" | xargs -r kill -TERM
-                sleep 1
+                sleep 2
                 echo "$PORT_PIDS" | xargs -r kill -KILL 2>/dev/null || true
               fi
             fi
             
+            # Node.js 프로세스 정리 (coffect-BE 관련)
+            echo "Node.js 프로세스 정리 중..."
+            pkill -f "coffect-BE" 2>/dev/null || true
+            pkill -f "npm.*dev" 2>/dev/null || true
+            pkill -f "node.*dist/index" 2>/dev/null || true
+            
+            sleep 2
             echo "✅ 정리 완료"
           '
 
@@ -338,7 +348,7 @@ jobs:
             echo "✅ 모든 필수 도구 설치 완료"
           '
 
-      - name: Start Application Efficiently
+      - name: Start Application with nohup
         run: |
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
@@ -350,175 +360,121 @@ jobs:
             
             # 환경 변수 확인
             echo "=== 환경 변수 확인 ==="
-            echo "NODE_ENV: $NODE_ENV"
+            echo "NODE_ENV: production"
             echo "PORT: ${{ secrets.EC2_PORT }}"
-            echo "DATABASE_HOST: $DATABASE_HOST"
             
-            # package.json 스크립트 확인
-            if [ -f package.json ]; then
-              echo "📋 package.json 스크립트:"
-              cat package.json | grep -A 5 -B 5 "scripts"
+            # 기존 nohup.out 파일 정리 (선택사항)
+            if [ -f nohup.out ]; then
+              mv nohup.out nohup.out.backup.$(date +%Y%m%d_%H%M%S)
             fi
             
-            # 기존 프로세스 정리
-            if [ -f app.pid ]; then
-              OLD_PID=$(cat app.pid)
-              if kill -0 $OLD_PID 2>/dev/null; then
-                echo "🛑 기존 프로세스 종료 중 (PID: $OLD_PID)"
-                kill -TERM $OLD_PID
-                sleep 2
-                kill -0 $OLD_PID 2>/dev/null && kill -KILL $OLD_PID || true
-              fi
-              rm -f app.pid
-            fi
+            # nohup을 사용하여 애플리케이션 시작 (올바른 방법)
+            echo "🚀 nohup으로 애플리케이션 시작..."
             
-            # 포트 사용 중인 프로세스 정리
-            if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
-              PORT_PIDS=$(lsof -ti:${{ secrets.EC2_PORT }} 2>/dev/null || true)
-              if [ ! -z "$PORT_PIDS" ]; then
-                echo "🛑 포트 ${{ secrets.EC2_PORT }} 사용 중인 프로세스 종료: $PORT_PIDS"
-                echo "$PORT_PIDS" | xargs -r kill -TERM
-                sleep 1
-                echo "$PORT_PIDS" | xargs -r kill -KILL 2>/dev/null || true
-              fi
-            fi
-            
-            # 애플리케이션 시작 (더 안전한 방법)
-            echo "🚀 애플리케이션 시작 명령어: npm run dev"
-            
-            # 환경 변수 설정과 함께 시작
-            nohup bash -c "
-              cd /home/ubuntu/coffect-BE
+            # 환경 변수 설정과 함께 nohup 실행
+            nohup sh -c "
               export NODE_ENV=production
               export PORT=${{ secrets.EC2_PORT }}
               export DATABASE_HOST=${{ secrets.DATABASE_HOST }}
               export DATABASE_PORT=${{ secrets.DATABASE_PORT }}
               export DATABASE_NAME=${{ secrets.DATABASE_NAME }}
               export DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
-              export DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-              export JWT_SECRET=${{ secrets.JWT_SECRET }}
-              export JWT_REFRESH=${{ secrets.JWT_REFRESH }}
-              export S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
-              export S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
-              export S3_NAME=${{ secrets.S3_NAME }}
-              export ENV=${{ secrets.ENV }}
-              export FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
-              export FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
-              export FIREBASE_PRIVATE_KEY='"${{ secrets.FIREBASE_PRIVATE_KEY }}"'
-              export MONGODB_URL=${{ secrets.MONGODB_URL }}
+              export DATABASE_PASSWORD=\"${{ secrets.DATABASE_PASSWORD }}\"
+              export JWT_SECRET=\"${{ secrets.JWT_SECRET }}\"
+              export JWT_REFRESH=\"${{ secrets.JWT_REFRESH }}\"
+              export S3_ACCESS_KEY=\"${{ secrets.S3_ACCESS_KEY }}\"
+              export S3_SECRET_KEY=\"${{ secrets.S3_SECRET_KEY }}\"
+              export S3_NAME=\"${{ secrets.S3_NAME }}\"
+              export ENV=\"${{ secrets.ENV }}\"
+              export FIREBASE_PROJECT_ID=\"${{ secrets.FIREBASE_PROJECT_ID }}\"
+              export FIREBASE_CLIENT_EMAIL=\"${{ secrets.FIREBASE_CLIENT_EMAIL }}\"
+              export FIREBASE_PRIVATE_KEY=\"${{ secrets.FIREBASE_PRIVATE_KEY }}\"
+              export MONGODB_URL=\"${{ secrets.MONGODB_URL }}\"
               
-              echo \"=== 애플리케이션 시작 ===\"
-              echo \"NODE_ENV: \$NODE_ENV\"
-              echo \"PORT: \$PORT\"
-              echo \"현재 디렉토리: \$(pwd)\"
-              echo \"Node.js 버전: \$(node --version)\"
-              echo \"npm 버전: \$(npm --version)\"
+              echo \"=== 애플리케이션 시작 ($(date)) ===\" >> nohup.out
+              echo \"NODE_ENV: \$NODE_ENV\" >> nohup.out
+              echo \"PORT: \$PORT\" >> nohup.out
+              echo \"현재 디렉토리: \$(pwd)\" >> nohup.out
+              echo \"Node.js 버전: \$(node --version)\" >> nohup.out
+              echo \"npm 버전: \$(npm --version)\" >> nohup.out
+              echo \"\" >> nohup.out
               
-              # 애플리케이션 시작
-              npm run dev >> logs/app.log 2>> logs/app.error.log
-            " > /dev/null 2>&1 &
+              # npm run start 사용 (production 환경에 적합)
+              npm run start
+            " &
             
-            # PID 설정 (실행 방법에 따라 다름)
-            if command -v nohup &> /dev/null && [ "$?" -eq 0 ]; then
-              APP_PID=$!
-              echo $APP_PID > app.pid
-              echo "✅ 애플리케이션 시작됨 (nohup PID: $APP_PID)"
-            elif command -v screen &> /dev/null && [ "$?" -eq 0 ]; then
-              # screen 세션에서 PID 찾기
-              sleep 2
-              SCREEN_PID=$(pgrep -f "screen.*app")
-              if [ ! -z "$SCREEN_PID" ]; then
-                echo $SCREEN_PID > app.pid
-                echo "✅ 애플리케이션 시작됨 (screen PID: $SCREEN_PID)"
-              else
-                echo "⚠️ screen 세션 PID를 찾을 수 없습니다"
-                echo "0" > app.pid
-              fi
+            # PID 저장 (nohup의 백그라운드 프로세스 PID)
+            APP_PID=$!
+            echo $APP_PID > app.pid
+            echo "✅ 애플리케이션 시작됨 (PID: $APP_PID)"
+            
+            # nohup.out 파일 생성 확인
+            sleep 2
+            if [ -f nohup.out ]; then
+              echo "✅ nohup.out 파일 생성 확인됨"
+              echo "📄 nohup.out 초기 내용:"
+              head -10 nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
             else
-              # 직접 실행한 경우
-              APP_PID=$!
-              echo $APP_PID > app.pid
-              echo "✅ 애플리케이션 시작됨 (직접 실행 PID: $APP_PID)"
+              echo "⚠️ nohup.out 파일이 아직 생성되지 않았습니다"
             fi
             
-            # 프로세스 상태 확인 (더 긴 대기 시간)
+            # 프로세스 상태 확인 (더 충분한 대기 시간)
             echo "⏳ 프로세스 상태 확인 중..."
-            for i in {1..10}; do
+            for i in {1..15}; do
               if kill -0 $APP_PID 2>/dev/null; then
-                echo "✅ 프로세스 정상 실행 중 (확인 $i/10)"
+                echo "✅ 프로세스 정상 실행 중 (확인 $i/15)"
                 
-                # 실시간 로그 모니터링 추가
-                echo "📋 실시간 로그 확인 중..."
-                if [ -f logs/app.error.log ]; then
-                  echo "=== 최근 에러 로그 (실시간) ==="
-                  tail -5 logs/app.error.log 2>/dev/null || echo "에러 로그 읽기 실패"
-                fi
-                if [ -f logs/app.log ]; then
-                  echo "=== 최근 앱 로그 (실시간) ==="
-                  tail -3 logs/app.log 2>/dev/null || echo "앱 로그 읽기 실패"
+                # nohup.out 파일 내용 확인
+                if [ -f nohup.out ]; then
+                  echo "📄 nohup.out 최신 내용:"
+                  tail -3 nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
                 fi
                 
                 # 포트 바인딩 확인
                 if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
-                  sleep 2
                   if netstat -ln 2>/dev/null | grep -q ":${{ secrets.EC2_PORT }}"; then
                     echo "✅ 포트 ${{ secrets.EC2_PORT }} 바인딩 확인"
                     break
                   else
-                    echo "⏳ 포트 바인딩 대기 중... (확인 $i/10)"
+                    echo "⏳ 포트 바인딩 대기 중... (확인 $i/15)"
                   fi
                 else
-                  break
+                  # 포트 확인이 불가능한 경우 5번 확인 후 성공으로 간주
+                  if [ $i -ge 5 ]; then
+                    echo "✅ 프로세스 실행 확인 완료"
+                    break
+                  fi
                 fi
               else
-                echo "❌ 프로세스 실행 실패 (확인 $i/10)"
+                echo "❌ 프로세스 실행 실패 (확인 $i/15)"
+                
+                # 상세 에러 분석
                 echo "=== 상세 에러 분석 ==="
                 
-                # 프로세스 종료 이유 분석
-                echo "🔍 프로세스 종료 이유 분석:"
-                ps -p $APP_PID -o pid,ppid,cmd,etime 2>/dev/null || echo "프로세스 정보 없음"
+                # nohup.out 파일 내용 확인
+                if [ -f nohup.out ]; then
+                  echo "📄 nohup.out 전체 내용:"
+                  cat nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
+                else
+                  echo "❌ nohup.out 파일이 존재하지 않습니다"
+                fi
                 
-                # 에러 로그 상세 출력
-                echo "=== 에러 로그 (상세) ==="
+                # 추가 로그 파일 확인
                 if [ -f logs/app.error.log ]; then
-                  echo "📄 에러 로그 파일 크기: $(wc -l < logs/app.error.log) 줄"
-                  echo "📄 에러 로그 전체 내용:"
+                  echo "📄 에러 로그:"
                   cat logs/app.error.log 2>/dev/null || echo "에러 로그 읽기 실패"
-                else
-                  echo "❌ 에러 로그 파일이 존재하지 않습니다"
-                  echo "📁 logs 디렉토리 내용:"
-                  ls -la logs/ 2>/dev/null || echo "logs 디렉토리 없음"
-                  
-                  # nohup 출력 확인
-                  echo "📄 nohup.out 확인:"
-                  if [ -f nohup.out ]; then
-                    cat nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
-                  else
-                    echo "nohup.out 파일 없음"
-                  fi
                 fi
                 
-                # 앱 로그 상세 출력
-                echo "=== 앱 로그 (상세) ==="
-                if [ -f logs/app.log ]; then
-                  echo "📄 앱 로그 파일 크기: $(wc -l < logs/app.log) 줄"
-                  cat logs/app.log 2>/dev/null || echo "앱 로그 읽기 실패"
-                else
-                  echo "❌ 앱 로그 파일이 존재하지 않습니다"
-                fi
-                
-                # 시스템 로그 확인
-                echo "=== 시스템 로그 확인 ==="
-                dmesg | tail -5 2>/dev/null || echo "시스템 로그 확인 불가"
-                
-                # 메모리 및 디스크 상태
+                # 시스템 상태 확인
                 echo "=== 시스템 상태 ==="
+                echo "💾 메모리 사용량:"
                 free -h 2>/dev/null || echo "메모리 정보 없음"
+                echo "💾 디스크 사용량:"
                 df -h . 2>/dev/null || echo "디스크 정보 없음"
                 
                 exit 1
               fi
-              sleep 2
+              sleep 3
             done
             
             # 최종 상태 확인
@@ -527,56 +483,27 @@ jobs:
               echo "📊 프로세스 정보:"
               ps -p $APP_PID -o pid,ppid,cmd,etime
               
-              # 성공 시에도 로그 확인
-              echo "=== 최근 로그 확인 ==="
-              if [ -f logs/app.log ]; then
-                echo "📄 앱 로그 (마지막 5줄):"
-                tail -5 logs/app.log 2>/dev/null || echo "앱 로그 읽기 실패"
-              fi
-              if [ -f logs/app.error.log ]; then
-                echo "📄 에러 로그 (마지막 3줄):"
-                tail -3 logs/app.error.log 2>/dev/null || echo "에러 로그 읽기 실패"
+              # nohup.out 파일 상태 확인
+              if [ -f nohup.out ]; then
+                echo "📄 nohup.out 파일 상태:"
+                ls -lh nohup.out
+                echo "📄 nohup.out 최신 내용 (마지막 10줄):"
+                tail -10 nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
+              else
+                echo "⚠️ nohup.out 파일이 존재하지 않습니다"
               fi
             else
-              echo "❌ 애플리케이션 시작 실패"
-              echo "=== 최종 상세 에러 분석 ==="
+              echo "❌ 애플리케이션 시작 최종 실패"
               
-              # 프로세스 상태 확인
-              echo "🔍 프로세스 상태:"
-              ps -p $APP_PID -o pid,ppid,cmd,etime 2>/dev/null || echo "프로세스 정보 없음"
+              # 최종 디버깅 정보
+              echo "=== 최종 디버깅 정보 ==="
+              echo "📁 현재 디렉토리 내용:"
+              ls -la 2>/dev/null || echo "디렉토리 내용 확인 불가"
               
-              # 상세 에러 로그 출력
-              echo "=== 최종 에러 로그 (전체) ==="
-              if [ -f logs/app.error.log ]; then
-                echo "📄 에러 로그 파일 크기: $(wc -l < logs/app.error.log) 줄"
-                echo "📄 에러 로그 전체 내용:"
-                cat logs/app.error.log 2>/dev/null || echo "에러 로그 읽기 실패"
-              else
-                echo "❌ 에러 로그 파일이 존재하지 않습니다"
-                echo "📁 현재 디렉토리 내용:"
-                ls -la 2>/dev/null || echo "디렉토리 내용 확인 불가"
-                echo "📁 logs 디렉토리 내용:"
-                ls -la logs/ 2>/dev/null || echo "logs 디렉토리 없음"
+              if [ -f nohup.out ]; then
+                echo "📄 nohup.out 최종 내용:"
+                cat nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
               fi
-              
-              # 앱 로그도 확인
-              echo "=== 최종 앱 로그 ==="
-              if [ -f logs/app.log ]; then
-                echo "📄 앱 로그 파일 크기: $(wc -l < logs/app.log) 줄"
-                echo "📄 앱 로그 전체 내용:"
-                cat logs/app.log 2>/dev/null || echo "앱 로그 읽기 실패"
-              else
-                echo "❌ 앱 로그 파일이 존재하지 않습니다"
-              fi
-              
-              # 시스템 상태 확인
-              echo "=== 시스템 상태 ==="
-              echo "💾 메모리 사용량:"
-              free -h 2>/dev/null || echo "메모리 정보 없음"
-              echo "💾 디스크 사용량:"
-              df -h . 2>/dev/null || echo "디스크 정보 없음"
-              echo "🔧 시스템 로그:"
-              dmesg | tail -10 2>/dev/null || echo "시스템 로그 확인 불가"
               
               exit 1
             fi
@@ -598,6 +525,16 @@ jobs:
                 # 프로세스 상세 정보
                 echo "📊 프로세스 정보:"
                 ps -p $PID -o pid,ppid,cmd,etime,pcpu,pmem
+                
+                # nohup.out 파일 확인
+                if [ -f nohup.out ]; then
+                  echo "📄 nohup.out 파일 상태:"
+                  ls -lh nohup.out
+                  echo "📄 nohup.out 최신 내용:"
+                  tail -5 nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
+                else
+                  echo "⚠️ nohup.out 파일이 존재하지 않습니다"
+                fi
                 
                 # 포트 바인딩 확인
                 if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
@@ -636,10 +573,10 @@ jobs:
                     echo "✅ 서버 정상 응답 확인"
                   else
                     echo "⚠️ 서버 응답 없음 - 로그 확인"
-                    echo "=== 최근 에러 로그 ==="
-                    tail -20 logs/app.error.log 2>/dev/null || echo "에러 로그 없음"
-                    echo "=== 최근 앱 로그 ==="
-                    tail -10 logs/app.log 2>/dev/null || echo "앱 로그 없음"
+                    if [ -f nohup.out ]; then
+                      echo "📄 nohup.out 최신 내용:"
+                      tail -10 nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
+                    fi
                     
                     # 프로세스는 살아있지만 응답이 없는 경우
                     if kill -0 $PID 2>/dev/null; then
@@ -655,8 +592,10 @@ jobs:
                 fi
               else
                 echo "❌ 프로세스 실행 실패"
-                echo "=== 에러 로그 ==="
-                tail -20 logs/app.error.log 2>/dev/null || echo "에러 로그 없음"
+                if [ -f nohup.out ]; then
+                  echo "=== nohup.out 에러 내용 ==="
+                  cat nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
+                fi
                 exit 1
               fi
             else
@@ -686,6 +625,15 @@ jobs:
               echo "❌ PID 파일 없음"
             fi
             
+            # nohup.out 파일 상태
+            if [ -f nohup.out ]; then
+              echo "✅ nohup.out 파일 존재 (크기: $(ls -lh nohup.out | awk \"{print \$5}\"))"
+              echo "📄 nohup.out 마지막 3줄:"
+              tail -3 nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
+            else
+              echo "❌ nohup.out 파일 없음"
+            fi
+            
             # 포트 상태 (빠른 확인)
             if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
               if netstat -ln 2>/dev/null | grep -q ":${{ secrets.EC2_PORT }}"; then
@@ -695,16 +643,9 @@ jobs:
               fi
             fi
             
-            # 간단한 로그 (마지막 3줄만)
             echo ""
-            echo "=== 최근 로그 ==="
-            tail -3 logs/app.log 2>/dev/null || echo "앱 로그 없음"
-            
+            echo "📄 nohup.out 파일 실시간 모니터링 명령어:"
+            echo "   tail -f nohup.out"
             echo ""
             echo "⏰ 배포 완료: $(date)"
           '
-
-
-
-
-
