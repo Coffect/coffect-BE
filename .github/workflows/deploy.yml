@@ -129,6 +129,36 @@ jobs:
             
             echo "📦 Dependencies 효율적 설치 중..."
             
+            # package.json 파일 무결성 확인 및 복구
+            echo "🔍 package.json 파일 확인 중..."
+            if [ -f package.json ]; then
+              # JSON 유효성 검사
+              if node -e "JSON.parse(require(\"fs\").readFileSync(\"package.json\", \"utf8\"))" 2>/dev/null; then
+                echo "✅ package.json 파일이 유효합니다"
+              else
+                echo "❌ package.json 파일이 손상되었습니다. 백업에서 복구 시도..."
+                # 백업에서 복구 시도
+                if [ -f /home/ubuntu/coffect-BE-backup/package.json ]; then
+                  cp /home/ubuntu/coffect-BE-backup/package.json .
+                  echo "✅ 백업에서 package.json 복구 완료"
+                else
+                  echo "❌ 백업 파일도 없습니다. package.json을 다시 생성합니다"
+                  # 기본 package.json 생성 (간단한 방법)
+                  echo "{\"name\":\"coffect-be\",\"version\":\"1.0.0\",\"description\":\"Coffect BackEnd Repository\",\"main\":\"./dist/index.js\",\"scripts\":{\"build\":\"tsoa spec-and-routes && tsc\",\"start\":\"npx prisma generate && npm run build && node ./dist/index.js\",\"lint\":\"eslint src/**/*.ts --fix --ext .ts\",\"prisma\":\"npx prisma generate --schema=prisma/mysql/schema.prisma && npx prisma generate --schema=prisma/mongodb/schema.prisma\",\"dev\":\"npm run prisma && npm run lint && npm run build && nodemon --watch *.ts --exec ts-node src/index.ts\"},\"author\":\"\",\"license\":\"ISC\",\"dependencies\":{\"@prisma/client\":\"^6.10.1\",\"@socket.io/admin-ui\":\"^0.5.1\",\"aws-sdk\":\"^2.1692.0\",\"bcrypt\":\"^6.0.0\",\"cors\":\"^2.8.5\",\"crypto\":\"^1.0.1\",\"dotenv\":\"^16.5.0\",\"es-hangul\":\"^2.3.5\",\"express\":\"^5.1.0\",\"firebase\":\"^12.0.0\",\"firebase-admin\":\"^13.4.0\",\"jsonwebtoken\":\"^9.0.2\",\"mongodb\":\"^6.18.0\",\"morgan\":\"^1.10.0\",\"multer\":\"^2.0.1\",\"multer-s3\":\"^3.0.1\",\"mysql2\":\"^3.14.1\",\"node-cron\":\"^4.2.1\",\"nodemon\":\"^3.1.10\",\"prisma\":\"^6.10.1\",\"socket.io\":\"^4.8.1\",\"socket.io-client\":\"^4.8.1\",\"swagger-autogen\":\"^2.23.7\",\"swagger-jsdoc\":\"^6.2.8\",\"swagger-ui-express\":\"^5.0.1\",\"tsoa\":\"^6.6.0\",\"tunnel-ssh\":\"^5.2.0\",\"uuid\":\"^11.1.0\",\"v4\":\"^0.0.1\"},\"devDependencies\":{\"@types/bcrypt\":\"^5.0.2\",\"@types/cors\":\"^2.8.19\",\"@types/express\":\"^5.0.3\",\"@types/jsonwebtoken\":\"^9.0.10\",\"@types/morgan\":\"^1.9.10\",\"@types/multer-s3\":\"^3.0.3\",\"@types/nodemailer\":\"^6.4.17\",\"@types/swagger-jsdoc\":\"^6.0.4\",\"@types/swagger-ui-express\":\"^4.1.8\",\"@typescript-eslint/eslint-plugin\":\"^8.35.0\",\"@typescript-eslint/parser\":\"^8.35.0\",\"eslint\":\"^8.57.1\",\"eslint-config-prettier\":\"^10.1.5\",\"eslint-plugin-prettier\":\"^5.5.0\",\"prettier\":\"^3.6.0\",\"prisma-erd-generator\":\"^2.0.4\",\"ts-node\":\"^10.9.2\"}}" > package.json
+                  echo "✅ 기본 package.json 생성 완료"
+                fi
+              fi
+            else
+              echo "❌ package.json 파일이 없습니다. 새로 생성합니다"
+              # 위와 동일한 기본 package.json 생성 코드
+              echo "{\"name\":\"coffect-be\",\"version\":\"1.0.0\",\"description\":\"Coffect BackEnd Repository\",\"main\":\"./dist/index.js\",\"scripts\":{\"build\":\"tsoa spec-and-routes && tsc\",\"start\":\"npx prisma generate && npm run build && node ./dist/index.js\",\"lint\":\"eslint src/**/*.ts --fix --ext .ts\",\"prisma\":\"npx prisma generate --schema=prisma/mysql/schema.prisma && npx prisma generate --schema=prisma/mongodb/schema.prisma\",\"dev\":\"npm run prisma && npm run lint && npm run build && nodemon --watch *.ts --exec ts-node src/index.ts\"},\"author\":\"\",\"license\":\"ISC\",\"dependencies\":{\"@prisma/client\":\"^6.10.1\",\"@socket.io/admin-ui\":\"^0.5.1\",\"aws-sdk\":\"^2.1692.0\",\"bcrypt\":\"^6.0.0\",\"cors\":\"^2.8.5\",\"crypto\":\"^1.0.1\",\"dotenv\":\"^16.5.0\",\"es-hangul\":\"^2.3.5\",\"express\":\"^5.1.0\",\"firebase\":\"^12.0.0\",\"firebase-admin\":\"^13.4.0\",\"jsonwebtoken\":\"^9.0.2\",\"mongodb\":\"^6.18.0\",\"morgan\":\"^1.10.0\",\"multer\":\"^2.0.1\",\"multer-s3\":\"^3.0.1\",\"mysql2\":\"^3.14.1\",\"node-cron\":\"^4.2.1\",\"nodemon\":\"^3.1.10\",\"prisma\":\"^6.10.1\",\"socket.io\":\"^4.8.1\",\"socket.io-client\":\"^4.8.1\",\"swagger-autogen\":\"^2.23.7\",\"swagger-jsdoc\":\"^6.2.8\",\"swagger-ui-express\":\"^5.0.1\",\"tsoa\":\"^6.6.0\",\"tunnel-ssh\":\"^5.2.0\",\"uuid\":\"^11.1.0\",\"v4\":\"^0.0.1\"},\"devDependencies\":{\"@types/bcrypt\":\"^5.0.2\",\"@types/cors\":\"^2.8.19\",\"@types/express\":\"^5.0.3\",\"@types/jsonwebtoken\":\"^9.0.10\",\"@types/morgan\":\"^1.9.10\",\"@types/multer-s3\":\"^3.0.3\",\"@types/nodemailer\":\"^6.4.17\",\"@types/swagger-jsdoc\":\"^6.0.4\",\"@types/swagger-ui-express\":\"^4.1.8\",\"@typescript-eslint/eslint-plugin\":\"^8.35.0\",\"@typescript-eslint/parser\":\"^8.35.0\",\"eslint\":\"^8.57.1\",\"eslint-config-prettier\":\"^10.1.5\",\"eslint-plugin-prettier\":\"^5.5.0\",\"prettier\":\"^3.6.0\",\"prisma-erd-generator\":\"^2.0.4\",\"ts-node\":\"^10.9.2\"}}" > package.json
+              echo "✅ 기본 package.json 생성 완료"
+            fi
+            
+            # 최종 package.json 확인
+            echo "🔍 최종 package.json 확인:"
+            cat package.json | head -10
+            
             # CPU 과부하 방지를 위한 설정
             export NODE_OPTIONS="--max-old-space-size=768"
             export NPM_CONFIG_AUDIT=false
@@ -136,17 +166,13 @@ jobs:
             export NPM_CONFIG_PROGRESS=false
             export NPM_CONFIG_PREFER_OFFLINE=true
             
+            # 기존 node_modules 및 package-lock.json 정리
+            echo "🧹 기존 dependencies 정리 중..."
+            rm -rf node_modules package-lock.json 2>/dev/null || true
+            
             # npm 설치 최적화
-            if [ -d node_modules ] && [ -f package-lock.json ]; then
-              echo "🔄 기존 dependencies 증분 업데이트..."
-              # 증분 설치로 CPU 부하 감소
-              npm install --no-audit --no-fund --prefer-offline --no-optional
-            else
-              echo "🆕 Dependencies 최초 설치..."
-              # 클린 설치
-              rm -rf node_modules package-lock.json 2>/dev/null || true
-              npm ci --no-audit --no-fund --prefer-offline --no-optional
-            fi
+            echo "🆕 Dependencies 클린 설치..."
+            npm ci --no-audit --no-fund --prefer-offline --no-optional
             
             echo "✅ Dependencies 설치 완료"
           '
