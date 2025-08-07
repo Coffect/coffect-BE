@@ -5,11 +5,22 @@ const prisma = new PrismaClient();
 
 // Firebase Admin SDK 초기화 함수
 function initializeFirebase() {
+  console.log(process.env.FIREBASE_PRIVATE_KEY);
+
+  // no undefined private key
+  if(process.env.FIREBASE_PRIVATE_KEY === undefined) {
+    return;
+  }
+
+  // parsing private key from env
+  const privateKey = JSON.parse(process.env.FIREBASE_PRIVATE_KEY);
+  //console.log(privateKey);
+
   admin.initializeApp({
     credential: admin.credential.cert({
       projectId: process.env.FIREBASE_PROJECT_ID, // I get no error here
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL, // I get no error here
-      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n') // NOW THIS WORKS!!!
+      privateKey: privateKey.private_key // NOW THIS WORKS!!!
     })
   });
 }
