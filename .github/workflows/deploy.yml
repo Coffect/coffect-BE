@@ -209,12 +209,11 @@ jobs:
           FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
           EOF
             
-            # FIREBASE_PRIVATE_KEY를 별도로 처리하여 n을 \n으로 변환
-            FIREBASE_PRIVATE_KEY=\"${{ secrets.FIREBASE_PRIVATE_KEY }}\"
-            FIREBASE_PRIVATE_KEY=\$(echo \"\$FIREBASE_PRIVATE_KEY\" | sed 's/n/\\n/g')
-            echo \"FIREBASE_PRIVATE_KEY=\\\"\$FIREBASE_PRIVATE_KEY\\\"\" >> /home/ubuntu/coffect-BE/.env
-          "
-          "
+                         # FIREBASE_PRIVATE_KEY를 별도로 처리하여 n을 \n으로 변환
+             FIREBASE_PRIVATE_KEY=\"${{ secrets.FIREBASE_PRIVATE_KEY }}\"
+             FIREBASE_PRIVATE_KEY=\$(echo \"\$FIREBASE_PRIVATE_KEY\" | sed 's/n/\\n/g')
+             echo \"FIREBASE_PRIVATE_KEY=\\\"\$FIREBASE_PRIVATE_KEY\\\"\" >> /home/ubuntu/coffect-BE/.env
+           "
             
       - name: Smart Build Process
         if: steps.analyze.outputs.source-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
