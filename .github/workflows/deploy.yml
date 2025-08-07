@@ -265,6 +265,52 @@ jobs:
           FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
           EOF
           "
+
+      - name: Fix Prisma Configuration
+        run: |
+          ssh playground-umc-8th '
+            cd /home/ubuntu/coffect-BE
+            
+            echo "🔧 Prisma 설정 확인 및 수정 중..."
+            
+            # 현재 디렉토리 구조 확인
+            echo "📁 현재 디렉토리 구조:"
+            find . -name "schema.prisma" -type f 2>/dev/null || echo "schema.prisma 파일을 찾을 수 없습니다"
+            find . -name "*.prisma" -type f 2>/dev/null || echo "prisma 파일을 찾을 수 없습니다"
+            
+            # prisma 디렉토리 구조 확인
+            if [ -d prisma ]; then
+              echo "📋 prisma 디렉토리 구조:"
+              ls -la prisma/
+              if [ -d prisma/mysql ]; then
+                echo "📋 prisma/mysql 디렉토리:"
+                ls -la prisma/mysql/
+              fi
+              if [ -d prisma/mongodb ]; then
+                echo "📋 prisma/mongodb 디렉토리:"
+                ls -la prisma/mongodb/
+              fi
+            fi
+            
+            # package.json에서 start 스크립트 확인
+            echo "📋 package.json start 스크립트:"
+            cat package.json | grep -A 5 -B 5 "scripts"
+            
+            # package.json start 스크립트 수정
+            echo "🔧 package.json start 스크립트 수정 중..."
+            
+            # 백업
+            cp package.json package.json.backup
+            
+            # start 스크립트를 수정하여 스키마 경로를 명시적으로 지정
+            cat package.json | jq '\''.scripts.start = "npm run prisma && npm run build && node ./dist/index.js"'\'' > package.json.tmp && mv package.json.tmp package.json
+            
+            # 수정된 내용 확인
+            echo "📋 수정된 start 스크립트:"
+            cat package.json | grep -A 5 -B 5 "scripts"
+            
+            echo "✅ Prisma 설정 수정 완료"
+          '
             
       - name: Smart Build Process
         if: steps.analyze.outputs.source-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
@@ -428,9 +474,25 @@ jobs:
             echo "- node_modules 존재: $([ -d node_modules ] && echo "✅" || echo "❌")"
             echo "- dist 디렉토리 존재: $([ -d dist ] && echo "✅" || echo "❌")"
             
+            # Prisma 스키마 파일 확인
+            echo "📋 Prisma 스키마 파일 확인:"
+            if [ -f prisma/mysql/schema.prisma ]; then
+              echo "✅ MySQL 스키마 존재"
+            else
+              echo "❌ MySQL 스키마 없음"
+            fi
+            if [ -f prisma/mongodb/schema.prisma ]; then
+              echo "✅ MongoDB 스키마 존재"  
+            else
+              echo "❌ MongoDB 스키마 없음"
+            fi
+            
             echo "🚀 nohup으로 애플리케이션 시작..."
             
-            # 환경 변수를 직접 설정하여 nohup 실행
+            # Prisma 클라이언트를 먼저 생성하고 애플리케이션 시작
+            echo "🔧 Prisma 클라이언트 생성 중..."
+            
+            # 환경 변수를 직접 설정하여 nohup 실행 (수정된 방식)
             NODE_ENV=production \
             PORT=${{ secrets.EC2_PORT }} \
             DATABASE_HOST=${{ secrets.DATABASE_HOST }} \
@@ -448,7 +510,28 @@ jobs:
             FIREBASE_CLIENT_EMAIL="${{ secrets.FIREBASE_CLIENT_EMAIL }}" \
             FIREBASE_PRIVATE_KEY="${{ secrets.FIREBASE_PRIVATE_KEY }}" \
             MONGODB_URL="${{ secrets.MONGODB_URL }}" \
-            nohup npm run start > nohup.out 2>&1 &
+            nohup sh -c "
+            echo \"=== 애플리케이션 시작 \$(date) ===\" 
+            echo \"Prisma 클라이언트 생성 중...\"
+            
+            # MySQL Prisma 클라이언트 생성
+            if [ -f prisma/mysql/schema.prisma ]; then
+              echo \"MySQL Prisma 클라이언트 생성 중...\"
+              npx prisma generate --schema=prisma/mysql/schema.prisma || echo \"MySQL Prisma 생성 실패\"
+            fi
+            
+            # MongoDB Prisma 클라이언트 생성  
+            if [ -f prisma/mongodb/schema.prisma ]; then
+              echo \"MongoDB Prisma 클라이언트 생성 중...\"
+              npx prisma generate --schema=prisma/mongodb/schema.prisma || echo \"MongoDB Prisma 생성 실패\"
+            fi
+            
+            echo \"빌드 시작...\"
+            npm run build || { echo \"빌드 실패\"; exit 1; }
+            
+            echo \"애플리케이션 시작...\"
+            node ./dist/index.js
+            " > nohup.out 2>&1 &
             
             APP_PID=$!
             echo $APP_PID > app.pid
@@ -474,30 +557,31 @@ jobs:
             fi
             
             echo "⏳ 프로세스 상태 확인 중..."
-            for i in {1..20}; do
+            for i in {1..25}; do
               if ps -p $APP_PID > /dev/null 2>&1; then
-                echo "✅ 프로세스 정상 실행 중 (확인 $i/20)"
+                echo "✅ 프로세스 정상 실행 중 (확인 $i/25)"
                 
                 if [ -f nohup.out ] && [ -s nohup.out ]; then
                   echo "📄 nohup.out 최신 내용:"
-                  tail -3 nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
+                  tail -5 nohup.out 2>/dev/null || echo "nohup.out 읽기 실패"
                 fi
                 
+                # 더 긴 시간 기다리기 (Prisma 생성 + 빌드 시간 고려)
                 if [ ! -z "${{ secrets.EC2_PORT }}" ] && command -v netstat >/dev/null 2>&1; then
                   if netstat -ln 2>/dev/null | grep -q ":${{ secrets.EC2_PORT }}"; then
                     echo "✅ 포트 ${{ secrets.EC2_PORT }} 바인딩 확인"
                     break
                   else
-                    echo "⏳ 포트 바인딩 대기 중... (확인 $i/20)"
+                    echo "⏳ 포트 바인딩 대기 중... (확인 $i/25)"
                   fi
                 else
-                  if [ $i -ge 10 ]; then
+                  if [ $i -ge 15 ]; then
                     echo "✅ 프로세스 실행 확인 완료"
                     break
                   fi
                 fi
               else
-                echo "❌ 프로세스 실행 실패 (확인 $i/20)"
+                echo "❌ 프로세스 실행 실패 (확인 $i/25)"
                 echo "=== 상세 에러 분석 ==="
                 
                 if [ -f nohup.out ]; then
@@ -518,7 +602,7 @@ jobs:
                 echo "❌ 프로세스 시작 실패 - 종료"
                 exit 1
               fi
-              sleep 2
+              sleep 3
             done
             
             if ps -p $APP_PID > /dev/null 2>&1; then
