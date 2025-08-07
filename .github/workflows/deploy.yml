@@ -177,19 +177,19 @@ jobs:
             echo "✅ Dependencies 설치 완료"
           '
 
-      # - name: Generate Prisma Client
-      #   if: steps.analyze.outputs.prisma-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
-      #   run: |
-      #     ssh playground-umc-8th '
-      #       cd /home/ubuntu/coffect-BE
+      - name: Generate Prisma Client
+        if: steps.analyze.outputs.prisma-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
+        run: |
+          ssh playground-umc-8th '
+            cd /home/ubuntu/coffect-BE
             
-      #       echo "🔧 Prisma 클라이언트 생성 중..."
-      #       export NODE_OPTIONS="--max-old-space-size=512"
+            echo "🔧 Prisma 클라이언트 생성 중..."
+            export NODE_OPTIONS="--max-old-space-size=512"
             
-      #       npx prisma generate --schema=prisma/mysql/schema.prisma
-      #       npx prisma generate --schema=prisma/mongodb/schema.prisma
-      #       echo "✅ Prisma 클라이언트 생성 완료"
-      #     '
+            npx prisma generate --schema=prisma/mysql/schema.prisma
+            npx prisma generate --schema=prisma/mongodb/schema.prisma
+            echo "✅ Prisma 클라이언트 생성 완료"
+          '
 
       - name: Fix Source Code Imports
         if: steps.analyze.outputs.source-changed == 'true' || steps.analyze.outputs.deps-install-needed == 'true'
@@ -543,6 +543,7 @@ jobs:
             echo ""
             echo "⏰ 배포 완료: $(date)"
           '
+
 
 
 
