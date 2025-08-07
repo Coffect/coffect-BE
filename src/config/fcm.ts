@@ -18,6 +18,23 @@ function initializeFirebase() {
         privateKey = privateKey.replace(/n-----BEGIN PRIVATE KEY-----n/g, '\n-----BEGIN PRIVATE KEY-----\n');
         privateKey = privateKey.replace(/n-----END PRIVATE KEY-----n/g, '\n-----END PRIVATE KEY-----\n');
         
+        // 중간에 있는 모든 'n' 문자를 줄바꿈으로 변환 (base64 인코딩된 키 내부)
+        // BEGIN과 END 부분을 제외한 나머지 부분에서만 변환
+        const beginIndex = privateKey.indexOf('-----BEGIN PRIVATE KEY-----');
+        const endIndex = privateKey.indexOf('-----END PRIVATE KEY-----');
+        
+        if (beginIndex !== -1 && endIndex !== -1) {
+          const beforeBegin = privateKey.substring(0, beginIndex);
+          const keyContent = privateKey.substring(beginIndex + '-----BEGIN PRIVATE KEY-----'.length, endIndex);
+          const afterEnd = privateKey.substring(endIndex + '-----END PRIVATE KEY-----'.length);
+          
+          // 키 내용 부분의 'n' 문자를 줄바꿈으로 변환
+          const fixedKeyContent = keyContent.replace(/n/g, '\n');
+          
+          // 다시 조합
+          privateKey = beforeBegin + '-----BEGIN PRIVATE KEY-----' + fixedKeyContent + '-----END PRIVATE KEY-----' + afterEnd;
+        }
+        
         // 따옴표로 감싸진 경우 제거
         if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
           privateKey = privateKey.slice(1, -1);
