@@ -437,7 +437,7 @@ jobs:
             echo "🚀 nohup으로 애플리케이션 시작..."
             
             # 스크립트 파일 생성 방식으로 변경 (더 안정적)
-            cat > start_app.sh << '\''EOF'\''
+            cat > start_app.sh << "SCRIPT_EOF"
 #!/bin/bash
 export NODE_ENV=production
 export PORT=${{ secrets.EC2_PORT }}
@@ -458,16 +458,16 @@ export FIREBASE_PRIVATE_KEY="${{ secrets.FIREBASE_PRIVATE_KEY }}"
 export MONGODB_URL="${{ secrets.MONGODB_URL }}"
 
 echo "=== 애플리케이션 시작 ($(date)) ==="
-echo "NODE_ENV: $NODE_ENV"
-echo "PORT: $PORT"
-echo "현재 디렉토리: $(pwd)"
-echo "Node.js 버전: $(node --version)"
-echo "npm 버전: $(npm --version)"
+echo "NODE_ENV: \$NODE_ENV"
+echo "PORT: \$PORT"
+echo "현재 디렉토리: \$(pwd)"
+echo "Node.js 버전: \$(node --version)"
+echo "npm 버전: \$(npm --version)"
 echo ""
 
 # npm run start 사용 (production 환경에 적합)
 npm run start
-EOF
+SCRIPT_EOF
 
             # 실행 권한 부여
             chmod +x start_app.sh
@@ -743,4 +743,3 @@ EOF
             echo ""
             echo "⏰ 배포 완료: $(date)"
           '
-  
