@@ -1,18 +1,20 @@
 import { Thread_type } from '@prisma/client';
 
 export class BodyToAddThread {
-  type: ThreadType;
+  type: Thread_type;
   threadTitle: string;
   threadBody: string;
   threadSubject: number[];
   userId: number;
+  imageUrls?: string[];
 
   constructor(
     body: {
-      type: ThreadType;
+      type: Thread_type;
       threadTitle: string;
       threadBody: string;
       threadSubject: number[];
+      imageUrls?: string[];
     },
     userId: number
   ) {
@@ -21,6 +23,7 @@ export class BodyToAddThread {
     this.threadTitle = body.threadTitle;
     this.threadBody = body.threadBody;
     this.threadSubject = body.threadSubject;
+    this.imageUrls = body.imageUrls; // 이미지 URL 배열을 추가
   }
 }
 

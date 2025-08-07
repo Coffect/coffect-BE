@@ -95,10 +95,11 @@ export class ThreadController extends Controller {
     @Request() req: ExpressRequest,
     @Body()
       body: {
-      type: ThreadType;
+      type: Thread_type;
       threadTitle: string;
       threadBody: string;
       threadSubject: number[];
+      imageUrls?: string[];
     }
   ): Promise<ITsoaSuccessResponse<string>> {
     if(!req.user || !req.user.index) {
@@ -126,20 +127,13 @@ export class ThreadController extends Controller {
   @SuccessResponse('201', '게시글 이미지 업로드 성공')
   public async addThreadImage(
     @Request() req: ExpressRequest,
-    @FormField() threadId: string,
     @UploadedFiles('image') image: Express.Multer.File[]
   ): Promise<ITsoaSuccessResponse<string[]>> {
     if(!req.user || !req.user.index) {
       throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
     }
 
-    const verifyRequest: boolean = await checkThreadOwner(threadId, req.user.index);
-    
-    if(!verifyRequest) {
-      throw new ThreadUnauthorizedError(`게시글 이미지 업로드 권한이 없습니다. ID: ${threadId}`);
-    }
-
-    const result = await this.ThreadService.addThreadImageService(image, threadId);
+    const result = await this.ThreadService.addThreadImageService(image);
 
     return new TsoaSuccessResponse<string[]>(result);
   }
