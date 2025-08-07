@@ -6,55 +6,13 @@ const prisma = new PrismaClient();
 // Firebase Admin SDK 초기화 함수
 function initializeFirebase() {
   if (!admin.apps.length) {
-    try {
-      // Private key 처리
-      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-      if (privateKey) {
-        // 환경 변수에서 가져온 private key의 이스케이프 문자 처리
-        privateKey = privateKey.replace(/\\n/g, '\n');
-        
-        // 모든 'n' 문자를 줄바꿈으로 변환
-        privateKey = privateKey.replace(/n/g, '\n');
-        
-        // 따옴표로 감싸진 경우 제거
-        if (privateKey.startsWith('"') && privateKey.endsWith('"')) {
-          privateKey = privateKey.slice(1, -1);
-        }
-        
-        // 추가적인 공백 제거
-        privateKey = privateKey.trim();
-        
-        // 디버깅을 위한 로그 (민감한 정보는 마스킹)
-        console.log('Private key 처리 완료:', privateKey.substring(0, 50) + '...');
-        
-        // Private key 유효성 검사
-        if (!privateKey.includes('-----BEGIN PRIVATE KEY-----') || !privateKey.includes('-----END PRIVATE KEY-----')) {
-          console.error('Private key 형식이 올바르지 않습니다.');
-          return;
-        }
-      }
-
-      // 필수 환경 변수 확인
-      if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
-        console.warn('Firebase 환경 변수가 설정되지 않았습니다. FCM 기능이 비활성화됩니다.');
-        console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? '설정됨' : '설정되지 않음');
-        console.log('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? '설정됨' : '설정되지 않음');
-        console.log('FIREBASE_PRIVATE_KEY:', privateKey ? '설정됨' : '설정되지 않음');
-        return;
-      }
-
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: privateKey
-        })
-      });
-      console.log('Firebase Admin SDK 초기화 성공');
-    } catch (error) {
-      console.error('Firebase Admin SDK 초기화 실패:', error);
-      console.warn('FCM 기능이 비활성화됩니다.');
-    }
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY
+      })
+    });
   }
 }
 
