@@ -103,31 +103,6 @@ jobs:
             
             echo "✅ 백업 서버 Import 경로 수정 완료"
           '
-
-      - name: Create Environment File
-        run: |
-          ssh backup-server "
-            # 기본 환경 변수들 생성
-            cat > /home/ubuntu/coffect-BE-backup/.env << 'EOF'
-          DATABASE_NAME=${{ secrets.DATABASE_NAME }}
-          DATABASE_Endpoint=${{ secrets.DATABASE_Endpoint }}
-          DATABASE_HOST=${{ secrets.DATABASE_HOST }}
-          DATABASE_PORT=${{ secrets.DATABASE_PORT }}
-          DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
-          DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
-          EC2_PORT=${{ secrets.EC2_PORT }}
-          JWT_SECRET=${{ secrets.JWT_SECRET }}
-          JWT_REFRESH=${{ secrets.JWT_REFRESH }}
-          S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
-          S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
-          S3_NAME=${{ secrets.S3_NAME }}
-          ENV=${{ secrets.ENV }}
-          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
-          FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
-          FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}
-          MONGODB_URL=${{ secrets.MONGODB_URL }}
-          EOF
-          "
             
       - name: Build on Backup
         run: |
@@ -176,3 +151,4 @@ jobs:
           echo "✅ 메인 브랜치 변경사항이 백업 서버에 반영되었습니다"
           echo "✅ PM2로 coffect-backup 프로세스가 실행 중입니다"
           echo "⏰ 배포 완료: $(date)"
+
