@@ -279,14 +279,73 @@ jobs:
             
             echo "🚀 애플리케이션 시작 중..."
             
-            # package.json의 start 스크립트 확인
-            START_SCRIPT="npm run dev"
-            echo "📋 사용할 시작 명령어: $START_SCRIPT"
+            # 환경 변수 확인
+            echo "=== 환경 변수 확인 ==="
+            echo "NODE_ENV: $NODE_ENV"
+            echo "PORT: ${{ secrets.EC2_PORT }}"
+            echo "DATABASE_HOST: $DATABASE_HOST"
             
-            # 백그라운드에서 애플리케이션 시작
+            # package.json 스크립트 확인
+            if [ -f package.json ]; then
+              echo "📋 package.json 스크립트:"
+              cat package.json | grep -A 5 -B 5 "scripts"
+            fi
+            
+            # 기존 프로세스 정리
+            if [ -f app.pid ]; then
+              OLD_PID=$(cat app.pid)
+              if kill -0 $OLD_PID 2>/dev/null; then
+                echo "🛑 기존 프로세스 종료 중 (PID: $OLD_PID)"
+                kill -TERM $OLD_PID
+                sleep 2
+                kill -0 $OLD_PID 2>/dev/null && kill -KILL $OLD_PID || true
+              fi
+              rm -f app.pid
+            fi
+            
+            # 포트 사용 중인 프로세스 정리
+            if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
+              PORT_PIDS=$(lsof -ti:${{ secrets.EC2_PORT }} 2>/dev/null || true)
+              if [ ! -z "$PORT_PIDS" ]; then
+                echo "🛑 포트 ${{ secrets.EC2_PORT }} 사용 중인 프로세스 종료: $PORT_PIDS"
+                echo "$PORT_PIDS" | xargs -r kill -TERM
+                sleep 1
+                echo "$PORT_PIDS" | xargs -r kill -KILL 2>/dev/null || true
+              fi
+            fi
+            
+            # 애플리케이션 시작 (더 안전한 방법)
+            echo "�� 애플리케이션 시작 명령어: npm run dev"
+            
+            # 환경 변수 설정과 함께 시작
             nohup bash -c "
+              cd /home/ubuntu/coffect-BE
               export NODE_ENV=production
-              $START_SCRIPT >> logs/app.log 2>> logs/app.error.log
+              export PORT=${{ secrets.EC2_PORT }}
+              export DATABASE_HOST=${{ secrets.DATABASE_HOST }}
+              export DATABASE_PORT=${{ secrets.DATABASE_PORT }}
+              export DATABASE_NAME=${{ secrets.DATABASE_NAME }}
+              export DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME }}
+              export DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD }}
+              export JWT_SECRET=${{ secrets.JWT_SECRET }}
+              export JWT_REFRESH=${{ secrets.JWT_REFRESH }}
+              export S3_ACCESS_KEY=${{ secrets.S3_ACCESS_KEY }}
+              export S3_SECRET_KEY=${{ secrets.S3_SECRET_KEY }}
+              export S3_NAME=${{ secrets.S3_NAME }}
+              export ENV=${{ secrets.ENV }}
+              export FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+              export FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}
+              export FIREBASE_PRIVATE_KEY=\"${{ secrets.FIREBASE_PRIVATE_KEY }}\"
+              
+              echo \"=== 애플리케이션 시작 ===\"
+              echo \"NODE_ENV: \$NODE_ENV\"
+              echo \"PORT: \$PORT\"
+              echo \"현재 디렉토리: \$(pwd)\"
+              echo \"Node.js 버전: \$(node --version)\"
+              echo \"npm 버전: \$(npm --version)\"
+              
+              # 애플리케이션 시작
+              npm run dev >> logs/app.log 2>> logs/app.error.log
             " > /dev/null 2>&1 &
             
             APP_PID=$!
@@ -294,13 +353,44 @@ jobs:
             
             echo "✅ 애플리케이션 시작됨 (PID: $APP_PID)"
             
-            # 초기 상태 확인
-            sleep 3
+            # 프로세스 상태 확인 (더 긴 대기 시간)
+            echo "⏳ 프로세스 상태 확인 중..."
+            for i in {1..10}; do
+              if kill -0 $APP_PID 2>/dev/null; then
+                echo "✅ 프로세스 정상 실행 중 (확인 $i/10)"
+                
+                # 포트 바인딩 확인
+                if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
+                  sleep 2
+                  if netstat -ln 2>/dev/null | grep -q ":${{ secrets.EC2_PORT }}"; then
+                    echo "✅ 포트 ${{ secrets.EC2_PORT }} 바인딩 확인"
+                    break
+                  else
+                    echo "⏳ 포트 바인딩 대기 중... (확인 $i/10)"
+                  fi
+                else
+                  break
+                fi
+              else
+                echo "❌ 프로세스 실행 실패 (확인 $i/10)"
+                echo "=== 에러 로그 ==="
+                cat logs/app.error.log 2>/dev/null | tail -20 || echo "에러 로그 없음"
+                echo "=== 앱 로그 ==="
+                cat logs/app.log 2>/dev/null | tail -10 || echo "앱 로그 없음"
+                exit 1
+              fi
+              sleep 2
+            done
+            
+            # 최종 상태 확인
             if kill -0 $APP_PID 2>/dev/null; then
-              echo "✅ 프로세스 정상 실행 중"
+              echo "✅ 애플리케이션 성공적으로 시작됨"
+              echo "📊 프로세스 정보:"
+              ps -p $APP_PID -o pid,ppid,cmd,etime
             else
-              echo "❌ 프로세스 실행 실패"
-              cat logs/app.error.log 2>/dev/null | tail -10
+              echo "❌ 애플리케이션 시작 실패"
+              echo "=== 최종 에러 로그 ==="
+              cat logs/app.error.log 2>/dev/null | tail -30 || echo "에러 로그 없음"
               exit 1
             fi
           '
@@ -310,35 +400,82 @@ jobs:
           ssh playground-umc-8th '
             cd /home/ubuntu/coffect-BE
             
-            echo "🏥 빠른 헬스 체크..."
+            echo "🏥 상세한 헬스 체크..."
             
-            # 15초 동안만 체크 (시간 단축)
-            for i in {1..3}; do
-              if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
-                if curl -f -s http://${{ secrets.EC2_HOST }}:${{ secrets.EC2_PORT }}/ > /dev/null 2>&1; then
-                  echo "✅ 서버 응답 확인 (시도 $i/3)"
-                  break
-                elif [ $i -eq 3 ]; then
-                  echo "⚠️ HTTP 응답 없음 - 프로세스 상태 확인"
-                  if [ -f app.pid ] && kill -0 $(cat app.pid) 2>/dev/null; then
-                    echo "✅ 프로세스는 실행 중 (포트 바인딩 대기 중일 수 있음)"
+            # 프로세스 상태 확인
+            if [ -f app.pid ]; then
+              PID=$(cat app.pid)
+              if kill -0 $PID 2>/dev/null; then
+                echo "✅ 프로세스 실행 중 (PID: $PID)"
+                
+                # 프로세스 상세 정보
+                echo "📊 프로세스 정보:"
+                ps -p $PID -o pid,ppid,cmd,etime,pcpu,pmem
+                
+                # 포트 바인딩 확인
+                if [ ! -z "${{ secrets.EC2_PORT }}" ]; then
+                  echo "🔍 포트 ${{ secrets.EC2_PORT }} 바인딩 확인:"
+                  netstat -ln 2>/dev/null | grep ":${{ secrets.EC2_PORT }}" || echo "포트 바인딩 없음"
+                  
+                  # HTTP 응답 테스트 (더 긴 시간)
+                  echo "🌐 HTTP 응답 테스트..."
+                  for i in {1..5}; do
+                    echo "시도 $i/5:"
+                    
+                    # 로컬호스트 테스트
+                    if curl -f -s -m 10 http://localhost:${{ secrets.EC2_PORT }}/ > /dev/null 2>&1; then
+                      echo "✅ 로컬호스트 응답 성공"
+                      break
+                    else
+                      echo "❌ 로컬호스트 응답 실패"
+                    fi
+                    
+                    # 외부 IP 테스트
+                    if curl -f -s -m 10 http://${{ secrets.EC2_HOST }}:${{ secrets.EC2_PORT }}/ > /dev/null 2>&1; then
+                      echo "✅ 외부 IP 응답 성공"
+                      break
+                    else
+                      echo "❌ 외부 IP 응답 실패"
+                    fi
+                    
+                    if [ $i -lt 5 ]; then
+                      echo "⏳ 3초 대기 후 재시도..."
+                      sleep 3
+                    fi
+                  done
+                  
+                  # 최종 상태 확인
+                  if curl -f -s -m 5 http://localhost:${{ secrets.EC2_PORT }}/ > /dev/null 2>&1; then
+                    echo "✅ 서버 정상 응답 확인"
                   else
-                    echo "❌ 프로세스 실행 실패"
-                    tail -10 logs/app.error.log 2>/dev/null || echo "에러 로그 없음"
-                    exit 1
+                    echo "⚠️ 서버 응답 없음 - 로그 확인"
+                    echo "=== 최근 에러 로그 ==="
+                    tail -20 logs/app.error.log 2>/dev/null || echo "에러 로그 없음"
+                    echo "=== 최근 앱 로그 ==="
+                    tail -10 logs/app.log 2>/dev/null || echo "앱 로그 없음"
+                    
+                    # 프로세스는 살아있지만 응답이 없는 경우
+                    if kill -0 $PID 2>/dev/null; then
+                      echo "⚠️ 프로세스는 실행 중이지만 서버 응답이 없습니다"
+                      echo "이는 애플리케이션 초기화 중이거나 포트 바인딩 문제일 수 있습니다"
+                    else
+                      echo "❌ 프로세스가 종료되었습니다"
+                      exit 1
+                    fi
                   fi
                 else
-                  echo "⏳ 응답 대기 중... (시도 $i/3)"
-                  sleep 5
+                  echo "⚠️ 포트 미설정 - 프로세스 상태만 확인"
                 fi
               else
-                echo "⚠️ 포트 미설정 - 프로세스 상태만 확인"
-                if [ -f app.pid ] && kill -0 $(cat app.pid) 2>/dev/null; then
-                  echo "✅ 프로세스 실행 중"
-                  break
-                fi
+                echo "❌ 프로세스 실행 실패"
+                echo "=== 에러 로그 ==="
+                tail -20 logs/app.error.log 2>/dev/null || echo "에러 로그 없음"
+                exit 1
               fi
-            done
+            else
+              echo "❌ PID 파일 없음"
+              exit 1
+            fi
           '
 
       - name: Deployment Summary
