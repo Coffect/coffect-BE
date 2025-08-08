@@ -41,7 +41,6 @@ export default function initSocket(
         await chatService.sendMessage(userId, chatRoomId, message);
       } catch (err: any) {
         console.log(err);
-        socket.emit('error', { message: err.message });
       }
       io.to(chatRoomId).emit('receive', {
         //roomID를 먼저 만들고, 클라이언트에서 roomId를 생성해서 메세지 보내기
