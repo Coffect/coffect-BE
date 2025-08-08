@@ -3,9 +3,9 @@ import { instrument } from '@socket.io/admin-ui';
 import SocketService from './socket.service';
 import { ChatService } from '../chat/chat.Service';
 import { SocketMessageError } from './socket.message';
-import { ClientToServerEvents, ServerToClientEvents } from '../middleware/socket.DTO/socket.DTO';
+import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from '../middleware/socket.DTO/socket.DTO';
 
-export default function initSocket(io: Server<ClientToServerEvents, ServerToClientEvents>) {
+export default function initSocket(io: Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>) {
   const socketService = new SocketService();
   const chatService = new ChatService();
   //socket.io 관리자 페이지 설정

@@ -13,7 +13,7 @@ import './config/scheduler';
 import initSocket from './socket/socket';
 import { Server } from 'socket.io';
 import verifySocket from './middleware/verifySocket';
-import { ClientToServerEvents, ServerToClientEvents } from './middleware/socket.DTO/socket.DTO';
+import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from './middleware/socket.DTO/socket.DTO';
 
 dotenv.config();
 const app = express();
@@ -29,8 +29,10 @@ app.use(morgan('dev')); // HTTP Req 요청 로그 출력
 //socket.io 설정
 const io = new Server
 <
+  ClientToServerEvents,
   ServerToClientEvents,
-  ClientToServerEvents
+  InterServerEvents,
+  SocketData
 >
 (httpServer, {
   cors: {
