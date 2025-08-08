@@ -81,18 +81,18 @@ export class ProfileUpdateDTO {
 
 export class UpdateProfileBody {
   @Example('[1,2,3,4]')
-  interest!: number[];
+    interest!: number[];
 }
 
 export class DetailProfileBody {
   @Example('Q. 어떤 분야에서 성장하고 싶나요?')
-  question!: string;
+    question!: string;
   @Example(
     '스타트업 창업과 제품 기획 분야에서 전문성을 쌓고 싶어요. 특히 사용자 중심의 서비스를 만드는 PM 역할에 관심이 많습니다.'
   )
-  answer!: string;
+    answer!: string;
   @Example(true)
-  isMain!: boolean;
+    isMain!: boolean;
 
   constructor(data: { question: string; answer: string; isMain: boolean }) {
     this.question = data.question;
