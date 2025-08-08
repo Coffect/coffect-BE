@@ -13,6 +13,7 @@ import './config/scheduler';
 import initSocket from './socket/socket';
 import { Server } from 'socket.io';
 import verifySocket from './middleware/verifySocket';
+import { ClientToServerEvents, InterServerEvents, ServerToClientEvents, SocketData } from './middleware/socket.DTO/socket.DTO';
 
 dotenv.config();
 const app = express();
@@ -26,7 +27,14 @@ app.use(express.urlencoded({ extended: true })); // HTML Form에서 전송된 �
 app.use(morgan('dev')); // HTTP Req 요청 로그 출력
 
 //socket.io 설정
-const io = new Server(httpServer, {
+const io = new Server
+<
+  ClientToServerEvents,
+  ServerToClientEvents,
+  InterServerEvents,
+  SocketData
+>
+(httpServer, {
   cors: {
     origin: ['https://admin.socket.io', '*'], //추후 클라이언트 주소 허용
     credentials: true
