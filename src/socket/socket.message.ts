@@ -1,4 +1,4 @@
-import { BasicError } from "../middleware/error";
+import { BasicError } from '../middleware/error';
 
 export class SocketMessageError extends BasicError {
   constructor(description: string) {
