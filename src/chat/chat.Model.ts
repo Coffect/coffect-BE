@@ -89,4 +89,19 @@ export class ChatModel {
     });
     return result;
   }
+
+  public async readMessage(
+    chatRoomId: string,
+    userId: number
+  ): Promise<boolean> {
+    const result = await mongo.message.updateMany({
+      where: {
+        chatRoomId: chatRoomId,
+        userId: { not: userId },
+        check: false
+      },
+      data: { check: true }
+    });
+    return result.count > 0; // 읽음 처리된 메시지가 있는지 여부 반환
+  }
 }
