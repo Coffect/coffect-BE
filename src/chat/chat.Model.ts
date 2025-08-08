@@ -1,5 +1,6 @@
 import { KSTtime } from '../config/KSTtime';
 import { mongo, prisma } from '../config/prisma.config';
+import { uploadToS3 } from '../config/s3';
 import { ChatDataDTO, ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
 
 export class ChatModel {
@@ -103,5 +104,37 @@ export class ChatModel {
       data: { check: true }
     });
     return result.count > 0; // 읽음 처리된 메시지가 있는지 여부 반환
+  }
+
+  
+  public async uploadPhoto(
+    image: Express.Multer.File
+  ):Promise<string> {
+    const imageUrl = await uploadToS3(image);
+    return imageUrl;
+  };
+
+
+  public async sendPhoto(
+    userId: number,
+    chatRoomId: string,
+    imageUrl: string
+  ): Promise<ChatDataDTO> {
+    try {
+      const data = await mongo.message.create({
+        data: {
+          userId,
+          chatRoomId,
+          messageBody: imageUrl,
+          createdAt: KSTtime(),
+          isPhoto: true,
+          check: false
+        }
+      });
+      return data;
+    } catch (error) {
+      console.error('MongoDB create error:', error);
+      throw new Error('사진 메시지 저장 중 오류가 발생했습니다.');
+    }
   }
 }

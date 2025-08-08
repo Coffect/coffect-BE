@@ -2,6 +2,7 @@ import { ChatDataDTO, ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
 import { ChatModel } from './chat.Model';
 import { pbkdf2Promise } from '../config/crypto';
 import { ChatRoomAlreadyExists, ChatRoomNotFound } from './chat.Message';
+import { MulterUploadError } from '../middleware/error';
 
 export class ChatService {
   private chatModel: ChatModel;
@@ -72,4 +73,29 @@ export class ChatService {
 
     return '채팅 읽기 성공';
   }
+
+  public async uploadPhoto(
+    image: Express.Multer.File
+  ): Promise<string> {
+    const imageUrl = await this.chatModel.uploadPhoto(image);
+
+    if(!imageUrl) {
+      throw new MulterUploadError('사진을 올리는 중 오류가 발생했습니다');
+    }
+
+    return imageUrl;
+  };
+
+  public async sendPhoto(
+    userId: number,
+    chatRoomId: string,
+    imageUrl: string
+  ): Promise<ChatDataDTO> {
+    const result = await this.chatModel.sendPhoto(userId, chatRoomId, imageUrl);
+
+    // 해당 채팅방의 마지막 메시지 업데이트
+    await this.chatModel.updateLastSendMessage(result);
+
+    return result;
+  };
 }
