@@ -16,9 +16,9 @@ const verifySocket = async (
   next: (err?: any) => void
 ): Promise<void> => {
   try {
-    if(!socket.connected){
-      return next(new SocketConnectionError('소켓 연결에 실패했습니다.'));
-    }
+    // if(!socket.connected){
+    //   return next(new SocketConnectionError('소켓 연결에 실패했습니다.'));
+    // }
 
     const auth =
       socket.handshake.auth.token || socket.handshake.headers.authorization;
