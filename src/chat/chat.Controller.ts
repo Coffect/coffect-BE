@@ -163,7 +163,7 @@ export class ChatController extends Controller {
     return new TsoaSuccessResponse<string>('메시지 읽음 처리 성공');
   }
 
-/**
+  /**
    * 메시지 사진 보내기
    * 
    * @param chatRoomId 보낼 채팅방 ID

@@ -124,7 +124,7 @@ export class ChatModel {
       const data = await mongo.message.create({
         data: {
           userId,
-          chatRoomId,
+          chatRoomId : chatRoomId,
           messageBody: imageUrl,
           createdAt: KSTtime(),
           isPhoto: true,
@@ -136,5 +136,5 @@ export class ChatModel {
       console.error('MongoDB create error:', error);
       throw new Error('사진 메시지 저장 중 오류가 발생했습니다.');
     }
-  }
+  };
 }
