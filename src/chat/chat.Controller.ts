@@ -140,4 +140,25 @@ export class ChatController extends Controller {
     const result = await this.chatService.getChatRoomInfo(chatRoomId);
     return new TsoaSuccessResponse<ChatDataDTO[]>(result);
   }
+
+  /**
+   * 채팅방의 메시지를 읽음 처리한다.
+   * 특정 chatRoomId에 있는 메시지를 읽음 처리한다.
+   * 
+   * @param chatRoomId 읽음 처리할 채팅방의 ID
+   * @param req Express 요청 객체
+   * @return 읽음 처리 성공 메시지
+   * @summary 채팅방 메시지 읽음 처리
+   */
+  @Patch('/read')
+  @Security('jwt_token')
+  @SuccessResponse(200, '메시지 읽음 처리 성공')
+  public async readMessage(
+    @Query() chatRoomId: string,
+    @Request() req: ExpressRequest
+  ): Promise<ITsoaSuccessResponse<string>> {
+    const userId = req.user.index;
+    await this.chatService.readMessage(chatRoomId, userId);
+    return new TsoaSuccessResponse<string>('메시지 읽음 처리 성공');
+  }
 }

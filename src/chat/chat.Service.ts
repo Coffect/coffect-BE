@@ -59,4 +59,17 @@ export class ChatService {
     const result = await this.chatModel.getChatRoomInfo(chatRoomId);
     return result;
   }
+
+  public async readMessage(
+    chatRoomId: string,
+    userId: number
+  ): Promise<string> {
+    const result = await this.chatModel.readMessage(chatRoomId, userId);
+
+    if (!result) {
+      throw new ChatRoomNotFound(chatRoomId);
+    }
+
+    return '채팅 읽기 성공';
+  }
 }
