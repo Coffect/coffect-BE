@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { prisma } from '../config/prisma.config';
 import {
   ProfileUpdateDTO,
@@ -221,17 +222,20 @@ export class ProfileModel {
     return data;
   }
 
-  public async postTimeLine(userId: number, timeLine: string): Promise<string | null> {
+  public async postTimeLine(
+    userId: number,
+    timeLine: string
+  ): Promise<string | null> {
     const isExistTimeTable = await prisma.userTimetable.findFirst({
       where: {
         userId: userId
       }
     });
 
-    if(isExistTimeTable) {
+    if (isExistTimeTable) {
       return null;
     }
-    
+
     const result = await prisma.userTimetable.create({
       data: {
         userId: userId,
@@ -249,14 +253,17 @@ export class ProfileModel {
       }
     });
 
-    if(!result) {
+    if (!result) {
       return null;
     }
 
     return result.timetable;
   }
 
-  public async fixTimeLine(userId: number, timeLine: string): Promise<string | null> {
+  public async fixTimeLine(
+    userId: number,
+    timeLine: string
+  ): Promise<string | null> {
     const result = await prisma.userTimetable.update({
       where: {
         userId: userId
@@ -266,10 +273,64 @@ export class ProfileModel {
       }
     });
 
-    if(!result){
+    if (!result) {
       return null;
     }
 
     return result.timetable;
+  }
+
+  public async selectScrap(
+    userId: number
+  ): Promise<ResponseFromThreadMainToClient[]> {
+    const q = `
+    select TH.threadId from Thread TH 
+    join ScrapMatch SM on TH.threadId = SM.threadId 
+    join ThreadScrap TS on SM.scrapId = TS.scrapID
+    where TS.userId = ${userId}`;
+    const scrap: [{ threadId: string }] = await prisma.$queryRaw(Prisma.raw(q));
+    const defaultSelect = {
+      threadId: true,
+      userId: true,
+      type: true,
+      threadTitle: true,
+      thradBody: true,
+      createdAt: true,
+      threadShare: true,
+      user: {
+        select: {
+          name: true,
+          profileImage: true,
+          studentId: true,
+          dept: true
+        }
+      },
+      subjectMatch: {
+        select: {
+          threadSubject: {
+            select: {
+              subjectName: true
+            }
+          }
+        }
+      },
+      images: {
+        select: {
+          imageId: true
+        }
+      },
+      _count: {
+        select: {
+          comments: true,
+          likes: true
+        }
+      }
+    };
+    const data: ResponseFromThreadMain[] = await prisma.thread.findMany({
+      where: { threadId: { in: scrap.map((item) => item.threadId) } },
+      select: defaultSelect
+    });
+    const result = data.map((item) => new ResponseFromThreadMainToClient(item));
+    return result;
   }
 }

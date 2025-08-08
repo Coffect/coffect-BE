@@ -359,4 +359,20 @@ export class ProfileController extends Controller {
 
     return new TsoaSuccessResponse<string>(result);
   }
+
+  /**
+   * 내가 저장해놓은 쓰레드를 확인한다. 쓰레드 조회 api와 자료형이 똑같습니다
+   *
+   * @summary 저장해놓은 쓰레드 조회
+   */
+  @Get('/scrap')
+  @Security('jwt_token')
+  @SuccessResponse(200, '스크랩 조회 성공')
+  public async getScrap(
+    @Request() req: Express.Request
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainToClient[]>> {
+    const userId = req.user.index;
+    const data = await this.profileService.getScrap(userId);
+    return new TsoaSuccessResponse(data);
+  }
 }
