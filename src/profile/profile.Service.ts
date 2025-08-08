@@ -104,13 +104,13 @@ export class ProfileService {
   //   return temp;
   // }
 
-  // public async getUserId(userId: number) {
-  //   const data = await this.profileModel.selectUserId(userId);
-  //   if (!data) {
-  //     throw new UserIdNotFound('유저 아이디를 찾을 수 없습니다.');
-  //   }
-  //   return data;
-  // }
+  public async getUserId(userId: number) {
+    const data = await this.profileModel.selectUserId(userId);
+    if (!data) {
+      throw new UserIdNotFound('유저 아이디를 찾을 수 없습니다.');
+    }
+    return data;
+  }
 
   public async postTimeLineService(
     userId: number,
