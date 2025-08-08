@@ -252,6 +252,33 @@ export class ProfileController extends Controller {
   }
 
   /**
+   * 유저의 아이디를 조회한다 userID를 기반으로 ID를 조회한다
+   * eg) userID : 66 -> ID : "seoki"
+   *
+   * @summary 유저 아이디 조회
+   * @param body 유저 아이디
+   */
+  @Post('/id')
+  @Security('jwt_token')
+  @SuccessResponse(200, '유저 아이디 조회 성공')
+  @Response<ITsoaErrorResponse>(404, '유저 아이디 조회 실패', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC404',
+      reason: '유저 아이디를 찾을 수 없습니다.',
+      data: '유저 아이디를 찾을 수 없습니다.'
+    },
+    success: null
+  })
+  public async getUserId(
+    @Request() req: Express.Request,
+    @Body() body: { userId: number }
+  ): Promise<ITsoaSuccessResponse<{ id: string }>> {
+    const data = await this.profileService.getUserId(body.userId);
+    return new TsoaSuccessResponse(data);
+  }
+
+  /**
    * 유저의 시간표를 업로드한다.
    *
    * @param timeLine - 시간표 데이터

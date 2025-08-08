@@ -13,7 +13,8 @@ import {
   Query,
   SuccessResponse,
   Post,
-  Example
+  Example,
+  UploadedFiles
 } from 'tsoa';
 
 import { Request as ExpressRequest } from 'express';
@@ -160,5 +161,29 @@ export class ChatController extends Controller {
     const userId = req.user.index;
     await this.chatService.readMessage(chatRoomId, userId);
     return new TsoaSuccessResponse<string>('메시지 읽음 처리 성공');
+  }
+
+/**
+   * 메시지 사진 보내기
+   * 
+   * @param chatRoomId 보낼 채팅방 ID
+   * @param req Express 요청 객체
+   * @return 사진 전달
+   * @summary 메시지 사진 전송
+   */
+  @Post('/photo')
+  @Security('jwt_token')
+  @SuccessResponse(200, '사진 전송 성공')
+  public async sendPhoto(
+    @Request() req: ExpressRequest,
+    @Query() chatRoomId: string,
+    @UploadedFiles('image') image: Express.Multer.File[]
+  ): Promise<ITsoaSuccessResponse<ChatDataDTO>> {
+    const userId = req.user.index;
+    const imageUrl = await this.chatService.uploadPhoto(image[0]);
+    
+    const result = await this.chatService.sendPhoto(userId, chatRoomId, imageUrl);
+
+    return new TsoaSuccessResponse<ChatDataDTO>(result);
   }
 }
