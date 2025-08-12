@@ -45,10 +45,10 @@ export class ThreadModel {
           newThread.imageUrls?.length
             ? prisma.threadImage.createMany({ 
               data: newThread.imageUrls.map((imageUrl) => ({
-              threadId: thread.threadId,
-              imageId: imageUrl
-            })) 
-          })
+                threadId: thread.threadId,
+                imageId: imageUrl
+              })) 
+            })
             : Promise.resolve()
         ]);
 

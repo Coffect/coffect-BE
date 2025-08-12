@@ -4,6 +4,7 @@ export interface ServerToClientEvents {
     senderName: string;
     message: string;
   }) => void;
+  errorAck: (err: any) => void;
 }
 
 export interface ClientToServerEvents {
@@ -11,7 +12,9 @@ export interface ClientToServerEvents {
   disconnect: () => void;
 }
 
-export interface InterServerEvents {}
+export interface InterServerEvents {
+  error: (err: any) => void;
+}
 
 export interface SocketData {
   decoded: {
