@@ -49,13 +49,22 @@ export class AlertController extends Controller {
     const userId = req.user.index;
     const { fcmToken } = body;
 
+    console.log(`FCM 토큰 등록 요청: 사용자 ${userId}, 토큰: ${fcmToken ? fcmToken.substring(0, 20) + '...' : 'null'}`);
+
     if (!fcmToken) {
+      console.error('FCM 토큰이 제공되지 않음');
       throw new Error('FCM 토큰이 필요합니다.');
     }
 
-    await FCMService.saveUserFCMToken(userId, fcmToken);
-
-    return new TsoaSuccessResponse<string>('FCM 토큰이 성공적으로 등록되었습니다.');
+    const result = await FCMService.saveUserFCMToken(userId, fcmToken);
+    
+    if (result) {
+      console.log(`FCM 토큰 등록 성공: 사용자 ${userId}`);
+      return new TsoaSuccessResponse<string>('FCM 토큰이 성공적으로 등록되었습니다.');
+    } else {
+      console.error(`FCM 토큰 등록 실패: 사용자 ${userId}`);
+      throw new Error('FCM 토큰 등록에 실패했습니다.');
+    }
   }
 
   /**

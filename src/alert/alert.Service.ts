@@ -72,6 +72,8 @@ export class AlertService {
     firstUserId: number,
     coffectId: number
   ) {
+    console.log(`커피챗 제안 알림 시작: 보내는 사용자 ${firstUserId} -> 받는 사용자 ${secondUserId}, 커피챗 ID: ${coffectId}`);
+
     // firstUser 정보 조회
     const firstUser = await prisma.user.findUnique({
       where: { userId: firstUserId },
@@ -79,16 +81,27 @@ export class AlertService {
     });
 
     if (!firstUser) {
+      console.error(`사용자를 찾을 수 없습니다: ${firstUserId}`);
       throw new Error('사용자를 찾을 수 없습니다.');
     }
 
+    console.log(`사용자 정보 조회 성공: ${firstUser.name}`);
+
     // FCM 알림 전송
-    const { FCMService } = await import('../config/fcm');
-    await FCMService.sendCoffeeChatProposalNotification(
-      secondUserId,
-      firstUserId,
-      firstUser.name,
-      coffectId
-    );
+    try {
+      const { FCMService } = await import('../config/fcm');
+      const result = await FCMService.sendCoffeeChatProposalNotification(
+        secondUserId,
+        firstUserId,
+        firstUser.name,
+        coffectId
+      );
+      
+      console.log(`FCM 알림 전송 완료: ${result ? '성공' : '실패'}`);
+      return result;
+    } catch (error) {
+      console.error('FCM 알림 전송 중 오류 발생:', error);
+      throw error;
+    }
   }
 }
