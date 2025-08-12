@@ -1,20 +1,20 @@
-import { 
-  ThreadCreateError, 
-  ThreadNotFoundError, 
-  ThreadPostCommentError, 
-  ThreadScrapError 
+import {
+  ThreadCreateError,
+  ThreadNotFoundError,
+  ThreadPostCommentError,
+  ThreadScrapError
 } from './thread.Message';
-import { 
-  BodyToAddThread, 
-  BodyToEditThread, 
-  BodyToLookUpMainThread, 
-  BodyToPostComment, 
-  ResponseFromGetComment, 
-  ResponseFromPostComment, 
-  ResponseFromSingleThreadWithLikes, 
-  ResponseFromThreadMain, 
-  ResponseFromThreadMainCursor, 
-  ResponseFromThreadMainCursorToClient, 
+import {
+  BodyToAddThread,
+  BodyToEditThread,
+  BodyToLookUpMainThread,
+  BodyToPostComment,
+  ResponseFromGetComment,
+  ResponseFromPostComment,
+  ResponseFromSingleThreadWithLikes,
+  ResponseFromThreadMain,
+  ResponseFromThreadMainCursor,
+  ResponseFromThreadMainCursorToClient,
   ResponseFromThreadMainToClient
 } from '../middleware/thread.DTO/thread.DTO';
 
@@ -31,7 +31,8 @@ export class ThreadService {
   public addThreadService = async (
     newThread: BodyToAddThread
   ): Promise<string> => {
-    const newThreadId: string = await this.ThreadModel.addThreadRepository(newThread);
+    const newThreadId: string =
+      await this.ThreadModel.addThreadRepository(newThread);
 
     if (!newThreadId) {
       throw new ThreadCreateError(
@@ -51,7 +52,7 @@ export class ThreadService {
       if (!file) continue;
 
       const imageUrl = await uploadToS3(file);
-      
+
       imageUrls.push(imageUrl);
     }
 
@@ -78,33 +79,40 @@ export class ThreadService {
 
     results = await this.ThreadModel.lookUpThreadMainRepository(body);
 
-    const thread: ResponseFromThreadMainToClient[] = results.thread.map((thread: any) => {
-      return new ResponseFromThreadMainToClient(thread);
-    });
+    const thread: ResponseFromThreadMainToClient[] = results.thread.map(
+      (thread: any) => {
+        return new ResponseFromThreadMainToClient(thread);
+      }
+    );
 
     console.log(thread);
 
     if (!results || results.thread.length === 0) {
-      throw new ThreadNotFoundError(`필터링 된 게시글이 없습니다. type: ${body.type}, subjects: ${body.threadSubject}`);
+      throw new ThreadNotFoundError(
+        `필터링 된 게시글이 없습니다. type: ${body.type}, subjects: ${body.threadSubject}`
+      );
     }
 
-    return {thread, nextCursor: results.nextCursor};
+    return { thread, nextCursor: results.nextCursor };
   };
 
   public lookUpLatestThreadMainService = async (
     dateCursor?: Date
   ): Promise<ResponseFromThreadMainCursorToClient> => {
-    const results: ResponseFromThreadMainCursor = await this.ThreadModel.lookUpLatestThreadMainRepository(dateCursor);
+    const results: ResponseFromThreadMainCursor =
+      await this.ThreadModel.lookUpLatestThreadMainRepository(dateCursor);
 
-    const thread: ResponseFromThreadMainToClient[] = results.thread.map((thread: any) => {
-      return new ResponseFromThreadMainToClient(thread);
-    });
+    const thread: ResponseFromThreadMainToClient[] = results.thread.map(
+      (thread: any) => {
+        return new ResponseFromThreadMainToClient(thread);
+      }
+    );
 
     if (!results || results.thread.length === 0) {
       throw new ThreadNotFoundError('최신 게시글이 없습니다.');
     }
 
-    return {thread, nextCursor: results.nextCursor};
+    return { thread, nextCursor: results.nextCursor };
   };
 
   public threadEditService = async (
@@ -112,19 +120,17 @@ export class ThreadService {
   ): Promise<string> => {
     const result = await this.ThreadModel.threadEditRepository(body);
 
-    if(result === null){
+    if (result === null) {
       throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${body.threadId}`);
     }
 
     return result;
   };
 
-  public threadDeleteService = async (
-    threadId: string
-  ): Promise<string> => {
+  public threadDeleteService = async (threadId: string): Promise<string> => {
     const result = await this.ThreadModel.threadDeleteRepository(threadId);
 
-    if(result === null) {
+    if (result === null) {
       throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${threadId}`);
     }
 
@@ -135,10 +141,15 @@ export class ThreadService {
     threadId: string,
     userId: number
   ): Promise<string> => {
-    const result = await this.ThreadModel.threadScrapRepository(threadId, userId);
+    const result = await this.ThreadModel.threadScrapRepository(
+      threadId,
+      userId
+    );
 
-    if(result === null || !result){
-      throw new ThreadScrapError(`게시물 스크랩에 실패했습니다. threadId: ${threadId}, userId: ${userId}`);
+    if (result === null || !result) {
+      throw new ThreadScrapError(
+        `게시물 스크랩에 실패했습니다. threadId: ${threadId}, userId: ${userId}`
+      );
     }
 
     return result;
@@ -148,10 +159,15 @@ export class ThreadService {
     body: BodyToPostComment,
     userId: number
   ): Promise<ResponseFromPostComment> => {
-    const result = await this.ThreadModel.threadPostCommentRepository(body, userId);
+    const result = await this.ThreadModel.threadPostCommentRepository(
+      body,
+      userId
+    );
 
-    if(!result) {
-      throw new ThreadPostCommentError(`댓글 작성에 실패했습니다. threadId: ${body.threadId}, userId: ${userId}`);
+    if (!result) {
+      throw new ThreadPostCommentError(
+        `댓글 작성에 실패했습니다. threadId: ${body.threadId}, userId: ${userId}`
+      );
     }
 
     return result;
@@ -162,7 +178,7 @@ export class ThreadService {
   ): Promise<ResponseFromGetComment[]> => {
     const result = await this.ThreadModel.threadGetCommentRepository(threadId);
 
-    if(result === null) {
+    if (result === null) {
       throw new ThreadNotFoundError(`댓글이 없습니다. threadId: ${threadId}`);
     }
 
@@ -173,9 +189,12 @@ export class ThreadService {
     threadId: string,
     userId: number
   ): Promise<string> => {
-    const result = await this.ThreadModel.threadLikeRepository(threadId, userId);
+    const result = await this.ThreadModel.threadLikeRepository(
+      threadId,
+      userId
+    );
 
-    if(result === null) {
+    if (result === null) {
       throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${threadId}`);
     }
 

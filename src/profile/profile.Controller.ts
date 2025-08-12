@@ -31,6 +31,7 @@ import {
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
 import { UserUnauthorizedError } from '../user/user.Message';
 import { ResponseFromThreadMainToClient } from '../middleware/thread.DTO/thread.DTO';
+import { SearchUserDTO } from '../middleware/profile.DTO/profile.DTO';
 @Route('profile')
 @Tags('Profile Controller')
 export class ProfileController extends Controller {
@@ -400,6 +401,31 @@ export class ProfileController extends Controller {
   ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainToClient[]>> {
     const userId = req.user.index;
     const data = await this.profileService.getScrap(userId);
+    return new TsoaSuccessResponse(data);
+  }
+
+  /**
+   * 유저를 검색한다.
+   *
+   * @summary 유저 검색
+   * @param id 아이디
+   */
+  @Post('/search')
+  @Security('jwt_token')
+  @SuccessResponse(200, '검색 성공')
+  @Response<ITsoaErrorResponse>(500, '서버에러', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-0',
+      reason: 'Unknown server error.',
+      data: null
+    },
+    success: null
+  })
+  public async search(
+    @Query() id: string
+  ): Promise<ITsoaSuccessResponse<SearchUserDTO[]>> {
+    const data = await this.profileService.search(id);
     return new TsoaSuccessResponse(data);
   }
 }

@@ -4,6 +4,7 @@ import {
   DetailProfileBody,
   AllProfileDTO
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
+import { SearchUserDTO } from '../middleware/profile.DTO/profile.DTO';
 import {
   ResponseFromSingleThreadWithLikes,
   ResponseFromThreadMainToClient
@@ -152,6 +153,13 @@ export class ProfileService {
     userId: number
   ): Promise<ResponseFromThreadMainToClient[]> {
     const data = await this.profileModel.selectScrap(userId);
+    return data;
+  }
+  public async search(id: string): Promise<SearchUserDTO[]> {
+    if (id.trim() === '') {
+      return [];
+    }
+    const data = await this.profileModel.searchUser(id.trim());
     return data;
   }
 }
