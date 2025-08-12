@@ -93,35 +93,17 @@ export class ThreadModel {
   // 게시글 단일 조회 모델
   public lookUpThreadRepository = async (
     threadID: string
-  ): Promise<ResponseFromSingleThreadWithLikes> => {
+  ): Promise<ResponseFromThreadMain | null> => {
     const result = await prisma.thread.findUnique({
       where: { threadId: threadID },
-      include: {
-        user: {
-          select: {
-            userId: true,
-            name: true,
-            profileImage: true
-          }
-        },
-        subjectMatch: {
-          select: {
-            threadSubject: {
-              select: {
-                subjectId: true,
-                subjectName: true
-              }
-            }
-          }
-        }
-      }
+      select: defaultThreadSelect
     });
 
-    const likes: number = await prisma.threadLike.count({
-      where: { threadId: threadID }
-    });
+    if(result === null) {
+      return null;
+    }
 
-    return {result, likes};
+    return result;
   };
 
   // 게시글 메인 페이지 조회 모델 (필터링 포함)
