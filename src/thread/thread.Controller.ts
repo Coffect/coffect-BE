@@ -33,7 +33,8 @@ import {
   ResponseFromPostComment,
   ResponseFromGetComment,
   ResponseFromThreadMainCursor,
-  ResponseFromThreadMain
+  ResponseFromThreadMain,
+  ResponseFromThreadMainToClient
 } from '../middleware/thread.DTO/thread.DTO';
 
 import { UserUnauthorizedError } from '../user/user.Message';
@@ -177,14 +178,14 @@ export class ThreadController extends Controller {
   })
   public async lookUpThread(
     @Query() threadId: string
-  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMain>> {
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainToClient>> {
     if(threadId === undefined || threadId === null) {
       throw new ThreadNoID('게시글 ID가 없습니다.');
     }
 
     const result = await this.ThreadService.lookUpThreadService(threadId);
 
-    return new TsoaSuccessResponse<ResponseFromThreadMain>(result);
+    return new TsoaSuccessResponse<ResponseFromThreadMainToClient>(result);
   }
 
   /**
