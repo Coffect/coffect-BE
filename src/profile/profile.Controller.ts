@@ -31,7 +31,10 @@ import {
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
 import { UserUnauthorizedError } from '../user/user.Message';
 import { ResponseFromThreadMainToClient } from '../middleware/thread.DTO/thread.DTO';
-import { SearchUserDTO } from '../middleware/profile.DTO/profile.DTO';
+import {
+  IsCoffeeChatDTO,
+  SearchUserDTO
+} from '../middleware/profile.DTO/profile.DTO';
 @Route('profile')
 @Tags('Profile Controller')
 export class ProfileController extends Controller {
@@ -223,6 +226,7 @@ export class ProfileController extends Controller {
     @Request() req: Express.Request,
     @Query() id: string
   ): Promise<ITsoaSuccessResponse<ProfileDTO>> {
+    const userId = req.user.index;
     const data = await this.profileService.getProfile(id);
     return new TsoaSuccessResponse(data);
   }
@@ -426,6 +430,18 @@ export class ProfileController extends Controller {
     @Query() id: string
   ): Promise<ITsoaSuccessResponse<SearchUserDTO[]>> {
     const data = await this.profileService.search(id);
+    return new TsoaSuccessResponse(data);
+  }
+
+  @Post('/isCoffeeChat')
+  @Security('jwt_token')
+  @SuccessResponse(200, '커피챗 조회 성공')
+  public async isCoffeeChat(
+    @Request() req: Express.Request,
+    @Query() otherUserId: number
+  ): Promise<ITsoaSuccessResponse<IsCoffeeChatDTO>> {
+    const userId = req.user.index;
+    const data = await this.profileService.isCoffeeChat(userId, otherUserId);
     return new TsoaSuccessResponse(data);
   }
 }

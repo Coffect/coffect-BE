@@ -342,4 +342,17 @@ export class ProfileModel {
     });
     return data;
   }
+
+  public async isCoffeeChat(userId: number, otherUserId: number) {
+    const data = await prisma.coffeeChat.findFirst({
+      where: {
+        OR: [
+          { firstUserId: userId, secondUserId: otherUserId },
+          { firstUserId: otherUserId, secondUserId: userId }
+        ]
+      },
+      select: { firstUserId: true, secondUserId: true, valid: true }
+    });
+    return data;
+  }
 }

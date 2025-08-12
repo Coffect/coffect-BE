@@ -40,3 +40,22 @@ export class SearchUserDTO {
     this.profileImage = profileImage;
   }
 }
+
+export class IsCoffeeChatDTO {
+  senderId: number;
+  receiverId: number;
+  isCoffeeChat: boolean;
+  check: boolean;
+
+  constructor(
+    senderId: number,
+    receiverId: number,
+    isCoffeeChat: boolean,
+    check: boolean
+  ) {
+    this.senderId = senderId;
+    this.receiverId = receiverId;
+    this.isCoffeeChat = isCoffeeChat;
+    this.check = check;
+  }
+}

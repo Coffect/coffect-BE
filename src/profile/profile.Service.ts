@@ -4,7 +4,10 @@ import {
   DetailProfileBody,
   AllProfileDTO
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
-import { SearchUserDTO } from '../middleware/profile.DTO/profile.DTO';
+import {
+  IsCoffeeChatDTO,
+  SearchUserDTO
+} from '../middleware/profile.DTO/profile.DTO';
 import {
   ResponseFromSingleThreadWithLikes,
   ResponseFromThreadMainToClient
@@ -161,5 +164,26 @@ export class ProfileService {
     }
     const data = await this.profileModel.searchUser(id.trim());
     return data;
+  }
+
+  public async isCoffeeChat(
+    userId: number,
+    otherUserId: number
+  ): Promise<IsCoffeeChatDTO> {
+    const data = await this.profileModel.isCoffeeChat(userId, otherUserId);
+    console.log(data);
+    if (!data) {
+      const body = new IsCoffeeChatDTO(0, 0, false, false);
+      return body;
+    } else {
+      const body = new IsCoffeeChatDTO(
+        data.firstUserId,
+        data.secondUserId,
+        true,
+        data.valid
+      );
+      return body;
+    }
+    // return data;
   }
 }
