@@ -91,7 +91,7 @@ export class ChatService {
     chatRoomId: string,
     imageUrl: string
   ): Promise<ChatDataDTO> {
-    const result = await this.chatModel.sendMessage(userId, chatRoomId, imageUrl);
+    const result = await this.chatModel.sendPhoto(userId, chatRoomId, imageUrl);
 
     // 해당 채팅방의 마지막 메시지 업데이트
     await this.chatModel.updateLastSendMessage(result);

@@ -174,6 +174,24 @@ export class ChatController extends Controller {
   @Post('/photo')
   @Security('jwt_token')
   @SuccessResponse(200, '사진 전송 성공')
+  @Response<ITsoaErrorResponse>(400, 'Bad Request', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE400',
+      reason: '사진을 올리는 중 오류가 발생했습니다',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(500, 'Internal Server Error', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE500',
+      reason: '서버 오류가 발생했습니다.',
+      data: null
+    },
+    success: null
+  })
   public async sendPhoto(
     @Request() req: ExpressRequest,
     @Query() chatRoomId: string,

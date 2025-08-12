@@ -17,3 +17,9 @@ export class ChatRoomNotFound extends BasicError {
     super(404, 'EC404', '채팅방을 찾을 수 없습니다.', description);
   }
 }
+
+export class uploadFail extends BasicError {
+  constructor(description: string) {
+    super(400, 'EC400', '사진을 올리는 중 오류가 발생했습니다.', description);
+  }
+}
