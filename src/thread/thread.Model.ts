@@ -35,21 +35,22 @@ export class ThreadModel {
           }
         });
 
-        await prisma.subjectMatch.createMany({
-          data: newThread.threadSubject.map((subjectId) => ({
-            threadId: thread.threadId,
-            subjectId: subjectId
-          }))
-        });
-
-        if(newThread.imageUrls && newThread.imageUrls.length > 0) {
-          await prisma.threadImage.createMany({
-            data: newThread.imageUrls.map((imageUrl) => ({
+        await Promise.all([
+          prisma.subjectMatch.create({ 
+            data: {
+              threadId: thread.threadId,
+              subjectId: Number(newThread.threadSubject)
+            }
+          }),
+          newThread.imageUrls?.length
+            ? prisma.threadImage.createMany({ 
+              data: newThread.imageUrls.map((imageUrl) => ({
               threadId: thread.threadId,
               imageId: imageUrl
-            }))
-          });
-        }
+            })) 
+          })
+            : Promise.resolve()
+        ]);
 
         return thread;
       })
@@ -398,7 +399,7 @@ export class ThreadModel {
       }
     });
 
-    if(!comments || comments.length === 0) {
+    if(!comments) {
       return null;
     }
 

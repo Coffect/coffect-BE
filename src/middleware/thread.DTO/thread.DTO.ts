@@ -4,7 +4,7 @@ export class BodyToAddThread {
   type: Thread_type;
   threadTitle: string;
   threadBody: string;
-  threadSubject: number[];
+  threadSubject: number;
   userId: number;
   imageUrls?: string[];
 
@@ -13,7 +13,7 @@ export class BodyToAddThread {
       type: Thread_type;
       threadTitle: string;
       threadBody: string;
-      threadSubject: number[];
+      threadSubject: number;
       imageUrls?: string[];
     },
     userId: number

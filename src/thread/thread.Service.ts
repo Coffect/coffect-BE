@@ -162,7 +162,7 @@ export class ThreadService {
   ): Promise<ResponseFromGetComment[]> => {
     const result = await this.ThreadModel.threadGetCommentRepository(threadId);
 
-    if(result === null || result.length === 0) {
+    if(result === null) {
       throw new ThreadNotFoundError(`댓글이 없습니다. threadId: ${threadId}`);
     }
 
