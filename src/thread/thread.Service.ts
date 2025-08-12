@@ -62,14 +62,16 @@ export class ThreadService {
   // 게시글 단일 조회 서비스
   public lookUpThreadService = async (
     threadId: string
-  ): Promise<ResponseFromThreadMain> => {
+  ): Promise<ResponseFromThreadMainToClient> => {
     const result = await this.ThreadModel.lookUpThreadRepository(threadId);
 
     if (!result) {
       throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${threadId}`);
     }
 
-    return result;
+    const reform = new ResponseFromThreadMainToClient(result);
+
+    return reform;
   };
 
   public lookUpThreadMainService = async (
