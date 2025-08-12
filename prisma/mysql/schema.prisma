@@ -225,6 +225,7 @@ model UnivList {
   updated_at   DateTime? @default(now()) @db.DateTime(0)
   name_initial String?   @db.VarChar(50)
   location     String?   @db.VarChar(100)
+  domain       String?   @db.VarChar(30)
   User         User[]
 }
 

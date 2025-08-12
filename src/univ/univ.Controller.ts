@@ -22,6 +22,7 @@ import {
   DeptSearchResponse,
   UnivCertBody,
   UnivCertRequest,
+  UnivDomainBody,
   UnivSearchBody,
   UnivSearchResponse
 } from '../middleware/univ.DTO/univ.DTO';
@@ -132,5 +133,41 @@ export class UnivController extends Controller {
     const info = new UnivCertRequest(body.certCode, body.email);
     await this.univService.certService(info);
     return new TsoaSuccessResponse('인증에 성공했습니다.');
+  }
+
+  @Post('/domain')
+  @SuccessResponse(200, '정상적인 도메인입니다.')
+  @Response<ITsoaErrorResponse>(500, '서버에러', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-0',
+      reason: 'Unknown server error.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(401, '도메인이 존재하지 않습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC4',
+      reason: '도메인이 존재하지 않습니다.',
+      data: '도메인이 존재하지 않습니다.'
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(401, '이메일 형식이 아닙니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC5',
+      reason: '이메일 형식이 아닙니다.',
+      data: '이메일 형식이 아닙니다.'
+    },
+    success: null
+  })
+  public async domain(
+    @Body() body: UnivDomainBody
+  ): Promise<ITsoaSuccessResponse<string>> {
+    await this.univService.domainService(body.email);
+    return new TsoaSuccessResponse('정상적인 도메인입니다.');
   }
 }
