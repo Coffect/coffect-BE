@@ -22,31 +22,63 @@ function initializeFirebase() {
   }
 
   try {
-    // Private Key 처리 - base64 디코딩
+    // Private Key 처리 - 여러 형식 시도
     let processedPrivateKey = privateKey;
     
     console.log('원본 Private Key 길이:', privateKey.length);
+    console.log('원본 Private Key 시작 부분:', privateKey.substring(0, 50));
     
-    // base64 디코딩
-    try {
-      const decoded = Buffer.from(privateKey, 'base64').toString('utf-8');
-      console.log('Base64 디코딩 성공, 길이:', decoded.length);
-      processedPrivateKey = decoded;
-    } catch (decodeError: unknown) {
-      const errorMessage = decodeError instanceof Error ? decodeError.message : 'Unknown error';
-      console.error('Private Key base64 디코딩 실패:', errorMessage);
-      throw new Error('Failed to decode base64 private key');
+    // 이미 올바른 형식인지 확인
+    if (privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      console.log('Private Key가 이미 올바른 형식입니다.');
+      processedPrivateKey = privateKey;
+    } else {
+      // base64 디코딩 시도
+      try {
+        const decoded = Buffer.from(privateKey, 'base64').toString('utf-8');
+        console.log('Base64 디코딩 성공, 길이:', decoded.length);
+        console.log('디코딩된 내용 시작 부분:', decoded.substring(0, 50));
+        console.log('디코딩된 내용 끝 부분:', decoded.substring(decoded.length - 50));
+        processedPrivateKey = decoded;
+      } catch (decodeError: unknown) {
+        const errorMessage = decodeError instanceof Error ? decodeError.message : 'Unknown error';
+        console.error('Private Key base64 디코딩 실패:', errorMessage);
+        console.log('base64 디코딩 실패, 원본 키를 그대로 사용합니다.');
+        processedPrivateKey = privateKey;
+      }
     }
 
-    // 개행 문자 처리
+    // 개행 문자 처리 (더 강력한 처리)
     processedPrivateKey = processedPrivateKey
       .replace(/\\n/g, '\n')
       .replace(/\\r/g, '\r')
-      .replace(/\\t/g, '\t');
+      .replace(/\\t/g, '\t')
+      .replace(/\\\\n/g, '\n')
+      .replace(/\\\\r/g, '\r')
+      .replace(/\\\\t/g, '\t')
+      .replace(/"/g, '')  // 따옴표 제거
+      .trim();  // 앞뒤 공백 제거
     
-    console.log('Private Key 처리 완료, 길이:', processedPrivateKey.length);
+    // Private Key 형식 검증
+    if (!processedPrivateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+      console.error('Private Key가 올바른 형식이 아닙니다. BEGIN 부분이 없습니다.');
+      console.error('디코딩된 내용 시작 부분:', processedPrivateKey.substring(0, 100));
+      throw new Error('Invalid private key format: missing BEGIN marker');
+    }
+    
+    if (!processedPrivateKey.includes('-----END PRIVATE KEY-----')) {
+      console.error('Private Key가 올바른 형식이 아닙니다. END 부분이 없습니다.');
+      console.error('디코딩된 내용 끝 부분:', processedPrivateKey.substring(processedPrivateKey.length - 100));
+      throw new Error('Invalid private key format: missing END marker');
+    }
+    
+    console.log('Private Key 형식 검증 완료');
+    console.log('처리된 Private Key 길이:', processedPrivateKey.length);
 
     console.log('Firebase Admin SDK 초기화 시도...');
+    console.log('사용할 Private Key 길이:', processedPrivateKey.length);
+    console.log('Private Key 시작:', processedPrivateKey.substring(0, 30));
+    console.log('Private Key 끝:', processedPrivateKey.substring(processedPrivateKey.length - 30));
     
     // Firebase 앱이 이미 초기화되어 있는지 확인
     if (admin.apps.length > 0) {
@@ -54,14 +86,19 @@ function initializeFirebase() {
       return;
     }
     
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: projectId,
-        clientEmail: clientEmail,
-        privateKey: processedPrivateKey
-      })
-    });
-    console.log('Firebase Admin SDK 초기화 성공');
+    try {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: projectId,
+          clientEmail: clientEmail,
+          privateKey: processedPrivateKey
+        })
+      });
+      console.log('Firebase Admin SDK 초기화 성공');
+    } catch (initError) {
+      console.error('Firebase 초기화 중 에러 발생:', initError);
+      throw initError;
+    }
   } catch (error: unknown) {
     console.error('Firebase Admin SDK 초기화 실패:', error);
     if (error instanceof Error) {
@@ -169,22 +206,31 @@ export class FCMService {
          } catch (error) {
        console.error('FCM 전송 실패:', error);
        
-       // Firebase 초기화 관련 에러인지 확인
+       // 에러 상세 정보 출력
+       if (error instanceof Error) {
+         console.error('에러 타입:', error.constructor.name);
+         console.error('에러 메시지:', error.message);
+         if ('errorInfo' in error) {
+           console.error('Firebase 에러 정보:', (error as any).errorInfo);
+         }
+       }
+       
+             // Firebase 초기화 관련 에러인지 확인
        if (error instanceof Error) {
          if (error.message.includes('Credential implementation provided to initializeApp()')) {
            console.error('Firebase 인증 정보 문제입니다. 환경 변수를 확인해주세요.');
            console.error('필요한 환경 변수: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
-         } else if (error.message.includes('InvalidRegistration')) {
+         } else if (error.message.includes('InvalidRegistration') || 
+                    error.message.includes('NotRegistered') ||
+                    error.message.includes('registration-token-not-registered') ||
+                    error.message.includes('Requested entity was not found')) {
            console.log(`유효하지 않은 FCM 토큰 삭제: ${userId}`);
-           await this.removeUserFCMToken(userId);
-         } else if (error.message.includes('NotRegistered')) {
-           console.log(`등록되지 않은 FCM 토큰 삭제: ${userId}`);
            await this.removeUserFCMToken(userId);
          }
        }
        
-       return false;
-     }
+      return false;
+    }
   }
 
   /**
