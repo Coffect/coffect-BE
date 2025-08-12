@@ -9,6 +9,9 @@ import {
   ServerToClientEvents,
   SocketData
 } from '../middleware/socket.DTO/socket.DTO';
+import { ChatRoomNotFound } from '../chat/chat.Message';
+import verifySocket from '../middleware/verifySocket';
+import { BasicError } from '../middleware/error';
 
 export default function initSocket(
   io: Server<
@@ -20,30 +23,40 @@ export default function initSocket(
 ) {
   const socketService = new SocketService();
   const chatService = new ChatService();
+
   //socket.io 관리자 페이지 설정
   instrument(io, {
     auth: false,
     mode: 'development'
   });
 
+  io.use(verifySocket);
+  io.on('error', (err: any) => {
+    console.log(err);
+  });
+
   io.on('connection', async (socket) => {
     const userId = socket.data.decoded.index;
     const userName = socket.data.decoded.userName;
 
-    console.log(`socket.io established\n
-      userId: ${userId}\n
-      userName: ${userName}`);
-
-    await socketService.joinRoom(socket);
+    console.log(
+      `==============\nsocket.io established\nuserId: ${userId}\nuserName: ${userName}`
+    );
+    try {
+      await socketService.joinRoom(socket);
+    } catch (err) {
+      socket.emit('errorAck', err);
+      socket.disconnect();
+    }
 
     socket.on('send', async ({ message, chatRoomId }) => {
       try {
         await chatService.sendMessage(userId, chatRoomId, message);
       } catch (err: any) {
-        console.log(err);
+        socket.emit('errorAck', err);
+        socket.disconnect();
       }
       io.to(chatRoomId).emit('receive', {
-        //roomID를 먼저 만들고, 클라이언트에서 roomId를 생성해서 메세지 보내기
         sender: userId,
         senderName: userName,
         message: message
@@ -54,5 +67,11 @@ export default function initSocket(
     // socket.on("seen",())
 
     socket.on('disconnect', () => {});
+  });
+  io.engine.on('connection_error', (err) => {
+    console.log(err.req); // the request object
+    console.log(err.code); // the error code, for example 1
+    console.log(err.message); // the error message, for example "Session ID unknown"
+    console.log(err.context); // some additional error context
   });
 }
