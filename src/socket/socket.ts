@@ -2,16 +2,13 @@ import { Server } from 'socket.io';
 import { instrument } from '@socket.io/admin-ui';
 import SocketService from './socket.service';
 import { ChatService } from '../chat/chat.Service';
-import { SocketConnectionError, SocketMessageError } from './socket.message';
 import {
   ClientToServerEvents,
   InterServerEvents,
   ServerToClientEvents,
   SocketData
 } from '../middleware/socket.DTO/socket.DTO';
-import { ChatRoomNotFound } from '../chat/chat.Message';
 import verifySocket from '../middleware/verifySocket';
-import { BasicError } from '../middleware/error';
 
 export default function initSocket(
   io: Server<

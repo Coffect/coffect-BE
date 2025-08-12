@@ -4,13 +4,11 @@ export interface ServerToClientEvents {
     senderName: string;
     message: string;
   }) => void;
-  error: (err: any) => void;
   errorAck: (err: any) => void;
 }
 
 export interface ClientToServerEvents {
   send: (data: { message: string; chatRoomId: string }) => void;
-  error: (err: any) => void;
   disconnect: () => void;
 }
 
