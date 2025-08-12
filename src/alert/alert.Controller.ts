@@ -3,6 +3,7 @@ import { ITsoaErrorResponse, ITsoaSuccessResponse, TsoaSuccessResponse } from '.
 import { Request as ExpressRequest } from 'express';
 import { AlertService } from './alert.Service';
 import { FCMService } from '../config/fcm';
+import { prisma } from '../config/prisma.config';
 
 @Route('alert') 
 @Tags('Alert Controller')
@@ -226,5 +227,39 @@ export class AlertController extends Controller {
     const count = await this.alertService.getUnreadCountService(userId);
 
     return new TsoaSuccessResponse<number>(count);
+  }
+
+  /**
+   * FCM 토큰 상태 확인 API (디버깅용)
+   * 
+   * @summary 사용자의 FCM 토큰 상태를 확인하는 API
+   * @returns FCM 토큰 상태 정보
+   */
+  @Get('checkFCMTokenStatus')
+  @Security('jwt_token')
+  @SuccessResponse('200', 'FCM 토큰 상태를 성공적으로 확인했습니다.')
+  public async checkFCMTokenStatusController(
+    @Request() req: ExpressRequest,
+  ): Promise<ITsoaSuccessResponse<any>> {
+    const userId = req.user.index;
+
+    // FCM 토큰 조회
+    const userFCMToken = await prisma.userFCMToken.findUnique({
+      where: { userId }
+    });
+
+    // Firebase 상태 확인
+    const firebaseStatus = FCMService.getFirebaseStatus();
+
+    const status = {
+      userId,
+      hasFCMToken: !!userFCMToken,
+      fcmTokenLength: userFCMToken ? userFCMToken.fcmToken.length : 0,
+      fcmTokenPreview: userFCMToken ? userFCMToken.fcmToken.substring(0, 20) + '...' : null,
+      firebaseInitialized: firebaseStatus.initialized,
+      firebaseError: firebaseStatus.error
+    };
+
+    return new TsoaSuccessResponse<any>(status);
   }
 }

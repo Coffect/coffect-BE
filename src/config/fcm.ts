@@ -22,21 +22,20 @@ function initializeFirebase() {
   }
 
   try {
-    // Private Key 처리 - base64 디코딩 시도
+    // Private Key 처리 - base64 디코딩
     let processedPrivateKey = privateKey;
     
+    console.log('원본 Private Key 길이:', privateKey.length);
+    
+    // base64 디코딩
     try {
-      // base64로 인코딩된 경우 디코딩
       const decoded = Buffer.from(privateKey, 'base64').toString('utf-8');
-      if (decoded.includes('-----BEGIN PRIVATE KEY-----')) {
-        processedPrivateKey = decoded;
-        console.log('Private Key base64 디코딩 성공');
-      } else {
-        console.log('Private Key가 이미 일반 텍스트 형태입니다');
-      }
+      console.log('Base64 디코딩 성공, 길이:', decoded.length);
+      processedPrivateKey = decoded;
     } catch (decodeError: unknown) {
       const errorMessage = decodeError instanceof Error ? decodeError.message : 'Unknown error';
-      console.log('Private Key base64 디코딩 실패, 원본 사용:', errorMessage);
+      console.error('Private Key base64 디코딩 실패:', errorMessage);
+      throw new Error('Failed to decode base64 private key');
     }
 
     // 개행 문자 처리
@@ -44,8 +43,16 @@ function initializeFirebase() {
       .replace(/\\n/g, '\n')
       .replace(/\\r/g, '\r')
       .replace(/\\t/g, '\t');
+    
+    console.log('Private Key 처리 완료, 길이:', processedPrivateKey.length);
 
     console.log('Firebase Admin SDK 초기화 시도...');
+    
+    // Firebase 앱이 이미 초기화되어 있는지 확인
+    if (admin.apps.length > 0) {
+      console.log('Firebase가 이미 초기화되어 있습니다.');
+      return;
+    }
     
     admin.initializeApp({
       credential: admin.credential.cert({
@@ -159,17 +166,25 @@ export class FCMService {
       const response = await admin.messaging().send(message);
       console.log('FCM 전송 성공:', response);
       return true;
-    } catch (error) {
-      console.error('FCM 전송 실패:', error);
-      
-      // 토큰이 유효하지 않은 경우 삭제
-      if (error instanceof Error && error.message.includes('InvalidRegistration')) {
-        console.log(`유효하지 않은 FCM 토큰 삭제: ${userId}`);
-        await this.removeUserFCMToken(userId);
-      }
-      
-      return false;
-    }
+         } catch (error) {
+       console.error('FCM 전송 실패:', error);
+       
+       // Firebase 초기화 관련 에러인지 확인
+       if (error instanceof Error) {
+         if (error.message.includes('Credential implementation provided to initializeApp()')) {
+           console.error('Firebase 인증 정보 문제입니다. 환경 변수를 확인해주세요.');
+           console.error('필요한 환경 변수: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
+         } else if (error.message.includes('InvalidRegistration')) {
+           console.log(`유효하지 않은 FCM 토큰 삭제: ${userId}`);
+           await this.removeUserFCMToken(userId);
+         } else if (error.message.includes('NotRegistered')) {
+           console.log(`등록되지 않은 FCM 토큰 삭제: ${userId}`);
+           await this.removeUserFCMToken(userId);
+         }
+       }
+       
+       return false;
+     }
   }
 
   /**
