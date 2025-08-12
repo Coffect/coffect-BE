@@ -82,6 +82,21 @@ export class FCMService {
 
   /**
    * 특정 사용자에게 FCM 알림 전송
+   * 
+   * @param userId - 알림을 받을 사용자 ID
+   * @param title - 알림 제목 (프론트엔드에서 표시됨)
+   * @param body - 알림 내용 (프론트엔드에서 표시됨)
+   * @param data - 추가 데이터 (프론트엔드에서 알림 클릭 시 사용됨)
+   * @returns Promise<boolean> - 전송 성공 여부
+   * 
+   * 프론트엔드 응답 값 위치:
+   * - title: 알림 제목으로 표시
+   * - body: 알림 내용으로 표시  
+   * - data: 알림 클릭 시 전달되는 추가 정보
+   * - android.channelId: 'coffect_notifications' - 안드로이드 알림 채널
+   * - android.priority: 'high' - 높은 우선순위
+   * - apns.payload.aps.sound: 'default' - iOS 알림음
+   * - apns.payload.aps.badge: 1 - iOS 뱃지 카운트
    */
   static async sendNotificationToUser(
     userId: number,
@@ -110,23 +125,23 @@ export class FCMService {
       const message: admin.messaging.Message = {
         token: userFCMToken.fcmToken,
         notification: {
-          title,
-          body
+          title, // 프론트엔드에서 알림 제목으로 표시
+          body   // 프론트엔드에서 알림 내용으로 표시
         },
-        data: data || {},
+        data: data || {}, // 프론트엔드에서 알림 클릭 시 전달되는 추가 데이터
         android: {
           notification: {
-            channelId: 'coffect_notifications',
-            priority: 'high',
-            defaultSound: true,
-            defaultVibrateTimings: true
+            channelId: 'coffect_notifications', // 안드로이드 알림 채널 ID
+            priority: 'high',                   // 높은 우선순위
+            defaultSound: true,                 // 기본 알림음 사용
+            defaultVibrateTimings: true         // 기본 진동 패턴 사용
           }
         },
         apns: {
           payload: {
             aps: {
-              sound: 'default',
-              badge: 1
+              sound: 'default', // iOS 알림음
+              badge: 1          // iOS 뱃지 카운트
             }
           }
         }
@@ -151,6 +166,20 @@ export class FCMService {
 
   /**
    * CoffeeChat 제안 알림 전송
+   * 
+   * @param secondUserId - 알림을 받을 사용자 ID (커피챗 제안을 받는 사람)
+   * @param firstUserId - 커피챗을 제안한 사용자 ID
+   * @param firstUserName - 커피챗을 제안한 사용자 이름
+   * @param coffectId - 커피챗 ID
+   * @returns Promise<boolean> - 전송 성공 여부
+   * 
+   * 프론트엔드에서 받는 알림 내용:
+   * - title: "커피챗 제안"
+   * - body: "{firstUserName}님의 커피챗 제안이 도착했어요!"
+   * - data.type: "coffee_chat_proposal"
+   * - data.firstUserId: 제안한 사용자 ID
+   * - data.coffectId: 커피챗 ID
+   * - data.firstUserName: 제안한 사용자 이름
    */
   static async sendCoffeeChatProposalNotification(
     secondUserId: number,
@@ -159,13 +188,13 @@ export class FCMService {
     coffectId: number
   ): Promise<boolean> {
     try {
-      const title = '커피챗 제안';
-      const body = `${firstUserName}님의 커피챗 제안이 도착했어요!`;
+      const title = '커피챗 제안'; // 프론트엔드에서 표시될 알림 제목
+      const body = `${firstUserName}님의 커피챗 제안이 도착했어요!`; // 프론트엔드에서 표시될 알림 내용
       const data = {
-        type: 'coffee_chat_proposal',
-        firstUserId: firstUserId.toString(),
-        coffectId: coffectId.toString(),
-        firstUserName: firstUserName
+        type: 'coffee_chat_proposal',           // 알림 타입 (프론트엔드에서 알림 처리 시 사용)
+        firstUserId: firstUserId.toString(),   // 제안한 사용자 ID (프론트엔드에서 사용자 정보 조회 시 사용)
+        coffectId: coffectId.toString(),       // 커피챗 ID (프론트엔드에서 커피챗 상세 페이지 이동 시 사용)
+        firstUserName: firstUserName           // 제안한 사용자 이름 (프론트엔드에서 표시)
       };
 
       // FCM 알림 전송
@@ -193,6 +222,13 @@ export class FCMService {
 
   /**
    * 사용자 FCM 토큰 저장/업데이트
+   * 
+   * @param userId - 사용자 ID
+   * @param fcmToken - FCM 토큰 (프론트엔드에서 Firebase SDK로 생성된 토큰)
+   * @returns Promise<boolean> - 저장/업데이트 성공 여부
+   * 
+   * 프론트엔드에서 이 함수를 직접 호출하지 않음.
+   * 프론트엔드는 /alert/registerFCMToken API를 통해 토큰을 등록함.
    */
   static async saveUserFCMToken(userId: number, fcmToken: string): Promise<boolean> {
     try {
