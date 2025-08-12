@@ -72,6 +72,12 @@ function initializeFirebase() {
 // Firebase 초기화 실행
 initializeFirebase();
 
+// Firebase 상태 로깅
+setTimeout(() => {
+  const status = FCMService.getFirebaseStatus();
+  console.log('Firebase 초기화 상태:', status);
+}, 1000);
+
 export class FCMService {
   /**
    * Firebase가 초기화되었는지 확인
@@ -116,10 +122,12 @@ export class FCMService {
         where: { userId }
       });
 
-      if (!userFCMToken) {
+      if (!userFCMToken || !userFCMToken.fcmToken) {
         console.log(`FCM 토큰이 없는 사용자: ${userId}`);
         return false;
       }
+
+      console.log(`FCM 토큰 조회 성공: 사용자 ${userId}, 토큰: ${userFCMToken.fcmToken.substring(0, 20)}...`);
 
       // FCM 메시지 생성
       const message: admin.messaging.Message = {
@@ -197,11 +205,8 @@ export class FCMService {
         firstUserName: firstUserName           // 제안한 사용자 이름 (프론트엔드에서 표시)
       };
 
-      // FCM 알림 전송
-      const fcmSuccess = await this.sendNotificationToUser(secondUserId, title, body, data);
-
-      // 데이터베이스에 알림 기록 저장
-      if (fcmSuccess) {
+      // 데이터베이스에 알림 기록 저장 (FCM 전송 성공 여부와 관계없이)
+      try {
         await prisma.notification.create({
           data: {
             userId: secondUserId,
@@ -211,6 +216,18 @@ export class FCMService {
             data: data
           }
         });
+        console.log(`알림 DB 저장 성공: 사용자 ${secondUserId}`);
+      } catch (dbError) {
+        console.error('알림 DB 저장 실패:', dbError);
+      }
+
+      // FCM 알림 전송
+      const fcmSuccess = await this.sendNotificationToUser(secondUserId, title, body, data);
+
+      if (fcmSuccess) {
+        console.log(`FCM 전송 성공: 사용자 ${secondUserId}`);
+      } else {
+        console.log(`FCM 전송 실패: 사용자 ${secondUserId} (토큰이 없거나 유효하지 않음)`);
       }
 
       return fcmSuccess;
@@ -232,12 +249,18 @@ export class FCMService {
    */
   static async saveUserFCMToken(userId: number, fcmToken: string): Promise<boolean> {
     try {
+      // 토큰 유효성 검사
+      if (!fcmToken || fcmToken.trim().length === 0) {
+        console.error('유효하지 않은 FCM 토큰:', fcmToken);
+        return false;
+      }
+
       await prisma.userFCMToken.upsert({
         where: { userId },
         update: { fcmToken },
         create: { userId, fcmToken }
       });
-      console.log(`FCM 토큰 저장/업데이트 성공: ${userId}`);
+      console.log(`FCM 토큰 저장/업데이트 성공: 사용자 ${userId}, 토큰: ${fcmToken.substring(0, 20)}...`);
       return true;
     } catch (error) {
       console.error('FCM 토큰 저장/업데이트 실패:', error);
