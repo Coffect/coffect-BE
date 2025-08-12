@@ -6,7 +6,9 @@ import {
 import {
   CertCodeExpired,
   CertCodeInvaild,
-  CertCodeNotMatch
+  CertCodeNotMatch,
+  DomainNotFound,
+  InvaildEmai
 } from './univ.Message';
 import { UnivModel } from './univ.Model';
 import { getChoseong } from 'es-hangul';
@@ -59,5 +61,16 @@ export class UnivService {
   public async deptService(search: string, univName: string) {
     const result = await this.univModel.searchDept(search, univName);
     return new DeptSearchResponse(result);
+  }
+
+  public async domainService(email: string): Promise<void> {
+    const domain = email.split('@')[1];
+    if (domain === undefined) {
+      throw new InvaildEmai('이메일 형식이 아닙니다.');
+    }
+    const result = await this.univModel.searchDomain(domain);
+    if (result === null) {
+      throw new DomainNotFound('도메인이 존재하지 않습니다.');
+    }
   }
 }

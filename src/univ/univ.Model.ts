@@ -1,6 +1,6 @@
 import { getChoseong } from 'es-hangul';
 import { prisma } from '../config/prisma.config';
-import { UnivCertRequest } from '../middleware/univ.DTO/univ.DTO';
+import { UnivCertRequest, UnivList } from '../middleware/univ.DTO/univ.DTO';
 
 export class UnivModel {
   public async selectCertInfo(info: UnivCertRequest) {
@@ -49,5 +49,15 @@ export class UnivModel {
       });
       return result;
     }
+  }
+  public async searchDomain(domain: string): Promise<UnivList | null> {
+    const result = await prisma.univList.findMany({
+      where: { domain: domain },
+      select: { id: true, name: true, location: true }
+    });
+    if (result.length === 0) {
+      return null;
+    }
+    return result[0];
   }
 }
