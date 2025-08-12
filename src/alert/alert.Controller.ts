@@ -20,6 +20,10 @@ export class AlertController extends Controller {
    * @summary 사용자의 FCM 토큰을 등록/업데이트하는 API
    * @param body FCM 토큰
    * @returns 요청 성공 여부
+   * 
+   * 프론트엔드에서 받는 응답:
+   * 성공 시: { resultType: "SUCCESS", error: null, success: "FCM 토큰이 성공적으로 등록되었습니다." }
+   * 실패 시: { resultType: "FAIL", error: { errorCode: "AL500", reason: "서버 오류가 발생했습니다.", data: null }, success: null }
    */
   @Post('registerFCMToken')
   @Security('jwt_token')
@@ -59,6 +63,20 @@ export class AlertController extends Controller {
    * 
    * @summary 사용자의 알림 목록을 조회하는 API
    * @returns 알림 목록
+   * 
+   * 프론트엔드에서 받는 응답:
+   * 성공 시: { resultType: "SUCCESS", error: null, success: [알림 목록 배열] }
+   * 실패 시: { resultType: "FAIL", error: { errorCode: "AL500", reason: "서버 오류가 발생했습니다.", data: null }, success: null }
+   * 
+   * 알림 목록 각 항목 구조:
+   * - notificationId: 알림 ID
+   * - userId: 사용자 ID
+   * - type: 알림 타입 (예: "coffee_chat_proposal")
+   * - title: 알림 제목
+   * - body: 알림 내용
+   * - data: 추가 데이터 (JSON 형태)
+   * - isRead: 읽음 여부
+   * - createdAt: 생성 시간
    */
   @Get('getNotifications')
   @Security('jwt_token')
@@ -169,6 +187,12 @@ export class AlertController extends Controller {
    * 
    * @summary 사용자의 읽지 않은 알림 개수를 조회하는 API
    * @returns 읽지 않은 알림 개수
+   * 
+   * 프론트엔드에서 받는 응답:
+   * 성공 시: { resultType: "SUCCESS", error: null, success: 숫자 }
+   * 실패 시: { resultType: "FAIL", error: { errorCode: "AL500", reason: "서버 오류가 발생했습니다.", data: null }, success: null }
+   * 
+   * 예시: { resultType: "SUCCESS", error: null, success: 5 }
    */
   @Get('getUnreadCount')
   @Security('jwt_token')
