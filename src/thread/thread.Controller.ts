@@ -95,11 +95,11 @@ export class ThreadController extends Controller {
   })
   public async addThread(
     @Request() req: ExpressRequest,
-    @UploadedFiles() images: Express.Multer.File[],
     @FormField() type: Thread_type,
     @FormField() threadTitle: string,
     @FormField() threadBody: string,
-    @FormField() threadSubject: number
+    @FormField() threadSubject: number,
+    @UploadedFiles() images: Express.Multer.File[]
   ): Promise<ITsoaSuccessResponse<string>> {
     if(!req.user || !req.user.index) {
       throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
@@ -107,7 +107,13 @@ export class ThreadController extends Controller {
 
     const userId = req.user.index;
 
-    const imageResult = await this.ThreadService.addThreadImageService(images);
+    let imageResult: string[] = [];
+
+    if(images === undefined) {
+      imageResult = [];
+    } else{
+      imageResult = await this.ThreadService.addThreadImageService(images);
+    }
 
     const body: BodyToAddThread = {
       type,
