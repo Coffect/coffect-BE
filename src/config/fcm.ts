@@ -270,7 +270,7 @@ export class FCMService {
   ): Promise<boolean> {
     try {
       const title = '커피챗 제안'; // 프론트엔드에서 표시될 알림 제목
-      const body = `${firstUserName}님의 커피챗 제안이 도착했어요!`; // 프론트엔드에서 표시될 알림 내용
+      const body = `커피챗 제안이 도착했어요!`; // 프론트엔드에서 표시될 알림 내용
       const data = {
         type: 'coffee_chat_proposal',           // 알림 타입 (프론트엔드에서 알림 처리 시 사용)
         firstUserId: firstUserId.toString(),   // 제안한 사용자 ID (프론트엔드에서 사용자 정보 조회 시 사용)
