@@ -1,4 +1,4 @@
-import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatRecordDetail, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatRecordDetail, CoffeeChatSchedule, CoffeeChatShowUpDTO } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 import { exceedLimitError, postTodayError } from './coffeeChat.Message';
 import { HomeModel } from './coffeeChat.Model';
 
@@ -199,4 +199,12 @@ export class HomeService {
   public async resetDailyFieldsService(): Promise<void> {
     await this.homeModel.resetDailyFieldsModel();
   };
+
+  public async messageShowUpService(
+    userId : number,
+    coffectId : number
+  ):Promise<CoffeeChatShowUpDTO> {
+    const result = await this.homeModel.messageShowUpModel(userId, coffectId);
+    return result;
+  }
 }
