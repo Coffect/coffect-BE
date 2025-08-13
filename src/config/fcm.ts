@@ -172,6 +172,7 @@ export class FCMService {
       }
 
       const oppentUserId = Number(data?.firstUserId);
+
       const oppentUserImage = await prisma.user.findUniqueOrThrow({
         where : {
           userId : oppentUserId
@@ -197,6 +198,7 @@ export class FCMService {
             requireInteraction: false, // 사용자가 직접 닫을 때까지 유지할지 여부
             silent: false, // 알림음 재생 여부
             image : oppentUserImage.profileImage,
+            userId : oppentUserId.toString(),
             actions: [
               {
                 action: 'profileShowUp',
