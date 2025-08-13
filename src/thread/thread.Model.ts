@@ -92,30 +92,63 @@ export class ThreadModel {
 
   // 게시글 단일 조회 모델
   public lookUpThreadRepository = async (
-    threadID: string
+    threadID: string,
+    viewerId: number
   ): Promise<ResponseFromThreadMain | null> => {
     const result = await prisma.thread.findUnique({
       where: { threadId: threadID },
-      select: defaultThreadSelect
+      select: {
+        ...defaultThreadSelect,
+        // 현재 로그인한 유저가 이 게시글을 좋아하는지 확인
+        likes: {
+          where: {
+            userId: viewerId
+          }
+        },
+        // 현재 로그인한 유저가 이 게시글을 스크랩했는지 확인
+        scraps: {
+          where: {
+            threadScrap: {
+              userId: viewerId
+            }
+          }
+        }
+      }
     });
 
     if(result === null) {
       return null;
     }
 
-    return result;
+    console.log(result);
+
+    // 팔로우 유무는 별도로 확인해야 합니다. (게시글 작성자 정보 필요)
+    const isFollowing = await prisma.follow.findFirst({
+      where: {
+        followerId: viewerId, // 팔로우 하는 사람
+        followingId: result.userId // 팔로우 당하는 사람 (게시글 작성자)
+      }
+    });
+
+    // 조회된 정보를 바탕으로 최종 응답 객체 구성
+    const finalResult = { ...result, isFollowing: !!isFollowing };
+
+    console.log(finalResult);
+
+    return finalResult;
   };
 
   // 게시글 메인 페이지 조회 모델 (필터링 포함)
   public lookUpThreadMainRepository = async (
-    body: BodyToLookUpMainThread
+    body: BodyToLookUpMainThread,
+    viewerId: number
   ): Promise<ResponseFromThreadMainCursor> => {
     const { type, threadSubject, dateCursor } = body;
 
     // 페이지네이션 (커서 기반)
     const limit = 10;
 
-    let thread: ResponseFromThreadMain[] = [];
+    let thread;
 
     if(threadSubject === undefined) {
       throw new ThreadNotFoundError('게시글 주제가 유효하지 않습니다. type: undefined');
@@ -140,7 +173,23 @@ export class ThreadModel {
             }}
           ]
         },
-        select: defaultThreadSelect,
+        select: {
+          ...defaultThreadSelect,
+          // 현재 로그인한 유저가 이 게시글을 좋아하는지 확인
+          likes: {
+            where: {
+              userId: viewerId
+            }
+          },
+          // 현재 로그인한 유저가 이 게시글을 스크랩했는지 확인
+          scraps: {
+            where: {
+              threadScrap: {
+                userId: viewerId
+              }
+            }
+          }
+        },
         orderBy: {
           createdAt: 'desc'
         }
@@ -164,7 +213,23 @@ export class ThreadModel {
             }}
           ]
         },
-        select: defaultThreadSelect,
+        select: {
+          ...defaultThreadSelect,
+          // 현재 로그인한 유저가 이 게시글을 좋아하는지 확인
+          likes: {
+            where: {
+              userId: viewerId
+            }
+          },
+          // 현재 로그인한 유저가 이 게시글을 스크랩했는지 확인
+          scraps: {
+            where: {
+              threadScrap: {
+                userId: viewerId
+              }
+            }
+          }
+        },
         orderBy: {
           createdAt: 'desc'
         }
@@ -176,27 +241,56 @@ export class ThreadModel {
       throw new ThreadNotFoundError(`필터링 된 게시글이 없습니다. type: ${type}, subjects: ${threadSubject}`);
     }
 
-    const lastThread = thread[thread.length - 1];
+    const threadsWithFollowingStatus = await Promise.all(
+      thread.map(async (t) => {
+        const isFollowing = await prisma.follow.findFirst({
+          where: {
+            followerId: viewerId,
+            followingId: t.userId
+          }
+        });
+        return { ...t, isFollowing: !!isFollowing };
+      })
+    );
+
+    const lastThread = threadsWithFollowingStatus[threadsWithFollowingStatus.length - 1];
     let nextCursor: Date | null = lastThread.createdAt;
 
-    if(thread.length < limit) {
+    if(threadsWithFollowingStatus.length < limit) {
       nextCursor = null;
     }
 
-    return {thread, nextCursor};
+    return {thread: threadsWithFollowingStatus, nextCursor};
   };
 
   public lookUpLatestThreadMainRepository = async (
+    viewerId: number,
     dateCursor?: Date
   ): Promise<ResponseFromThreadMainCursor> => {
     const limit = 10;
 
-    let thread: ResponseFromThreadMain[] = [];
+    let thread;
 
     if (dateCursor === undefined) {
       thread = await prisma.thread.findMany({
         take: limit,
-        select: defaultThreadSelect,
+        select: {
+          ...defaultThreadSelect,
+          // 현재 로그인한 유저가 이 게시글을 좋아하는지 확인
+          likes: {
+            where: {
+              userId: viewerId
+            }
+          },
+          // 현재 로그인한 유저가 이 게시글을 스크랩했는지 확인
+          scraps: {
+            where: {
+              threadScrap: {
+                userId: viewerId
+              }
+            }
+          }
+        },
         orderBy: {
           createdAt: 'desc'
         }
@@ -208,7 +302,23 @@ export class ThreadModel {
         cursor: {
           createdAt: dateCursor
         },
-        select: defaultThreadSelect,
+        select: {
+          ...defaultThreadSelect,
+          // 현재 로그인한 유저가 이 게시글을 좋아하는지 확인
+          likes: {
+            where: {
+              userId: viewerId
+            }
+          },
+          // 현재 로그인한 유저가 이 게시글을 스크랩했는지 확인
+          scraps: {
+            where: {
+              threadScrap: {
+                userId: viewerId
+              }
+            }
+          }
+        },
         orderBy: {
           createdAt: 'desc'
         }
@@ -219,13 +329,25 @@ export class ThreadModel {
       throw new ThreadNotFoundError('최신 게시글이 없습니다.');
     }
 
-    const lastThread = thread[thread.length - 1];
+    const threadsWithFollowingStatus = await Promise.all(
+      thread.map(async (t) => {
+        const isFollowing = await prisma.follow.findFirst({
+          where: {
+            followerId: viewerId,
+            followingId: t.userId
+          }
+        });
+        return { ...t, isFollowing: !!isFollowing };
+      })
+    );
+
+    const lastThread = threadsWithFollowingStatus[threadsWithFollowingStatus.length - 1];
     let nextCursor: Date | null = lastThread.createdAt;
-    if(thread.length < limit) {
+    if(threadsWithFollowingStatus.length < limit) {
       nextCursor = null;
     }
 
-    return {thread, nextCursor};
+    return {thread: threadsWithFollowingStatus, nextCursor};
   };
 
   public threadEditRepository = async (

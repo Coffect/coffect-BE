@@ -137,7 +137,16 @@ export interface ResponseFromThreadMain {
   _count: {
     comments: number;
     likes: number;
-  }
+  };
+  likes?: {
+    threadId: string;
+    userId: number;
+  }[];
+  scraps?: {
+    threadId: string;
+    scrapId: string;
+  }[];
+  isFollowing?: boolean;
 }
 
 export class ResponseFromThreadMainToClient {
@@ -158,9 +167,12 @@ export class ResponseFromThreadMainToClient {
   images: string[];
   commentCount: number;
   likeCount: number;
+  isFollowing?: boolean;
+  isScraped?: boolean;
+  isLiked?: boolean;
 
   constructor(body: ResponseFromThreadMain) {
-    const { threadId, userId, type, threadTitle, thradBody, createdAt, threadShare, user, subjectMatch, images, _count } = body;
+    const { threadId, userId, type, threadTitle, thradBody, createdAt, threadShare, user, subjectMatch, images, _count, likes, scraps, isFollowing } = body;
 
     this.threadId = threadId;
     this.userId = userId;
@@ -174,6 +186,9 @@ export class ResponseFromThreadMainToClient {
     this.images = images.map((image => {return image.imageId;}));
     this.commentCount = Number(_count.comments);
     this.likeCount = Number(_count.likes);
+    this.isFollowing = isFollowing;
+    this.isScraped = scraps ? scraps.length > 0 : false;
+    this.isLiked = likes ? likes.length > 0 : false;
   }
 }
 

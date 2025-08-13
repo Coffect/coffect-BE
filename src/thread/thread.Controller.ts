@@ -163,6 +163,7 @@ export class ThreadController extends Controller {
    * @returns 게시글의 상세 정보
    */
   @Get('lookUp')
+  @Security('jwt_token')
   @SuccessResponse('200', '게시글 조회 성공')
   @Response<ITsoaErrorResponse>('400', '게시글 ID가 없습니다.', {
     resultType: 'FAIL',
@@ -183,13 +184,19 @@ export class ThreadController extends Controller {
     success: null
   })
   public async lookUpThread(
+    @Request() req: ExpressRequest,
     @Query() threadId: string
   ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainToClient>> {
     if(threadId === undefined || threadId === null) {
       throw new ThreadNoID('게시글 ID가 없습니다.');
     }
 
-    const result = await this.ThreadService.lookUpThreadService(threadId);
+    const userId = req.user?.index;
+    if (userId === undefined) {
+      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+    }
+
+    const result = await this.ThreadService.lookUpThreadService(threadId, userId);
 
     return new TsoaSuccessResponse<ResponseFromThreadMainToClient>(result);
   }
@@ -214,6 +221,7 @@ export class ThreadController extends Controller {
    * @returns 게시글 목록
    */
   @Post('main')
+  @Security('jwt_token')
   @SuccessResponse('200', '게시글 메인 조회 성공')
   @Response<ITsoaErrorResponse>('400', '유효하지 않은 정렬 기준입니다.', {
     resultType: 'FAIL',
@@ -234,6 +242,7 @@ export class ThreadController extends Controller {
     success: null
   })
   public async mainThread(
+    @Request() req: ExpressRequest,
     @Body() body: {
       type: Thread_type;
       threadSubject: number[];
@@ -245,7 +254,7 @@ export class ThreadController extends Controller {
       throw new ThreadInvalidOrderByError(`정렬 기준은 createdAt 또는 likeCount 중 하나여야 합니다. orderBy: ${body.orderBy}`);
     }
 
-    const result = await this.ThreadService.lookUpThreadMainService(new BodyToLookUpMainThread(body));
+    const result = await this.ThreadService.lookUpThreadMainService(new BodyToLookUpMainThread(body), req.user.index);
 
     return new TsoaSuccessResponse<ResponseFromThreadMainCursorToClient>(result);
   }
@@ -257,11 +266,13 @@ export class ThreadController extends Controller {
    * @returns 게시글 목록
    */
   @Get('latest')
+  @Security('jwt_token')
   @SuccessResponse('200', '게시글 최신순조회 성공')
   public async getLatest(
+    @Request() req: ExpressRequest,
     @Query() dateCursor?: Date
   ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursorToClient>>{
-    const result = await this.ThreadService.lookUpLatestThreadMainService(dateCursor);
+    const result = await this.ThreadService.lookUpLatestThreadMainService(req.user.index, dateCursor);
 
     return new TsoaSuccessResponse<ResponseFromThreadMainCursorToClient>(result);
   }
@@ -568,6 +579,7 @@ export class ThreadController extends Controller {
    * @returns 좋아요 성공 문구
    */
   @Post('/like')
+  @Security('jwt_token')
   @SuccessResponse('200', '게시글 좋아요 성공')
   public async likeThread(
     @Request() req: ExpressRequest,
