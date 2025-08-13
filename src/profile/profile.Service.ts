@@ -184,6 +184,5 @@ export class ProfileService {
       );
       return body;
     }
-    // return data;
   }
 }

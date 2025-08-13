@@ -223,6 +223,12 @@ export class UserController extends Controller {
     },
     success: null
   })
+
+  /**
+   * 아이디 중복 체크
+   *
+   * @summary 아이디 중복 체크
+   */
   public async idcheck(
     @Request() req: ExpressRequest,
     @Body()
@@ -232,5 +238,21 @@ export class UserController extends Controller {
   ): Promise<ITsoaSuccessResponse<string>> {
     await this.userService.idCheckService(body.id);
     return new TsoaSuccessResponse('존재하지 않는 아이디');
+  }
+
+  /**
+   * 로그아웃
+   *
+   * @summary 로그아웃
+   */
+  @Delete('/logout')
+  @Security('jwt_token')
+  @SuccessResponse(200, '로그아웃 성공')
+  public async logout(
+    @Request() req: ExpressRequest
+  ): Promise<ITsoaSuccessResponse<string>> {
+    const userId = req.user.index;
+    await this.userService.logoutService(userId);
+    return new TsoaSuccessResponse('로그아웃 성공');
   }
 }

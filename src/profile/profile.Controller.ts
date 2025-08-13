@@ -433,6 +433,18 @@ export class ProfileController extends Controller {
     return new TsoaSuccessResponse(data);
   }
 
+  /**
+   * 내가 해당 유저와 커피챗을 한 적이 있는지 여부를 확인한다
+   *
+   * 상대방 userId를 쿼리에 담아 전송한다.
+   *
+   * isCoffeechat 은 해당 유저와 커피챗 제안을 주고 받은적이 있는지
+   *
+   * check은 커피쳇 제안을 확인 한 적이 있는지를 확인할 수 있다.
+   *
+   * @summary 커피챗 여부 조회
+   * @param otherUserId 상대방 userId
+   */
   @Post('/isCoffeeChat')
   @Security('jwt_token')
   @SuccessResponse(200, '커피챗 조회 성공')
