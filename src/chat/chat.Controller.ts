@@ -25,6 +25,7 @@ import {
 } from '../config/tsoaResponse';
 import { ChatService } from './chat.Service';
 import { ChatDataDTO, ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
+import { ChatRoomNotFound } from './chat.Message';
 
 @Route('chat')
 @Tags('Chat Controller')
@@ -134,10 +135,33 @@ export class ChatController extends Controller {
   @Get('/')
   @Security('jwt_token')
   @SuccessResponse(200, '채팅방 정보 조회 성공')
+  @Response<ITsoaErrorResponse>(404, '채팅방을 찾을 수 없습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC404',
+      reason: '채팅방을 찾을 수 없습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(500, '서버 오류가 발생했습니다.', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'EC500',
+      reason: '서버 오류가 발생했습니다.',
+      data: null
+    },
+    success: null
+  })
   public async getChatRoomInfo(
     @Request() req: ExpressRequest,
     @Query() chatRoomId: string
   ): Promise<ITsoaSuccessResponse<ChatDataDTO[]>> {
+
+    if(!chatRoomId) {
+      throw new ChatRoomNotFound('채팅방을 찾을 수 없습니다.');
+    }
+
     const result = await this.chatService.getChatRoomInfo(chatRoomId);
     return new TsoaSuccessResponse<ChatDataDTO[]>(result);
   }

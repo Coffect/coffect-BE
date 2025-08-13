@@ -58,6 +58,9 @@ export class ChatService {
   public async getChatRoomInfo(chatRoomId: string): Promise<ChatDataDTO[]> {
     // 채팅방에 존재하는 메시지들을 배열로 조회
     const result = await this.chatModel.getChatRoomInfo(chatRoomId);
+    if(!result) {
+      throw new ChatRoomNotFound(chatRoomId);
+    }
     return result;
   }
 

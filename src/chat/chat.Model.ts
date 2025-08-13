@@ -9,39 +9,64 @@ export class ChatModel {
     otherId: number,
     chatRoomId: string
   ): Promise<void> {
-    const makeRoom = prisma.chatRoom.create({
-      data: { chatroomId: chatRoomId, createdTime: KSTtime() }
-    });
-    const insertUser1 = prisma.chatRoomUser.create({
-      data: { userId: myId, chatroomId: chatRoomId }
-    });
-    const insertUser2 = prisma.chatRoomUser.create({
-      data: { userId: otherId, chatroomId: chatRoomId }
-    });
-    await prisma.$transaction([makeRoom, insertUser1, insertUser2]);
+    try {
+      const makeRoom = prisma.chatRoom.create({
+        data: { chatroomId: chatRoomId, createdTime: KSTtime() }
+      });
+      const insertUser1 = prisma.chatRoomUser.create({
+        data: { userId: myId, chatroomId: chatRoomId }
+      });
+      const insertUser2 = prisma.chatRoomUser.create({
+        data: { userId: otherId, chatroomId: chatRoomId }
+      });
+      await prisma.$transaction([makeRoom, insertUser1, insertUser2]);
+    } catch (error) {
+      console.error('채팅방 생성 중 오류 발생:', error);
+      throw new Error('채팅방을 생성하는 중 오류가 발생했습니다.');
+    }
   }
 
   public async getChatRoom(userId: number): Promise<ChatRoomsDTO[]> {
-    const result = await prisma.chatRoomUser.findMany({
-      where: { userId: userId },
-      select: {
-        chatroomId: true
-      }
-    });
+    try {
+      const result = await prisma.chatRoomUser.findMany({
+        where: { userId: userId },
+        select: {
+          chatroomId: true
+        }
+      });
 
-    const roomsInfo = await prisma.chatRoomUser.findMany({
-      where: {
-        userId: { not: userId },
-        chatroomId: { in: result.map((chatroomId) => chatroomId.chatroomId) }
-      },
-      select: {
-        chatroomId: true,
-        userId: true,
-        lastMessage: true,
-        check: true
-      }
-    });
-    return roomsInfo;
+      const roomsInfo = await prisma.chatRoomUser.findMany({
+        where: {
+          userId: { not: userId },
+          chatroomId: { in: result.map((chatroomId) => chatroomId.chatroomId) }
+        },
+        select: {
+          chatroomId: true,
+          userId: true,
+          lastMessage: true,
+          check: true
+        }
+      });
+      return roomsInfo;
+    } catch (error) {
+      console.error('채팅방 목록 조회 중 오류 발생:', error);
+      throw new Error('채팅방 목록을 조회하는 중 오류가 발생했습니다.');
+    }
+  }
+
+  public async checkUserInChatRoom(userId: number, chatRoomId: string): Promise<boolean> {
+    try {
+      const result = await prisma.chatRoomUser.findFirst({
+        where: { 
+          userId: userId,
+          chatroomId: chatRoomId
+        }
+      });
+      return !!result;
+    } catch (error) {
+      console.error('사용자 채팅방 접근 권한 확인 중 오류 발생:', error);
+      throw new Error('사용자 접근 권한을 확인하는 중 오류가 발생했습니다.');
+    }
   }
 
   public async sendMessage(
@@ -49,69 +74,94 @@ export class ChatModel {
     chatRoomId: string,
     message: string
   ): Promise<ChatDataDTO> {
-    const data = await mongo.message.create({
-      data: {
-        userId,
-        chatRoomId: chatRoomId,
-        messageBody: message,
-        createdAt: KSTtime(),
-        isPhoto: false,
-        check: false
-      }
-    });
-    return data;
+    try {
+      const data = await mongo.message.create({
+        data: {
+          userId,
+          chatRoomId: chatRoomId,
+          messageBody: message,
+          createdAt: KSTtime(),
+          isPhoto: false,
+          check: false
+        }
+      });
+      return data;
+    } catch (error) {
+      console.error('메시지 전송 중 오류 발생:', error);
+      throw new Error('메시지를 전송하는 중 오류가 발생했습니다.');
+    }
   }
 
   public async getChatRoomInfo(chatRoomId: string): Promise<ChatDataDTO[]> {
-    const result = await mongo.message.findMany({
-      where: { chatRoomId: chatRoomId },
-      select: {
-        id: true,
-        chatRoomId: true,
-        userId: true,
-        messageBody: true,
-        createdAt: true,
-        isPhoto: true,
-        check: true
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-    return result;
+    try {
+      const result = await mongo.message.findMany({
+        where: { chatRoomId: chatRoomId },
+        select: {
+          id: true,
+          chatRoomId: true,
+          userId: true,
+          messageBody: true,
+          createdAt: true,
+          isPhoto: true,
+          check: true
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+      return result;
+    } catch (error) {
+      console.error('채팅방 메시지 조회 중 오류 발생:', error);
+      throw new Error('채팅방 메시지를 조회하는 중 오류가 발생했습니다.');
+    }
   }
 
   public async updateLastSendMessage(chating: ChatDataDTO) {
-    const result = await prisma.chatRoomUser.updateMany({
-      where: {
-        chatroomId: chating.chatRoomId
-      },
-      data: { lastMessage: chating.messageBody, check: chating.check }
-    });
-    return result;
+    try {
+      const result = await prisma.chatRoomUser.updateMany({
+        where: {
+          chatroomId: chating.chatRoomId
+        },
+        data: { lastMessage: chating.messageBody, check: chating.check }
+      });
+      return result;
+    } catch (error) {
+      console.error('마지막 메시지 업데이트 중 오류 발생:', error);
+      throw new Error('마지막 메시지를 업데이트하는 중 오류가 발생했습니다.');
+    }
   }
 
   public async readMessage(
     chatRoomId: string,
     userId: number
   ): Promise<boolean> {
-    const result = await mongo.message.updateMany({
-      where: {
-        chatRoomId: chatRoomId,
-        userId: { not: userId },
-        check: false
-      },
-      data: { check: true }
-    });
-    return result.count > 0; // 읽음 처리된 메시지가 있는지 여부 반환
+    try {
+      const result = await mongo.message.updateMany({
+        where: {
+          chatRoomId: chatRoomId,
+          userId: { not: userId },
+          check: false
+        },
+        data: { check: true }
+      });
+      return result.count > 0; // 읽음 처리된 메시지가 있는지 여부 반환
+    } catch (error) {
+      console.error('메시지 읽음 처리 중 오류 발생:', error);
+      throw new Error('메시지를 읽음 처리하는 중 오류가 발생했습니다.');
+    }
   }
 
   
   public async uploadPhoto(
     image: Express.Multer.File
   ):Promise<string> {
-    const imageUrl = await uploadToS3(image);
-    return imageUrl;
+    try {
+      const imageUrl = await uploadToS3(image);
+      return imageUrl;
+    } catch (error) {
+      console.error('사진 업로드 중 오류 발생:', error);
+      throw new Error('사진을 업로드하는 중 오류가 발생했습니다.');
+    }
   };
 
 
@@ -133,8 +183,8 @@ export class ChatModel {
       });
       return data;
     } catch (error) {
-      console.error('MongoDB create error:', error);
-      throw new Error('사진 메시지 저장 중 오류가 발생했습니다.');
+      console.error('사진 메시지 저장 중 오류 발생:', error);
+      throw new Error('사진 메시지를 저장하는 중 오류가 발생했습니다.');
     }
   };
 }
