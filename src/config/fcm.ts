@@ -179,7 +179,7 @@ export class FCMService {
         },
         select : {
           profileImage : true,
-          id : true,
+          id : true
         }
       });
 
