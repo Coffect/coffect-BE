@@ -173,64 +173,64 @@ export class FCMService {
 
       console.log(`FCM 토큰 조회 성공: 사용자 ${userId}, 토큰: ${userFCMToken.fcmToken.substring(0, 20)}...`);
 
-             // FCM 메시지 생성 (웹 푸시 알림용)
-       const message: admin.messaging.Message = {
-         token: userFCMToken.fcmToken,
-         notification: {
-           title, // 프론트엔드에서 알림 제목으로 표시
-           body   // 프론트엔드에서 알림 내용으로 표시
-         },
-         data: data || {}, // 프론트엔드에서 알림 클릭 시 전달되는 추가 데이터
-         webpush: {
-           notification: {
-             title, // 웹 브라우저에서 표시될 알림 제목
-             body,  // 웹 브라우저에서 표시될 알림 내용
-             tag: 'coffect-notification', // 알림 그룹화를 위한 태그
-             requireInteraction: false, // 사용자가 직접 닫을 때까지 유지할지 여부
-             silent: false, // 알림음 재생 여부
-             actions: [
-               {
-                 action: 'accept',
-                 title: '수락',
-               },
-               {
-                 action: 'decline', 
-                 title: '거절',
-               }
-             ]
-           }
-         }
-       };
+      // FCM 메시지 생성 (웹 푸시 알림용)
+      const message: admin.messaging.Message = {
+        token: userFCMToken.fcmToken,
+        notification: {
+          title, // 프론트엔드에서 알림 제목으로 표시
+          body   // 프론트엔드에서 알림 내용으로 표시
+        },
+        data: data || {}, // 프론트엔드에서 알림 클릭 시 전달되는 추가 데이터
+        webpush: {
+          notification: {
+            title, // 웹 브라우저에서 표시될 알림 제목
+            body,  // 웹 브라우저에서 표시될 알림 내용
+            tag: 'coffect-notification', // 알림 그룹화를 위한 태그
+            requireInteraction: false, // 사용자가 직접 닫을 때까지 유지할지 여부
+            silent: false, // 알림음 재생 여부
+            actions: [
+              {
+                action: 'accept',
+                title: '수락'
+              },
+              {
+                action: 'decline', 
+                title: '거절'
+              }
+            ]
+          }
+        }
+      };
 
       // FCM 전송
       const response = await admin.messaging().send(message);
       console.log('FCM 전송 성공:', response);
       return true;
-         } catch (error) {
-       console.error('FCM 전송 실패:', error);
+    } catch (error) {
+      console.error('FCM 전송 실패:', error);
        
-       // 에러 상세 정보 출력
-       if (error instanceof Error) {
-         console.error('에러 타입:', error.constructor.name);
-         console.error('에러 메시지:', error.message);
-         if ('errorInfo' in error) {
-           console.error('Firebase 에러 정보:', (error as any).errorInfo);
-         }
-       }
+      // 에러 상세 정보 출력
+      if (error instanceof Error) {
+        console.error('에러 타입:', error.constructor.name);
+        console.error('에러 메시지:', error.message);
+        if ('errorInfo' in error) {
+          console.error('Firebase 에러 정보:', (error as any).errorInfo);
+        }
+      }
        
-             // Firebase 초기화 관련 에러인지 확인
-       if (error instanceof Error) {
-         if (error.message.includes('Credential implementation provided to initializeApp()')) {
-           console.error('Firebase 인증 정보 문제입니다. 환경 변수를 확인해주세요.');
-           console.error('필요한 환경 변수: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
-         } else if (error.message.includes('InvalidRegistration') || 
+      // Firebase 초기화 관련 에러인지 확인
+      if (error instanceof Error) {
+        if (error.message.includes('Credential implementation provided to initializeApp()')) {
+          console.error('Firebase 인증 정보 문제입니다. 환경 변수를 확인해주세요.');
+          console.error('필요한 환경 변수: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY');
+        } else if (error.message.includes('InvalidRegistration') || 
                     error.message.includes('NotRegistered') ||
                     error.message.includes('registration-token-not-registered') ||
                     error.message.includes('Requested entity was not found')) {
-           console.log(`유효하지 않은 FCM 토큰 삭제: ${userId}`);
-           await this.removeUserFCMToken(userId);
-         }
-       }
+          console.log(`유효하지 않은 FCM 토큰 삭제: ${userId}`);
+          await this.removeUserFCMToken(userId);
+        }
+      }
        
       return false;
     }

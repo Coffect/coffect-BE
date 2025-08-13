@@ -109,5 +109,6 @@ export class UserService {
   //TODO: 로그아웃 시 FCM 알림기능도 삭제 필요
   public async logoutService(userId: number): Promise<void> {
     await this.userModel.deleteRefreshToken(userId);
+    await this.userModel.deleteUserFCMToken(userId);
   }
 }

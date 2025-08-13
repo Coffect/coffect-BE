@@ -68,7 +68,6 @@ export class CoffeeChatRecord {
     this.coffeeDate = coffeeDate;
   }
 };
-
 export class CoffeeChatRecordDetail {
   opponentName : string;
   color1 : string;
@@ -96,3 +95,25 @@ export class CoffeeChatRecordDetail {
     this.secondUserImage = secondUserImage;
   }
 };
+
+export class CoffeeChatShowUpDTO{
+  coffectId : number;
+  firstUserId : number;
+  firstUserName : string;
+  message : string;
+  createdAt : Date;
+
+  constructor(
+    coffectId : number,
+    firstUserId : number,
+    firstUserName : string,
+    message : string,
+    createdAt : Date
+  ) {
+    this.coffectId = coffectId;
+    this.firstUserId = firstUserId;
+    this.firstUserName = firstUserName;
+    this.message = message;
+    this.createdAt = createdAt;
+  }
+}

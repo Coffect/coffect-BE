@@ -1,6 +1,6 @@
 import { KSTtime } from '../config/KSTtime';
 import { prisma } from '../config/prisma.config';
-import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatRecordDetail, CoffeeChatSchedule } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatRecordDetail, CoffeeChatSchedule, CoffeeChatShowUpDTO } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 
 export class HomeModel {
 
@@ -828,4 +828,37 @@ export class HomeModel {
       throw err;
     }
   };
+
+
+  public async messageShowUpModel(
+    userId : number,
+    coffectId : number
+  ):Promise<CoffeeChatShowUpDTO> {
+    const result = await prisma.coffeeChat.findFirstOrThrow({
+      where : {
+        coffectId : coffectId,
+        secondUserId : userId
+      }, 
+      select : {
+        coffectId : true,
+        firstUserId : true,
+        firstUser : {
+          select : {
+            userId : true,
+            name : true
+          }
+        },
+        message : true,
+        createdAt : true
+      }
+    });
+
+    return new CoffeeChatShowUpDTO(
+      result.coffectId,
+      result.firstUserId,
+      result.firstUser.name,
+      result.message || '',
+      result.createdAt
+    );
+  }
 }

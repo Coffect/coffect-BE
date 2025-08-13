@@ -30,7 +30,8 @@ import {
   coffectChatCardDTO,
   CoffeeChatRecord,
   CoffeeChatRecordDetail,
-  CoffeeChatSchedule
+  CoffeeChatSchedule,
+  CoffeeChatShowUpDTO
 } from '../middleware/coffectChat.DTO/coffectChat.DTO';
 
 @Route('home')
@@ -559,5 +560,42 @@ export class HomeController extends Controller {
     return new TsoaSuccessResponse<string>(
       '성공적으로 daily 필드를 초기화했습니다.'
     );
+  }
+
+
+  @Get('messageShowUp')
+  @Security('jwt_token')
+  @SuccessResponse('200', '성공적으로 메시지를 표시했습니다.')
+  @Response<ITsoaErrorResponse>(400, 'Bad Request', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE404',
+      reason: '존재하지 않는 커피챗 일정입니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(500, 'Internal Server Error', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE500',
+      reason: '서버 오류가 발생했습니다.',
+      data: null
+    },
+    success: null
+  })
+  public async messageShowUp(
+    @Request() req: ExpressRequest,
+    @Query() coffectId: number
+  ):Promise<ITsoaSuccessResponse<CoffeeChatShowUpDTO>> {
+    const userId = req.user.index;
+
+    const result = await this.homeService.messageShowUpService(userId, coffectId);
+
+    if(result === null) {
+      throw new nonData('존재하지 않는 커피챗 일정입니다.');
+    }
+
+    return new TsoaSuccessResponse<CoffeeChatShowUpDTO>(result);
   }
 }
