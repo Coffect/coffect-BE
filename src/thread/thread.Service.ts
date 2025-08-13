@@ -61,9 +61,10 @@ export class ThreadService {
 
   // 게시글 단일 조회 서비스
   public lookUpThreadService = async (
-    threadId: string
+    threadId: string,
+    userId: number
   ): Promise<ResponseFromThreadMainToClient> => {
-    const result = await this.ThreadModel.lookUpThreadRepository(threadId);
+    const result = await this.ThreadModel.lookUpThreadRepository(threadId, userId);
 
     if (!result) {
       throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${threadId}`);
@@ -75,11 +76,12 @@ export class ThreadService {
   };
 
   public lookUpThreadMainService = async (
-    body: BodyToLookUpMainThread
+    body: BodyToLookUpMainThread,
+    userId: number
   ): Promise<ResponseFromThreadMainCursorToClient> => {
     let results: ResponseFromThreadMainCursor;
 
-    results = await this.ThreadModel.lookUpThreadMainRepository(body);
+    results = await this.ThreadModel.lookUpThreadMainRepository(body, userId);
 
     const thread: ResponseFromThreadMainToClient[] = results.thread.map(
       (thread: any) => {
@@ -99,10 +101,11 @@ export class ThreadService {
   };
 
   public lookUpLatestThreadMainService = async (
+    userId: number,
     dateCursor?: Date
   ): Promise<ResponseFromThreadMainCursorToClient> => {
     const results: ResponseFromThreadMainCursor =
-      await this.ThreadModel.lookUpLatestThreadMainRepository(dateCursor);
+      await this.ThreadModel.lookUpLatestThreadMainRepository(userId, dateCursor);
 
     const thread: ResponseFromThreadMainToClient[] = results.thread.map(
       (thread: any) => {
