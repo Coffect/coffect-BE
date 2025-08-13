@@ -185,8 +185,6 @@ export class FCMService {
            notification: {
              title, // 웹 브라우저에서 표시될 알림 제목
              body,  // 웹 브라우저에서 표시될 알림 내용
-             icon: '/favicon.ico', // 웹사이트 아이콘 (선택사항)
-             badge: '/favicon.ico', // 배지 아이콘 (선택사항)
              tag: 'coffect-notification', // 알림 그룹화를 위한 태그
              requireInteraction: false, // 사용자가 직접 닫을 때까지 유지할지 여부
              silent: false, // 알림음 재생 여부
@@ -194,17 +192,12 @@ export class FCMService {
                {
                  action: 'accept',
                  title: '수락',
-                 icon: '/icons/accept.png' // 선택사항
                },
                {
                  action: 'decline', 
                  title: '거절',
-                 icon: '/icons/decline.png' // 선택사항
                }
              ]
-           },
-           fcmOptions: {
-             link: '/notifications' // 알림 클릭 시 이동할 URL
            }
          }
        };
