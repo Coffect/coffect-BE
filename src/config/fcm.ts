@@ -173,31 +173,41 @@ export class FCMService {
 
       console.log(`FCM 토큰 조회 성공: 사용자 ${userId}, 토큰: ${userFCMToken.fcmToken.substring(0, 20)}...`);
 
-      // FCM 메시지 생성
-      const message: admin.messaging.Message = {
-        token: userFCMToken.fcmToken,
-        notification: {
-          title, // 프론트엔드에서 알림 제목으로 표시
-          body   // 프론트엔드에서 알림 내용으로 표시
-        },
-        data: data || {}, // 프론트엔드에서 알림 클릭 시 전달되는 추가 데이터
-        android: {
-          notification: {
-            channelId: 'coffect_notifications', // 안드로이드 알림 채널 ID
-            priority: 'high',                   // 높은 우선순위
-            defaultSound: true,                 // 기본 알림음 사용
-            defaultVibrateTimings: true         // 기본 진동 패턴 사용
-          }
-        },
-        apns: {
-          payload: {
-            aps: {
-              sound: 'default', // iOS 알림음
-              badge: 1          // iOS 뱃지 카운트
-            }
-          }
-        }
-      };
+             // FCM 메시지 생성 (웹 푸시 알림용)
+       const message: admin.messaging.Message = {
+         token: userFCMToken.fcmToken,
+         notification: {
+           title, // 프론트엔드에서 알림 제목으로 표시
+           body   // 프론트엔드에서 알림 내용으로 표시
+         },
+         data: data || {}, // 프론트엔드에서 알림 클릭 시 전달되는 추가 데이터
+         webpush: {
+           notification: {
+             title, // 웹 브라우저에서 표시될 알림 제목
+             body,  // 웹 브라우저에서 표시될 알림 내용
+             icon: '/favicon.ico', // 웹사이트 아이콘 (선택사항)
+             badge: '/favicon.ico', // 배지 아이콘 (선택사항)
+             tag: 'coffect-notification', // 알림 그룹화를 위한 태그
+             requireInteraction: false, // 사용자가 직접 닫을 때까지 유지할지 여부
+             silent: false, // 알림음 재생 여부
+             actions: [
+               {
+                 action: 'accept',
+                 title: '수락',
+                 icon: '/icons/accept.png' // 선택사항
+               },
+               {
+                 action: 'decline', 
+                 title: '거절',
+                 icon: '/icons/decline.png' // 선택사항
+               }
+             ]
+           },
+           fcmOptions: {
+             link: '/notifications' // 알림 클릭 시 이동할 URL
+           }
+         }
+       };
 
       // FCM 전송
       const response = await admin.messaging().send(message);
