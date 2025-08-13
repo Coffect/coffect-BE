@@ -228,4 +228,25 @@ export class ChatController extends Controller {
 
     return new TsoaSuccessResponse<ChatDataDTO>(result);
   }
+
+
+  /**
+   * 메시지 사진 보내기
+   * 
+   * @param chatRoomId 채팅방 ID
+   * @param req Express 요청 객체
+   * @return coffectId
+   * @summary 커피챗 제안 아이디 전송
+   */
+  @Get('getCoffectId')
+  @Security('jwt_token')
+  @SuccessResponse(200, '커피 아이디 조회 성공')
+  public async getCoffectId(
+    @Request() req: ExpressRequest,
+    @Query() chatRoomId: string
+  ): Promise<ITsoaSuccessResponse<number>> {
+    const userId = req.user.index;
+    const result = await this.chatService.getCoffectIdToSuggest(userId, chatRoomId);
+    return new TsoaSuccessResponse<number>(result);
+  }
 }

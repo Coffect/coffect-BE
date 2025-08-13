@@ -7,11 +7,12 @@ export class ChatModel {
   public async makeChatRoom(
     myId: number,
     otherId: number,
-    chatRoomId: string
+    chatRoomId: string,
+    coffectId: number
   ): Promise<void> {
     try {
       const makeRoom = prisma.chatRoom.create({
-        data: { chatroomId: chatRoomId, createdTime: KSTtime() }
+        data: { chatroomId: chatRoomId, coffectId: coffectId, createdTime: KSTtime() }
       });
       const insertUser1 = prisma.chatRoomUser.create({
         data: { userId: myId, chatroomId: chatRoomId }
@@ -187,4 +188,62 @@ export class ChatModel {
       throw new Error('사진 메시지를 저장하는 중 오류가 발생했습니다.');
     }
   };
+
+  public async getCoffectId(
+    userId : number, 
+    otherId : number
+  ):Promise<number> {
+    try {
+      const coffectId = await prisma.coffeeChat.findFirst({
+        where : {
+          OR : [
+            {
+              firstUserId : userId,
+              secondUserId : otherId
+            },
+            {
+              firstUserId : otherId,
+              secondUserId : userId
+            }
+          ]
+        },
+        select : {
+          coffectId : true
+        }
+      });
+      if(!coffectId) {
+        throw new Error('커피챗 제안 아이디를 찾을 수 없습니다.');
+      }
+      return coffectId.coffectId;
+
+    } catch (error) {
+      console.error('커피챗 제안 아이디 조회 중 오류 발생:', error);
+      throw new Error('커피챗 제안 아이디를 조회하는 중 오류가 발생했습니다.');
+    }
+  }
+
+  public async getCoffectIdToSuggest(
+    userId : number,
+    chatRoomId : string
+  ):Promise<number> {
+    try {
+      const coffectId = await prisma.chatRoom.findFirst({
+        where : {
+          chatroomId : chatRoomId
+        },
+        select : {
+          coffectId : true
+        }
+      });
+
+      if(!coffectId) {
+        throw new Error('커피챗 제안 아이디를 찾을 수 없습니다.');
+      }
+
+      return coffectId.coffectId;
+    } catch (error) {
+      console.error('커피챗 제안 아이디 조회 중 오류 발생:', error);
+      throw new Error('커피챗 제안 아이디를 조회하는 중 오류가 발생했습니다.');
+    }
+  }
 }

@@ -68,6 +68,7 @@ model ChatRoom {
   chatroomId   String         @id @db.VarChar(100)
   createdAt    DateTime       @default(now())
   createdTime  DateTime
+  coffectId    Int
   ChatRoomUser ChatRoomUser[]
   Message      Message[]
 }

@@ -27,7 +27,8 @@ export class ChatService {
       // 이미 존재하는 채팅방이라면 예외 발생
       throw new ChatRoomAlreadyExists(chatRoomId);
     }
-    await this.chatModel.makeChatRoom(myId, otherId, chatRoomId);
+    const coffectId = await this.chatModel.getCoffectId(myId, otherId);
+    await this.chatModel.makeChatRoom(myId, otherId, chatRoomId, coffectId);
     return { chatRoomId };
   }
 
@@ -101,4 +102,9 @@ export class ChatService {
 
     return result;
   };
+
+  public async getCoffectIdToSuggest(userId: number, chatRoomId: string): Promise<number> {
+    const result = await this.chatModel.getCoffectIdToSuggest(userId, chatRoomId);
+    return result;
+  }
 }
