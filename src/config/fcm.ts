@@ -172,6 +172,7 @@ export class FCMService {
       }
 
       const oppentUserId = Number(data?.firstUserId);
+
       const oppentUserImage = await prisma.user.findUniqueOrThrow({
         where : {
           userId : oppentUserId
@@ -194,9 +195,10 @@ export class FCMService {
             title, // 웹 브라우저에서 표시될 알림 제목
             body,  // 웹 브라우저에서 표시될 알림 내용
             tag: 'coffect-notification', // 알림 그룹화를 위한 태그
-            requireInteraction: false, // 사용자가 직접 닫을 때까지 유지할지 여부
+            requireInteraction: true, // 사용자가 직접 닫을 때까지 유지할지 여부
             silent: false, // 알림음 재생 여부
             image : oppentUserImage.profileImage,
+            userId : oppentUserId.toString(),
             actions: [
               {
                 action: 'profileShowUp',
