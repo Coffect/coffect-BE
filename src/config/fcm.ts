@@ -171,7 +171,15 @@ export class FCMService {
         return false;
       }
 
-      console.log(`FCM 토큰 조회 성공: 사용자 ${userId}, 토큰: ${userFCMToken.fcmToken.substring(0, 20)}...`);
+      const oppentUserId = Number(data?.firstUserId);
+      const oppentUserImage = await prisma.user.findUniqueOrThrow({
+        where : {
+          userId : oppentUserId
+        },
+        select : {
+          profileImage : true
+        }
+      });
 
       // FCM 메시지 생성 (웹 푸시 알림용)
       const message: admin.messaging.Message = {
@@ -188,14 +196,15 @@ export class FCMService {
             tag: 'coffect-notification', // 알림 그룹화를 위한 태그
             requireInteraction: false, // 사용자가 직접 닫을 때까지 유지할지 여부
             silent: false, // 알림음 재생 여부
+            image : oppentUserImage.profileImage,
             actions: [
               {
-                action: 'accept',
-                title: '수락'
+                action: 'profileShowUp',
+                title: '프로필 보기'
               },
               {
-                action: 'decline', 
-                title: '거절'
+                action: 'messageShowUp', 
+                title: '메세지 확인하기'
               }
             ]
           }
