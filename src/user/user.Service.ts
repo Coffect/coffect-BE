@@ -105,4 +105,9 @@ export class UserService {
       throw new UserExistID('아이디가 중복됨');
     }
   }
+
+  //TODO: 로그아웃 시 FCM 알림기능도 삭제 필요
+  public async logoutService(userId: number): Promise<void> {
+    await this.userModel.deleteRefreshToken(userId);
+  }
 }

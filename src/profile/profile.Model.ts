@@ -9,6 +9,7 @@ import {
   ResponseFromThreadMain,
   ResponseFromThreadMainToClient
 } from '../middleware/thread.DTO/thread.DTO';
+import { SearchUserDTO } from '../middleware/profile.DTO/profile.DTO';
 
 export class ProfileModel {
   public async selectUserProfile(userId: number) {
@@ -332,5 +333,26 @@ export class ProfileModel {
     });
     const result = data.map((item) => new ResponseFromThreadMainToClient(item));
     return result;
+  }
+
+  public async searchUser(id: string): Promise<SearchUserDTO[]> {
+    const data = await prisma.user.findMany({
+      where: { id: { startsWith: id } },
+      select: { id: true, name: true, userId: true, profileImage: true }
+    });
+    return data;
+  }
+
+  public async isCoffeeChat(userId: number, otherUserId: number) {
+    const data = await prisma.coffeeChat.findFirst({
+      where: {
+        OR: [
+          { firstUserId: userId, secondUserId: otherUserId },
+          { firstUserId: otherUserId, secondUserId: userId }
+        ]
+      },
+      select: { firstUserId: true, secondUserId: true, valid: true }
+    });
+    return data;
   }
 }

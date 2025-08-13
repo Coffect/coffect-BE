@@ -77,4 +77,9 @@ export class UserModel {
       data: { userId: createdUser.userId, info: [] }
     });
   }
+  public async deleteRefreshToken(userId: number) {
+    await prisma.refeshToken.delete({
+      where: { userId: userId }
+    });
+  }
 }

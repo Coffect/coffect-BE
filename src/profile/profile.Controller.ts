@@ -31,6 +31,10 @@ import {
 } from '../middleware/detailProfile.DTO/detailProfile.DTO';
 import { UserUnauthorizedError } from '../user/user.Message';
 import { ResponseFromThreadMainToClient } from '../middleware/thread.DTO/thread.DTO';
+import {
+  IsCoffeeChatDTO,
+  SearchUserDTO
+} from '../middleware/profile.DTO/profile.DTO';
 @Route('profile')
 @Tags('Profile Controller')
 export class ProfileController extends Controller {
@@ -222,6 +226,7 @@ export class ProfileController extends Controller {
     @Request() req: Express.Request,
     @Query() id: string
   ): Promise<ITsoaSuccessResponse<ProfileDTO>> {
+    const userId = req.user.index;
     const data = await this.profileService.getProfile(id);
     return new TsoaSuccessResponse(data);
   }
@@ -400,6 +405,55 @@ export class ProfileController extends Controller {
   ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainToClient[]>> {
     const userId = req.user.index;
     const data = await this.profileService.getScrap(userId);
+    return new TsoaSuccessResponse(data);
+  }
+
+  /**
+   * 유저를 검색한다.
+   *
+   * @summary 유저 검색
+   * @param id 아이디
+   */
+  @Post('/search')
+  @Security('jwt_token')
+  @SuccessResponse(200, '검색 성공')
+  @Response<ITsoaErrorResponse>(500, '서버에러', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'ERR-0',
+      reason: 'Unknown server error.',
+      data: null
+    },
+    success: null
+  })
+  public async search(
+    @Query() id: string
+  ): Promise<ITsoaSuccessResponse<SearchUserDTO[]>> {
+    const data = await this.profileService.search(id);
+    return new TsoaSuccessResponse(data);
+  }
+
+  /**
+   * 내가 해당 유저와 커피챗을 한 적이 있는지 여부를 확인한다
+   *
+   * 상대방 userId를 쿼리에 담아 전송한다.
+   *
+   * isCoffeechat 은 해당 유저와 커피챗 제안을 주고 받은적이 있는지
+   *
+   * check은 커피쳇 제안을 확인 한 적이 있는지를 확인할 수 있다.
+   *
+   * @summary 커피챗 여부 조회
+   * @param otherUserId 상대방 userId
+   */
+  @Post('/isCoffeeChat')
+  @Security('jwt_token')
+  @SuccessResponse(200, '커피챗 조회 성공')
+  public async isCoffeeChat(
+    @Request() req: Express.Request,
+    @Query() otherUserId: number
+  ): Promise<ITsoaSuccessResponse<IsCoffeeChatDTO>> {
+    const userId = req.user.index;
+    const data = await this.profileService.isCoffeeChat(userId, otherUserId);
     return new TsoaSuccessResponse(data);
   }
 }
