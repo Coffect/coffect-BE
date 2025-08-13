@@ -111,4 +111,10 @@ export class UserService {
     await this.userModel.deleteRefreshToken(userId);
     await this.userModel.deleteUserFCMToken(userId);
   }
+
+  public async userDeleteService(
+    userId: number
+  ): Promise<void> {
+    await this.userModel.deleteUser(userId);
+  }
 }

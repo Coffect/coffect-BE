@@ -255,4 +255,16 @@ export class UserController extends Controller {
     await this.userService.logoutService(userId);
     return new TsoaSuccessResponse('로그아웃 성공');
   }
+
+  @Delete('/userDelete')
+  @Security('jwt_token')
+  @SuccessResponse(200, '회원탈퇴 성공')
+  public async userDelete(
+    @Request() req: ExpressRequest
+  ): Promise<ITsoaSuccessResponse<string>> {
+    const userId = req.user.index;
+    await this.userService.userDeleteService(userId);
+    
+    return new TsoaSuccessResponse('회원탈퇴 성공');
+  }
 }
