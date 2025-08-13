@@ -178,7 +178,8 @@ export class FCMService {
           userId : oppentUserId
         },
         select : {
-          profileImage : true
+          profileImage : true,
+          name : true
         }
       });
 
@@ -199,6 +200,7 @@ export class FCMService {
             silent: false, // 알림음 재생 여부
             image : oppentUserImage.profileImage,
             userId : oppentUserId.toString(),
+            name : oppentUserImage.name,
             actions: [
               {
                 action: 'profileShowUp',
