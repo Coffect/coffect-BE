@@ -91,11 +91,12 @@ export class ThreadService {
 
     console.log(thread);
 
-    if (!results || results.thread.length === 0) {
-      throw new ThreadNotFoundError(
-        `필터링 된 게시글이 없습니다. type: ${body.type}, subjects: ${body.threadSubject}`
-      );
-    }
+    // 프론트에서 예외처리 빼달래요;;
+    // if (!results || results.thread.length === 0) {
+    //   throw new ThreadNotFoundError(
+    //     `필터링 된 게시글이 없습니다. type: ${body.type}, subjects: ${body.threadSubject}`
+    //   );
+    // }
 
     return { thread, nextCursor: results.nextCursor };
   };
@@ -113,9 +114,10 @@ export class ThreadService {
       }
     );
 
-    if (!results || results.thread.length === 0) {
-      throw new ThreadNotFoundError('최신 게시글이 없습니다.');
-    }
+    // 프론트에서 예외처리 빼달래요
+    // if (!results || results.thread.length === 0) {
+    //   throw new ThreadNotFoundError('최신 게시글이 없습니다.');
+    // }
 
     return { thread, nextCursor: results.nextCursor };
   };

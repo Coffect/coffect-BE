@@ -237,9 +237,9 @@ export class ThreadModel {
     }
 
     //console.log(thread);
-    if(thread.length === 0) {
-      throw new ThreadNotFoundError(`필터링 된 게시글이 없습니다. type: ${type}, subjects: ${threadSubject}`);
-    }
+    // if(thread.length === 0) {
+    //   throw new ThreadNotFoundError(`필터링 된 게시글이 없습니다. type: ${type}, subjects: ${threadSubject}`);
+    // }
 
     const threadsWithFollowingStatus = await Promise.all(
       thread.map(async (t) => {
@@ -254,7 +254,7 @@ export class ThreadModel {
     );
 
     const lastThread = threadsWithFollowingStatus[threadsWithFollowingStatus.length - 1];
-    let nextCursor: Date | null = lastThread.createdAt;
+    let nextCursor: Date | null = lastThread ? lastThread.createdAt : null;
 
     if(threadsWithFollowingStatus.length < limit) {
       nextCursor = null;
@@ -325,9 +325,9 @@ export class ThreadModel {
       });
     }
 
-    if(thread.length === 0) {
-      throw new ThreadNotFoundError('최신 게시글이 없습니다.');
-    }
+    // if(thread.length === 0) {
+    //   throw new ThreadNotFoundError('최신 게시글이 없습니다.');
+    // }
 
     const threadsWithFollowingStatus = await Promise.all(
       thread.map(async (t) => {
@@ -342,7 +342,7 @@ export class ThreadModel {
     );
 
     const lastThread = threadsWithFollowingStatus[threadsWithFollowingStatus.length - 1];
-    let nextCursor: Date | null = lastThread.createdAt;
+    let nextCursor: Date | null = lastThread ? lastThread.createdAt : null;
     if(threadsWithFollowingStatus.length < limit) {
       nextCursor = null;
     }
