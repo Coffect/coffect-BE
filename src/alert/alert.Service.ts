@@ -8,7 +8,10 @@ export class AlertService {
    */
   async getNotificationsService(userId: number) {
     const notifications = await prisma.notification.findMany({
-      where: { userId },
+      where: { 
+        userId,
+        isRead: false // 읽지 않은 알림만 조회
+      },
       orderBy: { createdAt: 'desc' },
       take: 50 // 최근 50개만 조회
     });
