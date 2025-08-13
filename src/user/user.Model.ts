@@ -82,4 +82,10 @@ export class UserModel {
       where: { userId: userId }
     });
   }
+
+  public async deleteUserFCMToken(userId: number) {
+    await prisma.userFCMToken.delete({
+      where: { userId: userId }
+    });
+  }
 }
