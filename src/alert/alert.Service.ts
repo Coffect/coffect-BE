@@ -13,7 +13,57 @@ export class AlertService {
       take: 50 // 최근 50개만 조회
     });
 
-    return notifications;
+    // firstUserId들을 수집
+    const firstUserIds = new Set<number>();
+    notifications.forEach(notification => {
+      if (notification.data && typeof notification.data === 'object') {
+        const data = notification.data as any;
+        if (data.type === 'coffee_chat_proposal' && data.firstUserId) {
+          const firstUserId = parseInt(data.firstUserId);
+          if (!isNaN(firstUserId)) {
+            firstUserIds.add(firstUserId);
+          }
+        }
+      }
+    });
+
+    // 한 번에 모든 사용자 정보 조회
+    const users = await prisma.user.findMany({
+      where: {
+        userId: { in: Array.from(firstUserIds) }
+      },
+      select: {
+        userId: true,
+        profileImage: true,
+        name: true
+      }
+    });
+
+    // 사용자 정보를 Map으로 변환하여 빠른 접근 가능하게 함
+    const userMap = new Map(users.map(user => [user.userId, user]));
+
+    // 알림에 사용자 정보 추가
+    const notificationsWithUserImages = notifications.map(notification => {
+      if (notification.data && typeof notification.data === 'object') {
+        const data = notification.data as any;
+        if (data.type === 'coffee_chat_proposal' && data.firstUserId) {
+          const firstUserId = parseInt(data.firstUserId);
+          if (!isNaN(firstUserId)) {
+            const user = userMap.get(firstUserId);
+            if (user) {
+              return {
+                ...notification,
+                firstUserImage: user.profileImage,
+                firstUserName: user.name
+              };
+            }
+          }
+        }
+      }
+      return notification;
+    });
+
+    return notificationsWithUserImages;
   }
 
   /**
