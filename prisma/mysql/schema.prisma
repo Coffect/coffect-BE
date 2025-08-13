@@ -17,7 +17,7 @@ model User {
   introduce                       String?
   salt                            String
   createdAt                       DateTime        @default(now())
-  profileImage                    String?         @db.Text
+  profileImage                    String          @db.Text
   questionIndex                   Json?
   coffeeChatCount                 Int             @default(4)
   todayInterest                   Int?            @default(0)
