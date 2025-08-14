@@ -15,6 +15,7 @@ export class ChatService {
     otherId: number
   ): Promise<{ chatRoomId: string }> {
     const usersRooms = await this.chatModel.getChatRoom(myId);
+
     const chatRoomId = await pbkdf2Promise(
       // 유저 아이디를 조합해 난수 chatRoomId 생성
       myId.toString(),
@@ -23,12 +24,16 @@ export class ChatService {
       32,
       'sha512'
     ).then((result) => result.toString('base64'));
+    
     if (usersRooms.some((room) => room.chatroomId === chatRoomId)) {
       // 이미 존재하는 채팅방이라면 예외 발생
       throw new ChatRoomAlreadyExists(chatRoomId);
     }
+
     const coffectId = await this.chatModel.getCoffectId(myId, otherId);
+
     await this.chatModel.makeChatRoom(myId, otherId, chatRoomId, coffectId);
+
     return { chatRoomId };
   }
 
