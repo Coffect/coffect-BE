@@ -197,6 +197,7 @@ model CoffeeChat {
   message      String?
   createdAt    DateTime @default(now())
   valid        Boolean  @default(false)
+  isDelete     Boolean  @default(false)
   firstUser    User     @relation("FirstUser", fields: [firstUserId], references: [userId])
   secondUser   User     @relation("SecondUser", fields: [secondUserId], references: [userId])
 

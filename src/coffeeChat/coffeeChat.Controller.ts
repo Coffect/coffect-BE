@@ -598,4 +598,40 @@ export class HomeController extends Controller {
 
     return new TsoaSuccessResponse<CoffeeChatShowUpDTO>(result);
   }
+
+  @Patch('delete')
+  @Security('jwt_token')
+  @SuccessResponse('200', '성공적으로 커피챗을 삭제했습니다.')
+  @Response<ITsoaErrorResponse>(400, 'Bad Request', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE404',
+      reason: '존재하지 않는 커피챗 일정입니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(500, 'Internal Server Error', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE500',
+      reason: '서버 오류가 발생했습니다.',
+      data: null
+    },
+    success: null
+  })
+  public async deleteCoffeeChat(
+    @Request() req: ExpressRequest,
+    @Body()
+      body: {
+      coffectId: number;
+    }
+  ):Promise<ITsoaSuccessResponse<string>> {
+    const userId = req.user.index;
+    const { coffectId } = body;
+
+    await this.homeService.deleteCoffeeChatService(userId, coffectId);
+
+    return new TsoaSuccessResponse<string>('성공적으로 커피챗을 삭제했습니다.');
+  }
 }
