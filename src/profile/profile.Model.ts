@@ -7,7 +7,8 @@ import {
 import {
   ResponseFromSingleThread,
   ResponseFromThreadMain,
-  ResponseFromThreadMainToClient
+  ResponseFromThreadMainToClient,
+  defaultThreadSelect
 } from '../middleware/thread.DTO/thread.DTO';
 import { SearchUserDTO } from '../middleware/profile.DTO/profile.DTO';
 
@@ -139,46 +140,10 @@ export class ProfileModel {
   public async selectUserThread(
     userId: number
   ): Promise<ResponseFromThreadMainToClient[]> {
-    const defaultSelect = {
-      threadId: true,
-      userId: true,
-      type: true,
-      threadTitle: true,
-      thradBody: true,
-      createdAt: true,
-      threadShare: true,
-      user: {
-        select: {
-          name: true,
-          profileImage: true,
-          studentId: true,
-          dept: true
-        }
-      },
-      subjectMatch: {
-        select: {
-          threadSubject: {
-            select: {
-              subjectName: true
-            }
-          }
-        }
-      },
-      images: {
-        select: {
-          imageId: true
-        }
-      },
-      _count: {
-        select: {
-          comments: true,
-          likes: true
-        }
-      }
-    };
+
     const data: ResponseFromThreadMain[] = await prisma.thread.findMany({
       where: { userId: userId },
-      select: defaultSelect
+      select: defaultThreadSelect
     });
     const result = data.map((item) => new ResponseFromThreadMainToClient(item));
     return result;
@@ -290,46 +255,9 @@ export class ProfileModel {
     join ThreadScrap TS on SM.scrapId = TS.scrapID
     where TS.userId = ${userId}`;
     const scrap: [{ threadId: string }] = await prisma.$queryRaw(Prisma.raw(q));
-    const defaultSelect = {
-      threadId: true,
-      userId: true,
-      type: true,
-      threadTitle: true,
-      thradBody: true,
-      createdAt: true,
-      threadShare: true,
-      user: {
-        select: {
-          name: true,
-          profileImage: true,
-          studentId: true,
-          dept: true
-        }
-      },
-      subjectMatch: {
-        select: {
-          threadSubject: {
-            select: {
-              subjectName: true
-            }
-          }
-        }
-      },
-      images: {
-        select: {
-          imageId: true
-        }
-      },
-      _count: {
-        select: {
-          comments: true,
-          likes: true
-        }
-      }
-    };
     const data: ResponseFromThreadMain[] = await prisma.thread.findMany({
       where: { threadId: { in: scrap.map((item) => item.threadId) } },
-      select: defaultSelect
+      select: defaultThreadSelect
     });
     const result = data.map((item) => new ResponseFromThreadMainToClient(item));
     return result;

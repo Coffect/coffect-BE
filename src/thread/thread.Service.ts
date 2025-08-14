@@ -202,7 +202,7 @@ export class ThreadService {
     );
 
     if (result === null) {
-      throw new ThreadNotFoundError(`게시글이 없습니다. ID: ${threadId}`);
+      return `좋아요를 취소했습니다. threadId: ${threadId}, userId: ${userId}`;
     }
 
     return result;

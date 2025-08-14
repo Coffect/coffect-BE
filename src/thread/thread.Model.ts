@@ -435,6 +435,39 @@ export class ThreadModel {
       return null;
     }
 
+    const isExistScrap = await prisma.scrapMatch.findFirst({
+      where: {
+        threadId: threadId,
+        threadScrap: {
+          userId: userId
+        }
+      }
+    });
+
+    console.log(isExistScrap);
+
+    if(isExistScrap) {
+      // 이미 스크랩한 상태라면, 스크랩을 취소합니다.
+      await prisma.$transaction(async (prisma: any) => {
+        await prisma.scrapMatch.delete({
+          where: {
+            threadId_scrapId: {
+              threadId: threadId,
+              scrapId: isExistScrap.scrapId
+            }
+          }
+        });
+
+        await prisma.threadScrap.delete({
+          where: {
+            scrapId: isExistScrap.scrapId
+          }
+        });
+      });
+
+      return `스크랩을 취소했습니다. threadId: ${threadId}, userId: ${userId}`;
+    }
+
     const result = await prisma.$transaction(async (prisma: any) => {
       const scrap = await prisma.threadScrap.create({
         data: {
@@ -524,6 +557,15 @@ export class ThreadModel {
     });
 
     if(isExistLike) {
+      // 이미 좋아요를 누른 상태라면, 좋아요를 취소합니다.
+      await prisma.threadLike.delete({
+        where: {
+          threadId_userId: {
+            threadId: threadId,
+            userId: userId
+          }
+        }
+      });
       return null;
     }
 
