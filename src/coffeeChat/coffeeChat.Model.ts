@@ -874,4 +874,43 @@ export class HomeModel {
       data : { isDelete : true }
     });
   }
+
+  public async sendAcceptFCM(
+    secondUserId : number,
+    coffectId : number
+  ):Promise<void> {
+    const result = await prisma.coffeeChat.findFirstOrThrow({
+      where : { coffectId : coffectId, secondUserId : secondUserId },
+      select : {
+        firstUser : {
+          select : {
+            userId : true,
+            name : true
+          }
+        }
+      }
+    });
+
+    // 알림 전송
+    try {
+      const { FCMService } = await import('../config/fcm');
+      const notificationResult = await FCMService.sendAcceptCoffeeChatNotification(
+        secondUserId, // secondUserId (승낙 했다는 걸 보낸 사람.)
+        result.firstUser.userId,    // firstUserId (승낙헀다는걸 받는 사람.)
+        result.firstUser.name,
+        coffectId
+      );
+
+      if(notificationResult) {
+        console.log(`알림 전송 성공: 사용자 ${result.firstUser.name}`);
+      } else {
+        console.log(`알림 전송 실패: 사용자 ${result.firstUser.name} (토큰이 없거나 유효하지 않음)`);
+      }
+    } catch (error) {
+      console.error('알림 전송 실패:', error);
+      // 알림 전송 실패해도 커피챗 제안은 성공으로 처리
+    }
+  }
 }
+
+

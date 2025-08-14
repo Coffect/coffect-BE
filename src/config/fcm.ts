@@ -314,6 +314,38 @@ export class FCMService {
     }
   }
 
+
+  static async sendAcceptCoffeeChatNotification(
+    secondUserId : number,
+    firstUserId : number,
+    firstUserName : string,
+    coffectId : number
+  ):Promise<boolean> {
+    try {
+      const title = '커피챗 수락';
+      const body = '커피챗 수락이 도착했어요!';
+      const data = {
+        type : 'accept_coffee_chat',
+        firstUserId : firstUserId.toString(), // 받는 사람
+        coffectId : coffectId.toString(),
+        firstUserName : firstUserName
+      }
+
+      const fcmSuccess = await this.sendNotificationToUser(firstUserId, title, body, data);
+
+      if (fcmSuccess) {
+        console.log(`FCM 전송 성공: 사용자 ${firstUserName}`);
+        return true;
+      } else {
+        console.log(`FCM 전송 실패: 사용자 ${firstUserName} (토큰이 없거나 유효하지 않음)`);
+        return false;
+      }
+    } catch (error) {
+      console.error('커피챗 수락 알림 전송 실패:', error);
+      return false;
+    }
+  }
+
   /**
    * 사용자 FCM 토큰 저장/업데이트
    * 
