@@ -221,6 +221,8 @@ export interface ResponseFromGetComment {
   quote?: number | null;
   createdAtD: Date;
   user: {
+    id: string;
+    dept: string | null;
     name: string;
     profileImage: string;
     studentId: number | null;
