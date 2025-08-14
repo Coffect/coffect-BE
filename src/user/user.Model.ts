@@ -83,15 +83,24 @@ export class UserModel {
     });
   }
 
+  public async selectUserFCMToken(userId: number) {
+    const q = await prisma.userFCMToken.findMany({
+      where: { userId: userId }
+    });
+    if (q[0]) {
+      return q[0];
+    } else {
+      return null;
+    }
+  }
+
   public async deleteUserFCMToken(userId: number) {
     await prisma.userFCMToken.delete({
       where: { userId: userId }
     });
   }
-  
-  public async deleteUser(
-    userId : number
-  ):Promise<void> {
+
+  public async deleteUser(userId: number): Promise<void> {
     await prisma.$transaction(async (tx) => {
       // 1. RefreshToken 삭제
       await tx.refeshToken.deleteMany({
@@ -121,20 +130,14 @@ export class UserModel {
       // 6. Follow 관계 삭제 (팔로워/팔로잉)
       await tx.follow.deleteMany({
         where: {
-          OR: [
-            { followerId: userId },
-            { followingId: userId }
-          ]
+          OR: [{ followerId: userId }, { followingId: userId }]
         }
       });
 
       // 7. CoffeeChat 삭제
       await tx.coffeeChat.deleteMany({
         where: {
-          OR: [
-            { firstUserId: userId },
-            { secondUserId: userId }
-          ]
+          OR: [{ firstUserId: userId }, { secondUserId: userId }]
         }
       });
 
@@ -153,8 +156,8 @@ export class UserModel {
         where: { userId: userId },
         select: { threadId: true }
       });
-      
-      const threadIds = userThreads.map(thread => thread.threadId);
+
+      const threadIds = userThreads.map((thread) => thread.threadId);
 
       if (threadIds.length > 0) {
         // 11. ThreadImage 삭제 (Thread의 하위 테이블)
