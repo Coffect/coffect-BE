@@ -137,6 +137,46 @@ export class ProfileModel {
       });
     }
   }
+  public async selectOtherUserThread(
+    userId: number,
+    otherUserId: number
+  ): Promise<ResponseFromThreadMainToClient[]> {
+    const data: ResponseFromThreadMain[] = await prisma.thread.findMany({
+      where: { userId: otherUserId },
+      select: {
+        ...defaultThreadSelect,
+        likes: {
+          where: {
+            userId: userId
+          }
+        },
+        // 현재 로그인한 유저가 이 게시글을 스크랩했는지 확인
+        scraps: {
+          where: {
+            threadScrap: {
+              userId: userId
+            }
+          }
+        }
+      }
+    });
+    const isFollowing = await prisma.follow.findFirst({
+      where: {
+        followerId: userId, // 팔로우 하는 사람
+        followingId: otherUserId // 팔로우 당하는 사람 (게시글 작성자)
+      }
+    });
+    const result = await Promise.all(
+      data.map(async (item) => {
+        return new ResponseFromThreadMainToClient({
+          ...item,
+          isFollowing: !!isFollowing
+        });
+      })
+    );
+    return result;
+  }
+
   public async selectUserThread(
     userId: number
   ): Promise<ResponseFromThreadMainToClient[]> {

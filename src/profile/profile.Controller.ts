@@ -250,9 +250,11 @@ export class ProfileController extends Controller {
     success: null
   })
   public async getThread(
+    @Request() req: Express.Request,
     @Query() id: string
   ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainToClient[]>> {
-    const data = await this.profileService.getThread(id, undefined);
+    const userId = req.user.index;
+    const data = await this.profileService.getThread(id, userId);
     return new TsoaSuccessResponse(data);
   }
 

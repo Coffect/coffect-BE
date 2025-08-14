@@ -47,8 +47,8 @@ export class ProfileService {
   }
 
   public async getThread(
-    id?: string,
-    userIndex?: number
+    id?: string, //아이디 검색할때
+    userIndex?: number // 내 userIndex
   ): Promise<ResponseFromThreadMainToClient[]> {
     if (id) {
       // ID로 조회할때
@@ -56,7 +56,10 @@ export class ProfileService {
       if (!userId) {
         throw new UserIdNotFound('유저 아이디를 찾을 수 없습니다.');
       }
-      const data = await this.profileModel.selectUserThread(userId.userId);
+      const data = await this.profileModel.selectOtherUserThread(
+        userIndex!,
+        userId.userId
+      );
       return data;
     } else {
       // 유저 인덱스로 조회할때
