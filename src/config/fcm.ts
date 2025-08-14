@@ -263,7 +263,7 @@ export class FCMService {
    * - body: "{firstUserName}님의 커피챗 제안이 도착했어요!"
    * - data.type: "coffee_chat_proposal"
    * - data.firstUserId: 제안한 사용자 ID
-   * - data.coffectId: 커피챗 ID
+   * - data.cofectId: 커피챗 ID
    * - data.firstUserName: 제안한 사용자 이름
    */
   static async sendCoffeeChatProposalNotification(
@@ -331,7 +331,7 @@ export class FCMService {
         firstUserName : firstUserName
       }
 
-      const fcmSuccess = await this.sendNotificationToUser(firstUserId, title, body, data);
+      const fcmSuccess = await this.sendNotificationToUser(secondUserId, title, body, data);
 
       if (fcmSuccess) {
         console.log(`FCM 전송 성공: 사용자 ${firstUserName}`);

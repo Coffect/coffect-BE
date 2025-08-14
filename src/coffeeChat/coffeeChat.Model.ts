@@ -891,13 +891,13 @@ export class HomeModel {
       }
     });
 
-    // 알림 전송
+    // 알림 전송 - 매개변수 순서 수정
     try {
       const { FCMService } = await import('../config/fcm');
       const notificationResult = await FCMService.sendAcceptCoffeeChatNotification(
-        secondUserId, // secondUserId (승낙 했다는 걸 보낸 사람.)
-        result.firstUser.userId,    // firstUserId (승낙헀다는걸 받는 사람.)
-        result.firstUser.name,
+        result.firstUser.userId,    // firstUserId (승낙을 받는 사람 - 커피챗을 제안한 사람)
+        secondUserId,               // secondUserId (승낙을 보낸 사람)
+        result.firstUser.name,      // 승낙을 받는 사람의 이름
         coffectId
       );
 
