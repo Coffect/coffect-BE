@@ -289,33 +289,33 @@ export class ProfileController extends Controller {
    * @param timeLine - 시간표 데이터
    * @returns 업로드 성공
    */
-  @Post('/postTimeLine')
-  @Security('jwt_token')
-  @SuccessResponse(200, '시간표 업로드 성공')
-  @Response<ITsoaErrorResponse>(409, '시간표 업로드 실패', {
-    resultType: 'FAIL',
-    error: {
-      errorCode: 'PR-04',
-      reason: '이미 시간표가 존재합니다.',
-      data: null
-    },
-    success: null
-  })
-  public async postTimeLine(
-    @Request() req: Express.Request,
-    @Query() timeLine: string
-  ): Promise<ITsoaSuccessResponse<string>> {
-    if (!req.user || !req.user.index) {
-      throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
-    }
+  // @Post('/postTimeLine')
+  // @Security('jwt_token')
+  // @SuccessResponse(200, '시간표 업로드 성공')
+  // @Response<ITsoaErrorResponse>(409, '시간표 업로드 실패', {
+  //   resultType: 'FAIL',
+  //   error: {
+  //     errorCode: 'PR-04',
+  //     reason: '이미 시간표가 존재합니다.',
+  //     data: null
+  //   },
+  //   success: null
+  // })
+  // public async postTimeLine(
+  //   @Request() req: Express.Request,
+  //   @Query() timeLine: string
+  // ): Promise<ITsoaSuccessResponse<string>> {
+  //   if (!req.user || !req.user.index) {
+  //     throw new UserUnauthorizedError('유저 인증 정보가 없습니다.');
+  //   }
 
-    const result = await this.profileService.postTimeLineService(
-      req.user.index,
-      timeLine
-    );
+  //   const result = await this.profileService.postTimeLineService(
+  //     req.user.index,
+  //     timeLine
+  //   );
 
-    return new TsoaSuccessResponse<string>(result);
-  }
+  //   return new TsoaSuccessResponse<string>(result);
+  // }
 
   /**
    * 유저의 시간표를 조회한다.

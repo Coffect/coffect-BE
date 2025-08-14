@@ -76,6 +76,13 @@ export class UserModel {
     await prisma.specifyInfo.create({
       data: { userId: createdUser.userId, info: [] }
     });
+
+    await prisma.userTimetable.create({
+      data: {
+        userId: createdUser.userId,
+        timetable: '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+      }
+    });
   }
   public async deleteRefreshToken(userId: number) {
     await prisma.refeshToken.delete({
