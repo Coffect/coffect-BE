@@ -528,6 +528,8 @@ export class ThreadModel {
       include: {
         user: {
           select: {
+            id: true,
+            dept: true,
             name: true,
             profileImage: true,
             studentId: true
