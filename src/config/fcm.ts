@@ -331,7 +331,7 @@ export class FCMService {
         firstUserName : firstUserName
       }
 
-      const fcmSuccess = await this.sendNotificationToUser(secondUserId, title, body, data);
+      const fcmSuccess = await this.sendNotificationToUser(firstUserId, title, body, data);
 
       if (fcmSuccess) {
         console.log(`FCM 전송 성공: 사용자 ${firstUserName}`);

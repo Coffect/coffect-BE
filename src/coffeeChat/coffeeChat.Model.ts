@@ -884,10 +884,8 @@ export class HomeModel {
       select : {
         firstUser : {
           select : {
-            id : true,
             userId : true,
-            name : true,
-            profileImage : true,
+            name : true
           }
         }
       }
