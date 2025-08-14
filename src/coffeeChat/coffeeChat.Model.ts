@@ -895,6 +895,17 @@ export class HomeModel {
     // 알림 전송 - 매개변수 순서 수정
     try {
       const { FCMService } = await import('../config/fcm');
+      
+      // FCM 토큰 유효성 사전 검증
+      const userFCMToken = await prisma.userFCMToken.findUnique({
+        where: { userId: result.firstUser.userId }
+      });
+
+      if (!userFCMToken || !userFCMToken.fcmToken) {
+        console.log(`FCM 토큰이 없는 사용자: ${result.firstUser.name} (ID: ${result.firstUser.userId})`);
+        return; // 토큰이 없으면 알림 전송을 건너뛰고 성공 처리
+      }
+
       const notificationResult = await FCMService.sendAcceptCoffeeChatNotification(
         result.firstUser.userId,    // firstUserId (승낙을 받는 사람 - 커피챗을 제안한 사람)
         secondUserId,               // secondUserId (승낙을 보낸 사람)
