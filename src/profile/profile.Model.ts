@@ -273,7 +273,22 @@ export class ProfileModel {
         }
       }
     });
-    const result = data.map((item) => new ResponseFromThreadMainToClient(item));
+
+    const result = await Promise.all(
+      data.map(async (item) => {
+        const isFollowing = await prisma.follow.findFirst({
+          where: {
+            followerId: userId, // 팔로우 하는 사람
+            followingId: item.userId // 팔로우 당하는 사람 (게시글 작성자)
+          }
+        });
+
+        return new ResponseFromThreadMainToClient({
+          ...item,
+          isFollowing: !!isFollowing
+        });
+      })
+    );
     return result;
   }
 
