@@ -248,6 +248,7 @@ export class ProfileModel {
       create: { userId: userId, info: body as any }
     });
   }
+
   public async selectUserId(userId: number) {
     const data = await prisma.user.findFirst({
       where: { userId: userId },
