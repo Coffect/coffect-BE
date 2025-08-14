@@ -486,6 +486,7 @@ export class HomeModel {
           { secondUserId: userId }
         ],
         valid: true,
+        isDelete : false,
         // 커피챗 일정이 오늘 이후인 경우만 조회 (오늘 포함)
         coffectDate: {
           gte: todayStart
@@ -566,6 +567,7 @@ export class HomeModel {
       where: {
         OR: [{ firstUserId: userId }, { secondUserId: userId }],
         valid: true,
+        isDelete : false, // 삭제된 커피챗 제외
         coffectDate: {
           lt: todayStart // 오늘 이전의 데이터만
         }
@@ -791,7 +793,8 @@ export class HomeModel {
     const result = await prisma.coffeeChat.count({
       where : {
         OR : [{firstUserId : userId}, {secondUserId : userId}],
-        valid : true
+        valid : true,
+        isDelete : false
       }
     });
 
@@ -860,5 +863,15 @@ export class HomeModel {
       result.message || '',
       result.createdAt
     );
+  }
+
+  public async deleteCoffeeChatModel(
+    userId : number,
+    coffectId : number
+  ):Promise<void> {
+    await prisma.coffeeChat.update({
+      where : { coffectId : coffectId },
+      data : { isDelete : true }
+    });
   }
 }

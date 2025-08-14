@@ -207,4 +207,11 @@ export class HomeService {
     const result = await this.homeModel.messageShowUpModel(userId, coffectId);
     return result;
   }
+
+  public async deleteCoffeeChatService(
+    userId : number,
+    coffectId : number
+  ):Promise<void> {
+    await this.homeModel.deleteCoffeeChatModel(userId, coffectId);
+  }
 }
