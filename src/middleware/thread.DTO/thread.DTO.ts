@@ -235,6 +235,7 @@ export const defaultThreadSelect = {
   threadShare: true,
   user: {
     select: {
+      id : true,
       name: true,
       profileImage: true,
       studentId: true,
