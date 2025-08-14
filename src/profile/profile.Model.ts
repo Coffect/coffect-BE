@@ -140,7 +140,6 @@ export class ProfileModel {
   public async selectUserThread(
     userId: number
   ): Promise<ResponseFromThreadMainToClient[]> {
-
     const data: ResponseFromThreadMain[] = await prisma.thread.findMany({
       where: { userId: userId },
       select: defaultThreadSelect
@@ -257,7 +256,22 @@ export class ProfileModel {
     const scrap: [{ threadId: string }] = await prisma.$queryRaw(Prisma.raw(q));
     const data: ResponseFromThreadMain[] = await prisma.thread.findMany({
       where: { threadId: { in: scrap.map((item) => item.threadId) } },
-      select: defaultThreadSelect
+      select: {
+        ...defaultThreadSelect,
+        likes: {
+          where: {
+            userId: userId
+          }
+        },
+        // 현재 로그인한 유저가 이 게시글을 스크랩했는지 확인
+        scraps: {
+          where: {
+            threadScrap: {
+              userId: userId
+            }
+          }
+        }
+      }
     });
     const result = data.map((item) => new ResponseFromThreadMainToClient(item));
     return result;

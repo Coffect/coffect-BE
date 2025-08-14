@@ -33,14 +33,12 @@ export class BodyToLookUpMainThread {
   orderBy: 'createdAt' | 'likeCount';
   dateCursor?: Date;
 
-  constructor(
-    body: {
-      type: Thread_type;
-      threadSubject: number[];
-      dateCursor?: Date;
-      orderBy?: 'createdAt' | 'likeCount';
-    }
-  ) {
+  constructor(body: {
+    type: Thread_type;
+    threadSubject: number[];
+    dateCursor?: Date;
+    orderBy?: 'createdAt' | 'likeCount';
+  }) {
     this.type = body.type;
     this.orderBy = body.orderBy ?? 'createdAt'; // 기본값은 createdAt
     this.threadSubject = body.threadSubject ?? []; // 기본값은 빈 배열
@@ -48,7 +46,7 @@ export class BodyToLookUpMainThread {
   }
 }
 
-export interface BodyToEditThread{
+export interface BodyToEditThread {
   threadId: string;
   threadTitle: string;
   threadBody: string;
@@ -130,7 +128,7 @@ export interface ResponseFromThreadMain {
   subjectMatch: {
     threadSubject: {
       subjectName: string;
-    }
+    };
   }[];
   images: {
     imageId: string;
@@ -174,7 +172,22 @@ export class ResponseFromThreadMainToClient {
   isLiked?: boolean;
 
   constructor(body: ResponseFromThreadMain) {
-    const { threadId, userId, type, threadTitle, thradBody, createdAt, threadShare, user, subjectMatch, images, _count, likes, scraps, isFollowing } = body;
+    const {
+      threadId,
+      userId,
+      type,
+      threadTitle,
+      thradBody,
+      createdAt,
+      threadShare,
+      user,
+      subjectMatch,
+      images,
+      _count,
+      likes,
+      scraps,
+      isFollowing
+    } = body;
 
     this.threadId = threadId;
     this.userId = userId;
@@ -184,8 +197,12 @@ export class ResponseFromThreadMainToClient {
     this.createdAt = createdAt;
     this.threadShare = threadShare;
     this.user = user;
-    this.subjects = subjectMatch.map((subjectMatch => {return subjectMatch.threadSubject.subjectName;}));
-    this.images = images.map((image => {return image.imageId;}));
+    this.subjects = subjectMatch.map((subjectMatch) => {
+      return subjectMatch.threadSubject.subjectName;
+    });
+    this.images = images.map((image) => {
+      return image.imageId;
+    });
     this.commentCount = Number(_count.comments);
     this.likeCount = Number(_count.likes);
     this.isFollowing = isFollowing;
@@ -194,12 +211,12 @@ export class ResponseFromThreadMainToClient {
   }
 }
 
-export interface ResponseFromThreadMainCursor{
+export interface ResponseFromThreadMainCursor {
   thread: ResponseFromThreadMain[];
   nextCursor: number | Date | null;
 }
 
-export interface ResponseFromThreadMainCursorToClient{
+export interface ResponseFromThreadMainCursorToClient {
   thread: ResponseFromThreadMainToClient[];
   nextCursor: number | Date | null;
 }
@@ -226,7 +243,7 @@ export interface ResponseFromGetComment {
     name: string;
     profileImage: string;
     studentId: number | null;
-  }
+  };
 }
 
 export const defaultThreadSelect = {
@@ -239,7 +256,7 @@ export const defaultThreadSelect = {
   threadShare: true,
   user: {
     select: {
-      id : true,
+      id: true,
       name: true,
       profileImage: true,
       studentId: true,
