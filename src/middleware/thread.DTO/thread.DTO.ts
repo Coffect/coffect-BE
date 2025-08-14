@@ -121,6 +121,7 @@ export interface ResponseFromThreadMain {
   createdAt: Date;
   threadShare: number;
   user: {
+    id: string;
     name: string;
     profileImage: string;
     studentId: number | null;
@@ -158,6 +159,7 @@ export class ResponseFromThreadMainToClient {
   createdAt: Date;
   threadShare: number;
   user: {
+    id: string;
     name: string;
     profileImage: string;
     studentId: number | null;

@@ -464,7 +464,7 @@ export class ThreadController extends Controller {
 
     const result = await this.ThreadService.threadScrapService(threadId, req.user.index);
 
-    return new TsoaSuccessResponse<string>(`게시글 ${threadId} 스크랩 성공`);
+    return new TsoaSuccessResponse<string>(result);
   }
 
   /**
