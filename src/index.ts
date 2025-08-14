@@ -38,6 +38,7 @@ const io = new Server<
   InterServerEvents,
   SocketData
 >(httpServer, {
+  transports: ['websocket'],
   cors: {
     origin: ['https://admin.socket.io', '*'], //추후 클라이언트 주소 허용
     credentials: true
