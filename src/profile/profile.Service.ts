@@ -152,12 +152,14 @@ export class ProfileService {
 
     return result;
   }
+
   public async getScrap(
     userId: number
   ): Promise<ResponseFromThreadMainToClient[]> {
     const data = await this.profileModel.selectScrap(userId);
     return data;
   }
+
   public async search(id: string): Promise<SearchUserDTO[]> {
     if (id.trim() === '') {
       return [];

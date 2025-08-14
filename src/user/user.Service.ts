@@ -106,15 +106,16 @@ export class UserService {
     }
   }
 
-  //TODO: 로그아웃 시 FCM 알림기능도 삭제 필요
   public async logoutService(userId: number): Promise<void> {
     await this.userModel.deleteRefreshToken(userId);
-    await this.userModel.deleteUserFCMToken(userId);
+    //유저가 FCM 허용을 안할수도 있응게
+    const fcmToken = await this.userModel.selectUserFCMToken(userId);
+    if (fcmToken) {
+      await this.userModel.deleteUserFCMToken(userId);
+    }
   }
 
-  public async userDeleteService(
-    userId: number
-  ): Promise<void> {
+  public async userDeleteService(userId: number): Promise<void> {
     await this.userModel.deleteUser(userId);
   }
 }
