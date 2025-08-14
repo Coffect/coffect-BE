@@ -142,9 +142,38 @@ export class ProfileModel {
   ): Promise<ResponseFromThreadMainToClient[]> {
     const data: ResponseFromThreadMain[] = await prisma.thread.findMany({
       where: { userId: userId },
-      select: defaultThreadSelect
+      select: {
+        ...defaultThreadSelect,
+        likes: {
+          where: {
+            userId: userId
+          }
+        },
+        // 현재 로그인한 유저가 이 게시글을 스크랩했는지 확인
+        scraps: {
+          where: {
+            threadScrap: {
+              userId: userId
+            }
+          }
+        }
+      }
     });
-    const result = data.map((item) => new ResponseFromThreadMainToClient(item));
+    const result = await Promise.all(
+      data.map(async (item) => {
+        const isFollowing = await prisma.follow.findFirst({
+          where: {
+            followerId: userId, // 팔로우 하는 사람
+            followingId: item.userId // 팔로우 당하는 사람 (게시글 작성자)
+          }
+        });
+
+        return new ResponseFromThreadMainToClient({
+          ...item,
+          isFollowing: !!isFollowing
+        });
+      })
+    );
     return result;
   }
 
