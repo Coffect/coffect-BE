@@ -1,6 +1,8 @@
+import { Prisma } from '@prisma/client';
 import { CustomJwt } from '../../@types/jwt';
 import { KSTtime } from '../config/KSTtime';
 import { prisma } from '../config/prisma.config';
+import { DetailProfileBody } from '../middleware/detailProfile.DTO/detailProfile.DTO';
 import { UserSignUpRequest } from '../middleware/user.DTO/user.DTO';
 
 export class UserModel {
@@ -51,6 +53,29 @@ export class UserModel {
   }
 
   public async insertUser(info: UserSignUpRequest) {
+    const defaultInfo: DetailProfileBody[] = [
+      {
+        answer: '',
+        isMain: false,
+        question: 'Q. 어떤 분야에서 성장하고 싶나요?'
+      },
+      {
+        answer: '',
+        isMain: false,
+        question: 'Q. 커피챗에서 나누고 싶은 이야기는?'
+      },
+      {
+        answer: '',
+        isMain: false,
+        question: 'Q. 새롭게 배워보고 싶은 분야는?'
+      },
+      {
+        answer: '',
+        isMain: false,
+        question: 'Q. 요즘 내가 가장 열중하고 있는 것은?'
+      }
+    ];
+
     const createdUser = await prisma.user.create({
       data: {
         id: info.id,
@@ -74,13 +99,17 @@ export class UserModel {
       }
     }
     await prisma.specifyInfo.create({
-      data: { userId: createdUser.userId, info: [] }
+      data: {
+        userId: createdUser.userId,
+        info: defaultInfo as unknown as Prisma.JsonArray
+      }
     });
 
     await prisma.userTimetable.create({
       data: {
         userId: createdUser.userId,
-        timetable: '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        timetable:
+          '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
       }
     });
   }

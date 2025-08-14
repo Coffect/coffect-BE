@@ -329,7 +329,7 @@ export class FCMService {
         firstUserId : firstUserId.toString(), // 받는 사람
         coffectId : coffectId.toString(),
         firstUserName : firstUserName
-      }
+      };
 
       const fcmSuccess = await this.sendNotificationToUser(secondUserId, title, body, data);
 
