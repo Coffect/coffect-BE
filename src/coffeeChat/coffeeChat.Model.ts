@@ -776,10 +776,11 @@ export class HomeModel {
       throw new Error(`CoffeeChat with id ${coffectId} not found for user ${userId}`);
     }
 
+    // 수정된 쿼리 - coffectId와 userId를 모두 조건으로 사용
     await prisma.coffeeChat.update({
       where : {
-        OR : [{firstUserId : userId}, {secondUserId : userId}],
-        coffectId : coffectId
+        coffectId : coffectId,
+        OR : [{firstUserId : userId}, {secondUserId : userId}]
       },
       data : {
         valid : true
