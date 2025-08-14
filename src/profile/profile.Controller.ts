@@ -445,7 +445,7 @@ export class ProfileController extends Controller {
    * @summary 커피챗 여부 조회
    * @param otherUserId 상대방 userId
    */
-  @Post('/isCoffeeChat')
+  @Get('/isCoffeeChat')
   @Security('jwt_token')
   @SuccessResponse(200, '커피챗 조회 성공')
   public async isCoffeeChat(
