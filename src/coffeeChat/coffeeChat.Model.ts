@@ -474,6 +474,10 @@ export class HomeModel {
     // 오늘 날짜의 시작 시간 (00:00:00)
     const todayStart = new Date(currentDate);
     todayStart.setHours(0, 0, 0, 0);
+    
+    // 내일 자정 (오늘은 제외, 내일 이후만 조회)
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
 
     console.log('GetCoffeeChatScheduleModel - userId:', userId);
     console.log('GetCoffeeChatScheduleModel - currentDate:', currentDate);
@@ -487,9 +491,9 @@ export class HomeModel {
         ],
         valid: true,
         isDelete : false,
-        // 커피챗 일정이 오늘 이후인 경우만 조회 (오늘 포함)
+        // 커피챗 일정이 내일 이후인 경우만 조회 (오늘 제외)
         coffectDate: {
-          gte: todayStart
+          gte: tomorrowStart
         }
       },
       include: {
