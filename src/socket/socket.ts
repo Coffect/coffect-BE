@@ -103,7 +103,7 @@ export default function initSocket(
           sender: userId,
           senderName: userName,
           message: message,
-          timestamp: new Date().toISOString(),
+          timestamp: new KSTtime().toISOString(),
           isPhoto: true
         });
       } catch (err: any) {
