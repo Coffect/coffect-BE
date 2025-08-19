@@ -350,8 +350,16 @@ export class ThreadModel {
       }
     });
 
+    // orderedThreadIds의 순서에 맞게 threads 배열을 재정렬합니다.
+    const sortedThreads = orderedThreadIds
+      .map(threadId => thread.find(thread => thread.threadId === threadId))
+      .filter(Boolean); // find가 undefined를 반환하는 경우(데이터 불일치 등)를 안전하게 제외합니다.
+
     const threadsWithFollowingStatus = await Promise.all(
-      thread.map(async (t) => {
+      sortedThreads.map(async (t) => {
+        if(t === undefined){
+          throw new Error('t가 undefined입니다.');
+        }
         const isFollowing = await prisma.follow.findFirst({
           where: {
             followerId: viewerId,
@@ -556,7 +564,11 @@ export class ThreadModel {
     // }
 
     const threadsWithFollowingStatus = await Promise.all(
-      thread.map(async (t) => {
+      sortedThreads.map(async (t) => {
+        if(t === undefined){
+          throw new Error('t가 undefined입니다.');
+        }
+
         const isFollowing = await prisma.follow.findFirst({
           where: {
             followerId: viewerId,
