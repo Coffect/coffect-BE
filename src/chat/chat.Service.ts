@@ -16,6 +16,12 @@ export class ChatService {
   ): Promise<{ chatRoomId: string }> {
     const usersRooms = await this.chatModel.getChatRoom(myId);
 
+    if(myId > otherId){
+      const temp = myId;
+      myId = otherId;
+      otherId = temp;
+    }
+
     const chatRoomId = await pbkdf2Promise(
       // 유저 아이디를 조합해 난수 chatRoomId 생성
       myId.toString(),
