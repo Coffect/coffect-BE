@@ -322,13 +322,18 @@ export class FCMService {
     coffectId : number
   ):Promise<boolean> {
     try {
+      const secondUserName = await prisma.user.findFirstOrThrow ({
+        where : {userId : secondUserId},
+        select : { name : true }
+      })
+
       const title = '커피챗 수락';
       const body = '커피챗 수락이 도착했어요!';
       const data = {
         type : 'accept_coffee_chat',
         firstUserId : firstUserId.toString(), // 받는 사람
         coffectId : coffectId.toString(),
-        firstUserName : firstUserName
+        firstUserName : secondUserName.name
       };
 
       const fcmSuccess = await this.sendNotificationToUser(firstUserId, title, body, data);

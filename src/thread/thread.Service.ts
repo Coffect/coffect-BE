@@ -79,9 +79,17 @@ export class ThreadService {
     body: BodyToLookUpMainThread,
     userId: number
   ): Promise<ResponseFromThreadMainCursorToClient> => {
-    let results: ResponseFromThreadMainCursor;
+    let results: ResponseFromThreadMainCursor | null;
 
-    results = await this.ThreadModel.lookUpThreadMainRepository(body, userId);
+    if(body.orderBy === 'createdAt'){
+      results = await this.ThreadModel.lookUpThreadMainRepository(body, userId);  
+    }else{
+      results = await this.ThreadModel.lookUpThreadMainByLikesRepository(body, userId);
+      
+      if(results === null){
+        return {thread: [], nextCursor: null};
+      }
+    }
 
     const thread: ResponseFromThreadMainToClient[] = results.thread.map(
       (thread: any) => {
@@ -118,6 +126,25 @@ export class ThreadService {
     // if (!results || results.thread.length === 0) {
     //   throw new ThreadNotFoundError('최신 게시글이 없습니다.');
     // }
+
+    return { thread, nextCursor: results.nextCursor };
+  };
+
+  public lookUpLikesThreadService = async (
+    userId: number
+  ): Promise<ResponseFromThreadMainCursorToClient> => {
+    const results: ResponseFromThreadMainCursor | null =
+    await this.ThreadModel.threadByLikesRepository(userId);
+
+    if(results === null){
+      return {thread: [], nextCursor: null};
+    }
+
+    const thread: ResponseFromThreadMainToClient[] = results.thread.map(
+      (thread: any) => {
+        return new ResponseFromThreadMainToClient(thread);
+      }
+    );
 
     return { thread, nextCursor: results.nextCursor };
   };

@@ -446,6 +446,19 @@ export class HomeModel {
   ):Promise<number> {
     const currentDate = KSTtime();
 
+    const alreadyExsist = await prisma.coffeeChat.findFirst({
+      where: {
+        OR: [
+          { firstUserId: myUserId, secondUserId: otherUserId },
+          { firstUserId: otherUserId, secondUserId: myUserId }
+        ]
+      }
+    });
+
+    if(alreadyExsist) {
+      throw new Error(`이미 존재하는 coffeeChat 제안입니다.`);
+    }
+
     const coffeeChat = await prisma.coffeeChat.create({
       data: {
         firstUserId: myUserId,   
