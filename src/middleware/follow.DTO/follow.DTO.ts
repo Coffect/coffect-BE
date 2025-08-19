@@ -25,3 +25,23 @@ export class specifyProfileDTO {
     this.profileImage = profileImage;
   }
 }
+
+export class followerListup {
+  userId: number;
+  id: string;
+  name: string;
+  profileImage: string;
+  studentId: string;
+  dept: string;
+  idCursor: number | null | undefined;
+
+  constructor(userId: number, id: string, name: string, profileImage: string, studentId: string, dept: string, idCursor: number | null | undefined) {
+    this.userId = userId;
+    this.id = id;
+    this.name = name;
+    this.profileImage = profileImage;
+    this.studentId = studentId;
+    this.dept = dept;
+    this.idCursor = idCursor;
+  }
+}

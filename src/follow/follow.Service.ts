@@ -1,4 +1,4 @@
-import { specifyFeedDTO, specifyProfileDTO } from '../middleware/follow.DTO/follow.DTO';
+import { followerListup, specifyFeedDTO, specifyProfileDTO } from '../middleware/follow.DTO/follow.DTO';
 import { FollowModel, specifyProfileModel } from './follow.Model';
 
 export class FollowService {
@@ -32,6 +32,24 @@ export class FollowService {
 
     return result;
   }
+
+  public async listUpFollowerService(
+    oppentUserId : number,
+    idCursor?: number
+  ):Promise<followerListup[]> {
+    const result = await this.FollowModel.listUpFollowerModel(oppentUserId, idCursor);
+
+    return result;
+  };
+
+  public async listUpFollowingService(
+    oppentUserId : number,
+    idCursor?: number
+  ):Promise<followerListup[]> {
+    const result = await this.FollowModel.listUpFollowingModel(oppentUserId, idCursor);
+
+    return result;
+  };
 };
 
 export class specifyProfileService {
