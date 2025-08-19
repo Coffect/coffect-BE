@@ -1,4 +1,8 @@
-import { ChatDataDTO, ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
+import {
+  ChatDataDTO,
+  ChatRoomInfoDTO,
+  ChatRoomsDTO
+} from '../middleware/chat.DTO/chat.DTO';
 import { ChatModel } from './chat.Model';
 import { pbkdf2Promise } from '../config/crypto';
 import { ChatRoomAlreadyExists, ChatRoomNotFound } from './chat.Message';
@@ -16,7 +20,7 @@ export class ChatService {
   ): Promise<{ chatRoomId: string }> {
     const usersRooms = await this.chatModel.getChatRoom(myId);
 
-    if(myId > otherId){
+    if (myId > otherId) {
       const temp = myId;
       myId = otherId;
       otherId = temp;
@@ -30,7 +34,7 @@ export class ChatService {
       32,
       'sha512'
     ).then((result) => result.toString('base64'));
-    
+
     if (usersRooms.some((room) => room.chatroomId === chatRoomId)) {
       // 이미 존재하는 채팅방이라면 예외 발생
       throw new ChatRoomAlreadyExists(chatRoomId);
@@ -43,9 +47,29 @@ export class ChatService {
     return { chatRoomId };
   }
 
-  public async getChatRoom(userId: number): Promise<ChatRoomsDTO[]> {
+  public async getChatRoom(userId: number): Promise<ChatRoomInfoDTO[]> {
     const result = await this.chatModel.getChatRoom(userId);
-    return result;
+    const resultInfo: ChatRoomInfoDTO[] = [];
+    for (const rooms of result) {
+      const room: ChatRoomInfoDTO = {
+        chatroomId: rooms.chatroomId,
+        userId: rooms.userId,
+        check: rooms.check,
+        lastMessage: null,
+        lastMeesageTime: null
+      };
+
+      const lastMessage = await this.chatModel.getLastMessageByChatRoomId(
+        rooms.chatroomId
+      );
+      if (lastMessage) {
+        room.lastMessage = lastMessage.messageBody;
+        room.lastMeesageTime = lastMessage.createdAt;
+      }
+      resultInfo.push(room);
+    }
+
+    return resultInfo;
   }
 
   public async sendMessage(
@@ -70,7 +94,7 @@ export class ChatService {
   public async getChatRoomInfo(chatRoomId: string): Promise<ChatDataDTO[]> {
     // 채팅방에 존재하는 메시지들을 배열로 조회
     const result = await this.chatModel.getChatRoomInfo(chatRoomId);
-    if(!result) {
+    if (!result) {
       throw new ChatRoomNotFound(chatRoomId);
     }
     return result;
@@ -89,17 +113,15 @@ export class ChatService {
     return '채팅 읽기 성공';
   }
 
-  public async uploadPhoto(
-    image: Express.Multer.File
-  ): Promise<string> {
+  public async uploadPhoto(image: Express.Multer.File): Promise<string> {
     const imageUrl = await this.chatModel.uploadPhoto(image);
 
-    if(!imageUrl) {
+    if (!imageUrl) {
       throw new MulterUploadError('사진을 올리는 중 오류가 발생했습니다');
     }
 
     return imageUrl;
-  };
+  }
 
   public async sendPhoto(
     userId: number,
@@ -112,10 +134,16 @@ export class ChatService {
     await this.chatModel.updateLastSendMessage(result);
 
     return result;
-  };
+  }
 
-  public async getCoffectIdToSuggest(userId: number, chatRoomId: string): Promise<number> {
-    const result = await this.chatModel.getCoffectIdToSuggest(userId, chatRoomId);
+  public async getCoffectIdToSuggest(
+    userId: number,
+    chatRoomId: string
+  ): Promise<number> {
+    const result = await this.chatModel.getCoffectIdToSuggest(
+      userId,
+      chatRoomId
+    );
     return result;
   }
 }

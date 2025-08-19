@@ -167,7 +167,7 @@ export class UnivController extends Controller {
   public async domain(
     @Body() body: UnivDomainBody
   ): Promise<ITsoaSuccessResponse<string>> {
-    await this.univService.domainService(body.email);
+    await this.univService.domainService(body.email, body.univ);
     return new TsoaSuccessResponse('정상적인 도메인입니다.');
   }
 }

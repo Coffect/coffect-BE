@@ -456,7 +456,7 @@ export class HomeModel {
     });
 
     if(alreadyExsist) {
-      throw new Error(`이미 존재하는 coffeeChat 제안입니다.`);
+      throw new Error('이미 존재하는 coffeeChat 제안입니다.');
     }
 
     const coffeeChat = await prisma.coffeeChat.create({

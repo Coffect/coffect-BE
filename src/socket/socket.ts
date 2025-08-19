@@ -10,6 +10,7 @@ import {
 } from '../middleware/socket.DTO/socket.DTO';
 import verifySocket from '../middleware/verifySocket';
 import { SocketConnectionError } from './socket.message';
+import { KSTtime } from '../config/KSTtime';
 
 export default function initSocket(
   io: Server<
@@ -40,12 +41,13 @@ export default function initSocket(
     console.log(
       `==============\nsocket.io established\nuserId: ${userId}\nuserName: ${userName}`
     );
-    
+
     try {
       await socketService.joinRoom(socket);
     } catch (err: any) {
       console.error('소켓 룸 참가 오류:', err);
-      const errorMessage = err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
+      const errorMessage =
+        err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다.';
       socket.emit('errorAck', {
         error: 'EC500',
         message: '소켓 연결 중 오류가 발생했습니다.',
@@ -59,32 +61,33 @@ export default function initSocket(
       try {
         // MongoDB 연결 상태 확인
         await chatService.sendMessage(userId, chatRoomId, message);
-        
+
         // 메시지 전송 성공 시 브로드캐스트
         io.to(chatRoomId).emit('receive', {
           sender: userId,
           senderName: userName,
           message: message,
-          timestamp: new Date().toISOString()
+          timestamp: KSTtime().toISOString()
         });
       } catch (err: any) {
         console.error('메시지 전송 오류:', err);
-        
+
         // MongoDB 연결 오류인지 확인
-        const isMongoError = err.code === 'P2010' || 
-                           err.message?.includes('Connection refused') ||
-                           err.message?.includes('Transactions are not supported');
-        
-        const errorMessage = isMongoError 
+        const isMongoError =
+          err.code === 'P2010' ||
+          err.message?.includes('Connection refused') ||
+          err.message?.includes('Transactions are not supported');
+
+        const errorMessage = isMongoError
           ? '데이터베이스 연결 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
           : '메시지 전송 중 오류가 발생했습니다.';
-        
+
         socket.emit('errorAck', {
           error: 'EC500',
           message: errorMessage,
           description: err.message || '알 수 없는 오류'
         });
-        
+
         // MongoDB 연결 오류가 아닌 경우에만 연결 해제
         if (!isMongoError) {
           socket.disconnect();
@@ -114,7 +117,7 @@ export default function initSocket(
       console.log(`사용자 ${userName} (${userId}) 연결 해제: ${reason}`);
     });
   });
-  
+
   io.engine.on('connection_error', (err) => {
     console.error('Socket.io 엔진 연결 오류:', {
       req: err.req,

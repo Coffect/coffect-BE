@@ -4,6 +4,7 @@ import { KSTtime } from '../config/KSTtime';
 import { prisma } from '../config/prisma.config';
 import { DetailProfileBody } from '../middleware/detailProfile.DTO/detailProfile.DTO';
 import { UserSignUpRequest } from '../middleware/user.DTO/user.DTO';
+import { UserServerError } from './user.Message';
 
 export class UserModel {
   public async selectUserInfo(id: string) {
@@ -76,42 +77,55 @@ export class UserModel {
       }
     ];
 
-    const createdUser = await prisma.user.create({
-      data: {
-        id: info.id,
-        password: info.hashed,
-        mail: info.email,
-        name: info.name,
-        salt: info.salt,
-        profileImage: info.profile,
-        univId: info.univId,
-        dept: info.dept,
-        studentId: info.studentId,
-        createdAt: KSTtime()
-      }
-    });
-    if (info.interest.length !== 0) {
-      const userId = createdUser.userId;
-      for (const index of info.interest) {
-        await prisma.categoryMatch.create({
-          data: { userId: userId, categotyId: index }
+    await prisma
+      .$transaction(async (tx) => {
+        // 1. User 생성
+        const createdUser = await tx.user.create({
+          data: {
+            id: info.id,
+            password: info.hashed,
+            mail: info.email,
+            name: info.name,
+            salt: info.salt,
+            profileImage: info.profile,
+            univId: info.univId,
+            dept: info.dept,
+            studentId: info.studentId,
+            createdAt: KSTtime()
+          }
         });
-      }
-    }
-    await prisma.specifyInfo.create({
-      data: {
-        userId: createdUser.userId,
-        info: defaultInfo as unknown as Prisma.JsonArray
-      }
-    });
 
-    await prisma.userTimetable.create({
-      data: {
-        userId: createdUser.userId,
-        timetable:
-          '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
-      }
-    });
+        // 2. 관심사 카테고리 매칭 생성
+        if (info.interest.length !== 0) {
+          const userId = createdUser.userId;
+          for (const index of info.interest) {
+            await tx.categoryMatch.create({
+              data: { userId: userId, categotyId: index }
+            });
+          }
+        }
+
+        // 3. 상세 정보 생성
+        await tx.specifyInfo.create({
+          data: {
+            userId: createdUser.userId,
+            info: defaultInfo as unknown as Prisma.JsonArray
+          }
+        });
+
+        // 4. 시간표 생성
+        await tx.userTimetable.create({
+          data: {
+            userId: createdUser.userId,
+            timetable:
+              '0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000'
+          }
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        throw new UserServerError('데이터베이스 삽입에 실패했습니다.');
+      });
   }
   public async deleteRefreshToken(userId: number) {
     await prisma.refeshToken.delete({

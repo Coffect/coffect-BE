@@ -60,4 +60,12 @@ export class UnivModel {
     }
     return result[0];
   }
+
+  public async searchUniv(univ: string): Promise<string | null> {
+    const result = await prisma.univList.findFirst({
+      where: { name: univ },
+      select: { domain: true }
+    });
+    return result?.domain ?? null;
+  }
 }
