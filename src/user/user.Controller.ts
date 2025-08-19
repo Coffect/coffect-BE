@@ -264,7 +264,7 @@ export class UserController extends Controller {
   ): Promise<ITsoaSuccessResponse<string>> {
     const userId = req.user.index;
     await this.userService.userDeleteService(userId);
-    
+
     return new TsoaSuccessResponse('회원탈퇴 성공');
   }
 }
