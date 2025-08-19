@@ -20,6 +20,7 @@ import { Request as ExpressRequest } from 'express';
 import { followMySelf, nonProfile, nonUser } from './follow.Message';
 import { FollowService, specifyProfileService } from './follow.Service';
 import {
+  followerListup,
   specifyFeedDTO,
   specifyProfileDTO
 } from '../middleware/follow.DTO/follow.DTO';
@@ -193,6 +194,101 @@ export class FollowController extends Controller {
     );
 
     return new TsoaSuccessResponse<boolean>(result);
+  }
+
+  /**
+   * Coffect coffeeChat show Follower API.
+   *
+   * @summary 해당 userId에 해당하는 follower 목록 조회
+   * @param body 유저 Token & 상대방 UserId
+   * @returns 요청 성공 여부
+   */
+  @Get('listUpFollower')
+  @Security('jwt_token')
+  @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
+  @Response<ITsoaErrorResponse>(400, 'Bad Request', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'FE400',
+      reason: '상대방 UserId가 존재하지 않거나 누락되었습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(500, 'Internal Server Error', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE500',
+      reason: '서버 오류가 발생했습니다.',
+      data: null
+    },
+    success: null
+  })
+  public async listUpFollower(
+    @Request() req: ExpressRequest,
+    @Query() oppentUserId: number,
+    @Query() idCursor?: number
+  ): Promise<TsoaSuccessResponse<followerListup[]>> {
+    const userId = req.user.index;
+
+    if (oppentUserId == undefined || !oppentUserId) {
+      throw new nonUser('상대방 UserId가 존재하지 않거나 누락되었습니다.');
+    }
+
+    const result = await this.FollowService.listUpFollowerService(
+      oppentUserId,
+      idCursor
+    );
+
+    return new TsoaSuccessResponse<followerListup[]>(result);
+  }
+
+
+  /**
+   * Coffect coffeeChat show Following API.
+   *
+   * @summary 해당 userId에 해당하는 following 목록 조회
+   * @param body 유저 Token & 상대방 UserId
+   * @returns 요청 성공 여부
+   */
+  @Get('listUpFollowing')
+  @Security('jwt_token')
+  @SuccessResponse('200', '성공적으로 Data를 넣었습니다.')
+  @Response<ITsoaErrorResponse>(400, 'Bad Request', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'FE400',
+      reason: '상대방 UserId가 존재하지 않거나 누락되었습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(500, 'Internal Server Error', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE500',
+      reason: '서버 오류가 발생했습니다.',
+      data: null
+    },
+    success: null
+  })
+  public async listUpFollowing(
+    @Request() req: ExpressRequest,
+    @Query() oppentUserId: number,
+    @Query() idCursor?: number
+  ): Promise<TsoaSuccessResponse<followerListup[]>> {
+    const userId = req.user.index;
+
+    if (oppentUserId == undefined || !oppentUserId) {
+      throw new nonUser('상대방 UserId가 존재하지 않거나 누락되었습니다.');
+    }
+
+    const result = await this.FollowService.listUpFollowingService(
+      oppentUserId,
+      idCursor
+    );
+
+    return new TsoaSuccessResponse<followerListup[]>(result);
   }
 }
 

@@ -1,5 +1,5 @@
 import { prisma } from '../config/prisma.config';
-import { specifyFeedDTO, specifyProfileDTO } from '../middleware/follow.DTO/follow.DTO';
+import { followerListup, specifyFeedDTO, specifyProfileDTO } from '../middleware/follow.DTO/follow.DTO';
 import { notExsistUser } from './follow.Message';
 
 // 시간 차이를 계산하는 유틸리티 함수
@@ -112,7 +112,152 @@ export class FollowModel {
     return true;
   };
 
+  public async listUpFollowerModel (
+    oppentUserId : number,
+    idCursor? : number
+  ):Promise<followerListup[]> {
+    const limit = 15;
+
+    let result;
+
+    if(!idCursor) {
+      result = await prisma.follow.findMany({
+        take: limit,
+        where : { followerId : oppentUserId },
+        include : {
+          User_Follow_followingIdToUser : {
+            select : {
+              userId : true,
+              id : true,
+              name : true,
+              profileImage : true,
+              studentId : true,
+              dept : true
+            }
+          }
+        }
+      });
+
+    } else {
+      result = await prisma.follow.findMany({
+        take: limit,
+        where : { 
+          followerId : oppentUserId,
+          User_Follow_followingIdToUser: {
+            userId: {
+              gt: idCursor
+            }
+          }
+        },
+        include : {
+          User_Follow_followingIdToUser : {
+            select : {
+              userId : true,
+              id : true,
+              name : true,
+              profileImage : true,
+              studentId : true,
+              dept : true
+            }
+          }
+        }
+      });
+    }
+
+    if(result.length === 0) {
+      return [];
+    }
+
+    const lastResult = result[result.length-1];
+    const nextCursor = result.length === limit ? lastResult.User_Follow_followingIdToUser.userId : undefined;
+
+    return result.map((item) => {
+      return new followerListup(
+        item.User_Follow_followingIdToUser.userId, 
+        item.User_Follow_followingIdToUser.id, 
+        item.User_Follow_followingIdToUser.name, 
+        item.User_Follow_followingIdToUser.profileImage, 
+        item.User_Follow_followingIdToUser.studentId?.toString() || '', 
+        item.User_Follow_followingIdToUser.dept || '',
+        nextCursor
+      );
+    });
+  };
+
+
+  public async listUpFollowingModel (
+    oppentUserId : number,
+    idCursor? : number
+  ):Promise<followerListup[]> {
+    const limit = 15;
+
+    let result;
+
+    if(!idCursor) {
+      result = await prisma.follow.findMany({
+        take: limit,
+        where : { followingId : oppentUserId },
+        include : {
+          User_Follow_followerIdToUser : {
+            select : {
+              userId : true,
+              id : true,
+              name : true,
+              profileImage : true,
+              studentId : true,
+              dept : true
+            }
+          }
+        }
+      });
+
+    } else {
+      result = await prisma.follow.findMany({
+        take: limit,
+        where : { 
+          followingId : oppentUserId,
+          User_Follow_followerIdToUser: {
+            userId: {
+              gt: idCursor
+            }
+          }
+        },
+        include : {
+          User_Follow_followerIdToUser : {
+            select : {
+              userId : true,
+              id : true,
+              name : true,
+              profileImage : true,
+              studentId : true,
+              dept : true
+            }
+          }
+        }
+      });
+    }
+
+    if(result.length === 0) {
+      return [];
+    }
+
+    const lastResult = result[result.length-1];
+    const nextCursor = result.length === limit ? lastResult.User_Follow_followerIdToUser.userId : undefined;
+
+    return result.map((item) => {
+      return new followerListup(
+        item.User_Follow_followerIdToUser.userId, 
+        item.User_Follow_followerIdToUser.id, 
+        item.User_Follow_followerIdToUser.name, 
+        item.User_Follow_followerIdToUser.profileImage, 
+        item.User_Follow_followerIdToUser.studentId?.toString() || '', 
+        item.User_Follow_followerIdToUser.dept || '',
+        nextCursor
+      );
+    });
+  };
 };
+
 
 export class specifyProfileModel {
 
