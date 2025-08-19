@@ -247,7 +247,7 @@ export class ThreadController extends Controller {
       type: Thread_type;
       threadSubject: number[];
       orderBy: 'createdAt' | 'likeCount';
-      dateCursor?: Date;
+      dateCursor?: Date
     }
   ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursorToClient>> {
     if(body.orderBy !== 'createdAt' && body.orderBy !== 'likeCount') {
@@ -273,6 +273,22 @@ export class ThreadController extends Controller {
     @Query() dateCursor?: Date
   ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursorToClient>>{
     const result = await this.ThreadService.lookUpLatestThreadMainService(req.user.index, dateCursor);
+
+    return new TsoaSuccessResponse<ResponseFromThreadMainCursorToClient>(result);
+  }
+
+  /**
+   * 게시글 좋아요순조회 API
+   * @summary 게시글 좋아요순조회
+   * @returns 게시글 목록
+   */
+  @Get('likes')
+  @Security('jwt_token')
+  @SuccessResponse('200', '게시글 좋아요순조회 성공')
+  public async getLikes(
+    @Request() req: ExpressRequest
+  ): Promise<ITsoaSuccessResponse<ResponseFromThreadMainCursorToClient>>{
+    const result = await this.ThreadService.lookUpLikesThreadService(req.user.index);
 
     return new TsoaSuccessResponse<ResponseFromThreadMainCursorToClient>(result);
   }

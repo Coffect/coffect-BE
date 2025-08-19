@@ -263,6 +263,114 @@ export class ThreadModel {
     return {thread: threadsWithFollowingStatus, nextCursor};
   };
 
+  public lookUpThreadMainByLikesRepository = async (
+    body: BodyToLookUpMainThread,
+    viewerId: number
+  ): Promise<ResponseFromThreadMainCursor | null> => {
+    const { type, threadSubject} = body;
+
+    const limit = 20;
+    const today: Date = new Date();
+    const yesterdayStart = new Date(today);
+    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+    yesterdayStart.setHours(7, 0, 0, 0); // 어제 오전 7시
+
+    const yesterdayEnd = new Date(today);
+    yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+    yesterdayEnd.setHours(23, 0, 0, 0); // 어제 오후 11시
+
+    let thread;
+
+    // --- 1단계: 어제 날짜 범위 내에서 좋아요가 많은 순서대로 threadId 가져오기 ---
+    const popularThreadsByLikes = await prisma.threadLike.groupBy({
+      // threadId를 기준으로 그룹화합니다.
+      by: ['threadId'],
+      // 어제 생성된 좋아요만 대상으로 합니다.
+      where: {
+        createdAt: {
+          gte: yesterdayStart,
+          lte: yesterdayEnd
+        }
+      },
+      // 각 threadId별로 좋아요 수를 셉니다.
+      _count: {
+        threadId: true
+      },
+      // 위에서 센 좋아요 수를 기준으로 내림차순 정렬합니다.
+      orderBy: {
+        _count: {
+          threadId: 'desc'
+        }
+      },
+      // 지정된 limit만큼 가져옵니다.
+      take: limit
+    });
+
+    // --- 2단계: 정렬된 threadId 목록을 사용하여 실제 게시글 데이터 가져오기 ---
+
+    // 1단계 결과에서 정렬된 threadId 목록만 추출합니다.
+    const orderedThreadIds = popularThreadsByLikes.map((item) => item.threadId);
+
+    // 만약 어제 좋아요를 받은 게시글이 없다면 빈 배열을 반환하고 종료합니다.
+    if (orderedThreadIds.length === 0) {
+      // 실제 API 응답 형식에 맞게 빈 배열 등을 반환해주세요.
+      return null;
+    }
+
+    thread = await prisma.thread.findMany({
+      take: limit,
+      where: {
+        AND: [
+          {type: type},
+          {subjectMatch: {
+            some: {
+              subjectId: {
+                in: threadSubject
+              }
+            }
+          }}
+        ]
+      },
+      select: {
+        ...defaultThreadSelect,
+        // 현재 로그인한 유저가 이 게시글을 좋아하는지 확인
+        likes: {
+          where: {
+            userId: viewerId
+          }
+        },
+        // 현재 로그인한 유저가 이 게시글을 스크랩했는지 확인
+        scraps: {
+          where: {
+            threadScrap: {
+              userId: viewerId
+            }
+          }
+        }
+      }
+    });
+
+    const threadsWithFollowingStatus = await Promise.all(
+      thread.map(async (t) => {
+        const isFollowing = await prisma.follow.findFirst({
+          where: {
+            followerId: viewerId,
+            followingId: t.userId
+          }
+        });
+        return { ...t, isFollowing: !!isFollowing };
+      })
+    );
+
+    const lastThread = threadsWithFollowingStatus[threadsWithFollowingStatus.length - 1];
+    let nextCursor: Date | null = lastThread ? lastThread.createdAt : null;
+    if(threadsWithFollowingStatus.length < limit) {
+      nextCursor = null;
+    }
+
+    return {thread: threadsWithFollowingStatus, nextCursor};
+  };
+
   public lookUpLatestThreadMainRepository = async (
     viewerId: number,
     dateCursor?: Date
@@ -324,6 +432,124 @@ export class ThreadModel {
         }
       });
     }
+
+    // if(thread.length === 0) {
+    //   throw new ThreadNotFoundError('최신 게시글이 없습니다.');
+    // }
+
+    const threadsWithFollowingStatus = await Promise.all(
+      thread.map(async (t) => {
+        const isFollowing = await prisma.follow.findFirst({
+          where: {
+            followerId: viewerId,
+            followingId: t.userId
+          }
+        });
+        return { ...t, isFollowing: !!isFollowing };
+      })
+    );
+
+    const lastThread = threadsWithFollowingStatus[threadsWithFollowingStatus.length - 1];
+    let nextCursor: Date | null = lastThread ? lastThread.createdAt : null;
+    if(threadsWithFollowingStatus.length < limit) {
+      nextCursor = null;
+    }
+
+    return {thread: threadsWithFollowingStatus, nextCursor};
+  };
+
+  public threadByLikesRepository = async (
+    viewerId: number
+  ): Promise<ResponseFromThreadMainCursor | null> => {
+    const limit = 20;
+
+    const today: Date = new Date();
+    const yesterdayStart = new Date(today);
+    yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+    yesterdayStart.setHours(7, 0, 0, 0); // 어제 오전 7시
+
+    const yesterdayEnd = new Date(today);
+    yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+    yesterdayEnd.setHours(23, 0, 0, 0); // 어제 오후 11시
+
+    // 이 코드 블록 이전에 yesterdayStart, yesterdayEnd, limit, viewerId,
+    // defaultThreadSelect가 정의되어 있다고 가정합니다.
+    let thread;
+
+    // --- 1단계: 어제 날짜 범위 내에서 좋아요가 많은 순서대로 threadId 가져오기 ---
+    const popularThreadsByLikes = await prisma.threadLike.groupBy({
+      // threadId를 기준으로 그룹화합니다.
+      by: ['threadId'],
+      // 어제 생성된 좋아요만 대상으로 합니다.
+      where: {
+        createdAt: {
+          gte: yesterdayStart,
+          lte: yesterdayEnd
+        }
+      },
+      // 각 threadId별로 좋아요 수를 셉니다.
+      _count: {
+        threadId: true
+      },
+      // 위에서 센 좋아요 수를 기준으로 내림차순 정렬합니다.
+      orderBy: {
+        _count: {
+          threadId: 'desc'
+        }
+      },
+      // 지정된 limit만큼 가져옵니다.
+      take: limit
+    });
+
+    // --- 2단계: 정렬된 threadId 목록을 사용하여 실제 게시글 데이터 가져오기 ---
+
+    // 1단계 결과에서 정렬된 threadId 목록만 추출합니다.
+    const orderedThreadIds = popularThreadsByLikes.map((item) => item.threadId);
+
+    // 만약 어제 좋아요를 받은 게시글이 없다면 빈 배열을 반환하고 종료합니다.
+    if (orderedThreadIds.length === 0) {
+      // 실제 API 응답 형식에 맞게 빈 배열 등을 반환해주세요.
+      return null;
+    }
+
+    // 추출된 ID 목록을 사용해 실제 게시글 데이터를 가져옵니다.
+    // 참고: `in` 쿼리는 데이터베이스에 따라 순서를 보장하지 않을 수 있으므로,
+    //       애플리케이션 코드에서 다시 정렬하는 과정이 필요합니다.
+    thread = await prisma.thread.findMany({
+      where: {
+        threadId: {
+          in: orderedThreadIds
+        }
+      },
+      select: {
+        ...defaultThreadSelect,
+        // 현재 로그인한 유저가 이 게시글을 좋아하는지 확인
+        likes: {
+          where: {
+            userId: viewerId
+          }
+        },
+        // 현재 로그인한 유저가 이 게시글을 스크랩했는지 확인
+        scraps: {
+          where: {
+            threadScrap: {
+              userId: viewerId
+            }
+          }
+        }
+      }
+    });
+
+    // --- 3단계: 1단계에서 얻은 순서대로 게시글 데이터 재정렬하기 ---
+
+    // orderedThreadIds의 순서에 맞게 threads 배열을 재정렬합니다.
+    const sortedThreads = orderedThreadIds
+      .map(threadId => thread.find(thread => thread.threadId === threadId))
+      .filter(Boolean); // find가 undefined를 반환하는 경우(데이터 불일치 등)를 안전하게 제외합니다.
+
+    // 최종적으로 'sortedThreads' 변수에 원하시는 결과가 담기게 됩니다.
+    // 이 변수를 반환하여 사용하시면 됩니다.
+
 
     // if(thread.length === 0) {
     //   throw new ThreadNotFoundError('최신 게시글이 없습니다.');

@@ -100,10 +100,11 @@ model ThreadImage {
 }
 
 model ThreadLike {
-  threadId String
-  userId   Int
-  thread   Thread @relation(fields: [threadId], references: [threadId])
-  user     User   @relation(fields: [userId], references: [userId])
+  threadId  String
+  userId    Int
+  createdAt DateTime @default(now()) @db.Timestamp(3)
+  thread    Thread   @relation(fields: [threadId], references: [threadId])
+  user      User     @relation(fields: [userId], references: [userId])
 
   @@id([threadId, userId])
   @@index([userId], map: "ThreadLike_userId_fkey")
