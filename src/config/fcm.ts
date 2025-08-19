@@ -149,7 +149,7 @@ export class FCMService {
    * - apns.payload.aps.badge: 1 - iOS 뱃지 카운트
    */
   static async sendNotificationToUser(
-    userId: number,
+    userId: number, // 받는 사람 secondUserId / 알림은 firstUser
     title: string,
     body: string,
     data?: Record<string, string>
@@ -267,8 +267,8 @@ export class FCMService {
    * - data.firstUserName: 제안한 사용자 이름
    */
   static async sendCoffeeChatProposalNotification(
-    secondUserId: number,
-    firstUserId: number,
+    secondUserId: number, // 받는 사람
+    firstUserId: number, // 보내는 사람람
     firstUserName: string,
     coffectId: number
   ): Promise<boolean> {
@@ -316,8 +316,8 @@ export class FCMService {
 
 
   static async sendAcceptCoffeeChatNotification(
-    secondUserId : number,
-    firstUserId : number,
+    secondUserId : number, // 승낙을 받내는 사람람
+    firstUserId : number, // 승낙을 받아야됨
     firstUserName : string,
     coffectId : number
   ):Promise<boolean> {
@@ -331,7 +331,7 @@ export class FCMService {
         firstUserName : firstUserName
       };
 
-      const fcmSuccess = await this.sendNotificationToUser(secondUserId, title, body, data);
+      const fcmSuccess = await this.sendNotificationToUser(firstUserId, title, body, data);
 
       if (fcmSuccess) {
         console.log(`FCM 전송 성공: 사용자 ${firstUserName}`);

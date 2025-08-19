@@ -121,8 +121,8 @@ export class AlertService {
    * CoffeeChat 제안 알림 생성 및 전송
    */
   async sendCoffeeChatProposalNotification(
-    secondUserId: number,
-    firstUserId: number,
+    secondUserId: number, // 받는 사람
+    firstUserId: number, // 보내는 사람람
     coffectId: number
   ) {
     console.log(`커피챗 제안 알림 시작: 보내는 사용자 ${firstUserId} -> 받는 사용자 ${secondUserId}, 커피챗 ID: ${coffectId}`);

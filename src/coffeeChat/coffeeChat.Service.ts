@@ -186,7 +186,7 @@ export class HomeService {
     coffectId : number
   ):Promise<void> {
     await this.homeModel.acceptCoffeeChatModel(userId, coffectId);
-    await this.homeModel.sendAcceptFCM(userId, coffectId);
+    await this.homeModel.sendAcceptFCM(userId, coffectId); // userId는 승낙을 하는 사람임.
   };
 
   public async getTotalCoffeeChatCountService(

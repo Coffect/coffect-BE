@@ -877,13 +877,13 @@ export class HomeModel {
   }
 
   public async sendAcceptFCM(
-    secondUserId : number,
+    secondUserId : number, // 승낙 한 사람
     coffectId : number
   ):Promise<void> {
     const result = await prisma.coffeeChat.findFirstOrThrow({
       where : { coffectId : coffectId, secondUserId : secondUserId },
       select : {
-        firstUser : {
+        firstUser : { // 승낙 되었다고 받는 사람람
           select : {
             userId : true,
             name : true
@@ -907,8 +907,8 @@ export class HomeModel {
       }
 
       const notificationResult = await FCMService.sendAcceptCoffeeChatNotification(
-        result.firstUser.userId,    // firstUserId (승낙을 받는 사람 - 커피챗을 제안한 사람)
         secondUserId,               // secondUserId (승낙을 보낸 사람)
+        result.firstUser.userId,    // firstUserId (승낙을 받는 사람 - 커피챗을 제안한 사람)
         result.firstUser.name,      // 승낙을 받는 사람의 이름
         coffectId
       );
