@@ -33,3 +33,14 @@ export class nonData extends BasicError {
     );
   }
 }
+
+export class exsist extends BasicError {
+  constructor(description: string) {
+    super (
+      400,
+      'HE405',
+      '이미 존재하는 coffeeChat입니다.',
+      description
+    );
+  }
+}
