@@ -55,7 +55,7 @@ export class ChatService {
         chatroomId: rooms.chatroomId,
         userId: rooms.userId,
         check: rooms.check,
-        lastMessage: rooms.lastMessage,
+        lastMessage: null,
         lastMeesageTime: null
       };
 
@@ -63,6 +63,7 @@ export class ChatService {
         rooms.chatroomId
       );
       if (lastMessage) {
+        room.lastMessage = lastMessage.messageBody;
         room.lastMeesageTime = lastMessage.createdAt;
       }
       resultInfo.push(room);
