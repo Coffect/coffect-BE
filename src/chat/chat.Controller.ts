@@ -24,7 +24,11 @@ import {
   TsoaSuccessResponse
 } from '../config/tsoaResponse';
 import { ChatService } from './chat.Service';
-import { ChatDataDTO, ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
+import {
+  ChatDataDTO,
+  ChatRoomInfoDTO,
+  ChatRoomsDTO
+} from '../middleware/chat.DTO/chat.DTO';
 import { ChatRoomNotFound } from './chat.Message';
 
 @Route('chat')
@@ -55,7 +59,7 @@ export class ChatController extends Controller {
   public async makeChatRoom(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       userId: number;
     }
   ): Promise<ITsoaSuccessResponse<{ chatRoomId: string }>> {
@@ -99,10 +103,10 @@ export class ChatController extends Controller {
   })
   public async getChatRoom(
     @Request() req: ExpressRequest
-  ): Promise<ITsoaSuccessResponse<ChatRoomsDTO[]>> {
+  ): Promise<ITsoaSuccessResponse<ChatRoomInfoDTO[]>> {
     const userId = req.user.index;
     const result = await this.chatService.getChatRoom(userId);
-    return new TsoaSuccessResponse<ChatRoomsDTO[]>(result);
+    return new TsoaSuccessResponse<ChatRoomInfoDTO[]>(result);
   }
 
   /**
@@ -157,8 +161,7 @@ export class ChatController extends Controller {
     @Request() req: ExpressRequest,
     @Query() chatRoomId: string
   ): Promise<ITsoaSuccessResponse<ChatDataDTO[]>> {
-
-    if(!chatRoomId) {
+    if (!chatRoomId) {
       throw new ChatRoomNotFound('채팅방을 찾을 수 없습니다.');
     }
 
@@ -169,7 +172,7 @@ export class ChatController extends Controller {
   /**
    * 채팅방의 메시지를 읽음 처리한다.
    * 특정 chatRoomId에 있는 메시지를 읽음 처리한다.
-   * 
+   *
    * @param chatRoomId 읽음 처리할 채팅방의 ID
    * @param req Express 요청 객체
    * @return 읽음 처리 성공 메시지
@@ -189,7 +192,7 @@ export class ChatController extends Controller {
 
   /**
    * 메시지 사진 보내기
-   * 
+   *
    * @param chatRoomId 보낼 채팅방 ID
    * @param req Express 요청 객체
    * @return 사진 전달
@@ -223,16 +226,19 @@ export class ChatController extends Controller {
   ): Promise<ITsoaSuccessResponse<ChatDataDTO>> {
     const userId = req.user.index;
     const imageUrl = await this.chatService.uploadPhoto(image[0]);
-    
-    const result = await this.chatService.sendPhoto(userId, chatRoomId, imageUrl);
+
+    const result = await this.chatService.sendPhoto(
+      userId,
+      chatRoomId,
+      imageUrl
+    );
 
     return new TsoaSuccessResponse<ChatDataDTO>(result);
   }
 
-
   /**
    * 메시지 사진 보내기
-   * 
+   *
    * @param chatRoomId 채팅방 ID
    * @param req Express 요청 객체
    * @return coffectId
@@ -246,7 +252,10 @@ export class ChatController extends Controller {
     @Query() chatRoomId: string
   ): Promise<ITsoaSuccessResponse<number>> {
     const userId = req.user.index;
-    const result = await this.chatService.getCoffectIdToSuggest(userId, chatRoomId);
+    const result = await this.chatService.getCoffectIdToSuggest(
+      userId,
+      chatRoomId
+    );
     return new TsoaSuccessResponse<number>(result);
   }
 }

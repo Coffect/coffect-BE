@@ -4,6 +4,13 @@ export interface ChatRoomsDTO {
   lastMessage: string | null;
   check: boolean | null;
 }
+export interface ChatRoomInfoDTO {
+  chatroomId: string;
+  userId: number;
+  lastMessage: string | null;
+  check: boolean | null;
+  lastMeesageTime: Date | null;
+}
 
 export interface ChatDataDTO {
   id: string;

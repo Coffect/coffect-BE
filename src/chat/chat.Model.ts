@@ -12,7 +12,11 @@ export class ChatModel {
   ): Promise<void> {
     try {
       const makeRoom = prisma.chatRoom.create({
-        data: { chatroomId: chatRoomId, coffectId: coffectId, createdTime: KSTtime() }
+        data: {
+          chatroomId: chatRoomId,
+          coffectId: coffectId,
+          createdTime: KSTtime()
+        }
       });
       const insertUser1 = prisma.chatRoomUser.create({
         data: { userId: myId, chatroomId: chatRoomId }
@@ -55,10 +59,13 @@ export class ChatModel {
     }
   }
 
-  public async checkUserInChatRoom(userId: number, chatRoomId: string): Promise<boolean> {
+  public async checkUserInChatRoom(
+    userId: number,
+    chatRoomId: string
+  ): Promise<boolean> {
     try {
       const result = await prisma.chatRoomUser.findFirst({
-        where: { 
+        where: {
           userId: userId,
           chatroomId: chatRoomId
         }
@@ -91,6 +98,19 @@ export class ChatModel {
       console.error('메시지 전송 중 오류 발생:', error);
       throw new Error('메시지를 전송하는 중 오류가 발생했습니다.');
     }
+  }
+
+  public async getLastMessageByChatRoomId(
+    chatRoomId: string
+  ): Promise<ChatDataDTO | null> {
+    const result = await mongo.message.findFirst({
+      where: { chatRoomId: chatRoomId },
+      orderBy: { createdAt: 'desc' }
+    });
+    if (!result) {
+      return null;
+    }
+    return result;
   }
 
   public async getChatRoomInfo(chatRoomId: string): Promise<ChatDataDTO[]> {
@@ -152,10 +172,7 @@ export class ChatModel {
     }
   }
 
-  
-  public async uploadPhoto(
-    image: Express.Multer.File
-  ):Promise<string> {
+  public async uploadPhoto(image: Express.Multer.File): Promise<string> {
     try {
       const imageUrl = await uploadToS3(image);
       return imageUrl;
@@ -163,8 +180,7 @@ export class ChatModel {
       console.error('사진 업로드 중 오류 발생:', error);
       throw new Error('사진을 업로드하는 중 오류가 발생했습니다.');
     }
-  };
-
+  }
 
   public async sendPhoto(
     userId: number,
@@ -175,7 +191,7 @@ export class ChatModel {
       const data = await mongo.message.create({
         data: {
           userId,
-          chatRoomId : chatRoomId,
+          chatRoomId: chatRoomId,
           messageBody: imageUrl,
           createdAt: KSTtime(),
           isPhoto: true,
@@ -187,35 +203,31 @@ export class ChatModel {
       console.error('사진 메시지 저장 중 오류 발생:', error);
       throw new Error('사진 메시지를 저장하는 중 오류가 발생했습니다.');
     }
-  };
+  }
 
-  public async getCoffectId(
-    userId : number, 
-    otherId : number
-  ):Promise<number> {
+  public async getCoffectId(userId: number, otherId: number): Promise<number> {
     try {
       const coffectId = await prisma.coffeeChat.findFirst({
-        where : {
-          OR : [
+        where: {
+          OR: [
             {
-              firstUserId : userId,
-              secondUserId : otherId
+              firstUserId: userId,
+              secondUserId: otherId
             },
             {
-              firstUserId : otherId,
-              secondUserId : userId
+              firstUserId: otherId,
+              secondUserId: userId
             }
           ]
         },
-        select : {
-          coffectId : true
+        select: {
+          coffectId: true
         }
       });
-      if(!coffectId) {
+      if (!coffectId) {
         throw new Error('커피챗 제안 아이디를 찾을 수 없습니다.');
       }
       return coffectId.coffectId;
-
     } catch (error) {
       console.error('커피챗 제안 아이디 조회 중 오류 발생:', error);
       throw new Error('커피챗 제안 아이디를 조회하는 중 오류가 발생했습니다.');
@@ -223,20 +235,20 @@ export class ChatModel {
   }
 
   public async getCoffectIdToSuggest(
-    userId : number,
-    chatRoomId : string
-  ):Promise<number> {
+    userId: number,
+    chatRoomId: string
+  ): Promise<number> {
     try {
       const coffectId = await prisma.chatRoom.findFirst({
-        where : {
-          chatroomId : chatRoomId
+        where: {
+          chatroomId: chatRoomId
         },
-        select : {
-          coffectId : true
+        select: {
+          coffectId: true
         }
       });
 
-      if(!coffectId) {
+      if (!coffectId) {
         throw new Error('커피챗 제안 아이디를 찾을 수 없습니다.');
       }
 
