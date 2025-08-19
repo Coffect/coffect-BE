@@ -95,6 +95,42 @@ export default function initSocket(
       }
     });
 
+    socket.on('sendImage', async ({ message, chatRoomId }) => {
+      try {
+        await chatService.sendMessage(userId, chatRoomId, message, true);
+
+        io.to(chatRoomId).emit('receive', {
+          sender: userId,
+          senderName: userName,
+          message: message,
+          timestamp: new Date().toISOString(),
+          isPhoto: true
+        });
+      } catch (err: any) {
+        console.error('이미지 전송 오류:', err);
+
+        // MongoDB 연결 오류인지 확인
+        const isMongoError = err.code === 'P2010' || 
+                           err.message?.includes('Connection refused') ||
+                           err.message?.includes('Transactions are not supported');
+        
+        const errorMessage = isMongoError 
+          ? '데이터베이스 연결 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+          : '메시지 전송 중 오류가 발생했습니다.';
+        
+        socket.emit('errorAck', {
+          error: 'EC500',
+          message: errorMessage,
+          description: err.message || '알 수 없는 오류'
+        });
+        
+        // MongoDB 연결 오류가 아닌 경우에만 연결 해제
+        if (!isMongoError) {
+          socket.disconnect();
+        }
+      }
+    });
+
     // 타이핑 상태 전송
     socket.on('typing', ({ chatRoomId, isTyping }) => {
       socket.to(chatRoomId).emit('userTyping', {
