@@ -219,6 +219,15 @@ export class HomeController extends Controller {
     },
     success: null
   })
+  @Response<ITsoaErrorResponse>(400, 'Bad Request', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE405',
+      reason: '이미 존재하는 coffeeChat입니다.',
+      data: null
+    },
+    success: null
+  })
   @Response<ITsoaErrorResponse>(500, 'Internal Server Error', {
     resultType: 'FAIL',
     error: {
