@@ -251,7 +251,12 @@ export class UserModel {
         where: { userId: userId }
       });
 
-      // 19. 마지막으로 User 삭제
+      // 19. UserTimetable 삭제
+      await tx.userTimetable.deleteMany({
+        where: { userId: userId }
+      });
+
+      // 20. 마지막으로 User 삭제
       await tx.user.delete({
         where: { userId: userId }
       });
