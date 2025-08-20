@@ -56,7 +56,7 @@ export class ChatService {
         userId: rooms.userId,
         check: rooms.check,
         lastMessage: null,
-        lastMeesageTime: null
+        lastMessageTime: null
       };
 
       const lastMessage = await this.chatModel.getLastMessageByChatRoomId(
@@ -64,7 +64,7 @@ export class ChatService {
       );
       if (lastMessage) {
         room.lastMessage = lastMessage.messageBody;
-        room.lastMeesageTime = lastMessage.createdAt;
+        room.lastMessageTime = lastMessage.createdAt;
       }
       resultInfo.push(room);
     }
