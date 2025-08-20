@@ -223,17 +223,13 @@ export class ChatController extends Controller {
     @Request() req: ExpressRequest,
     @Query() chatRoomId: string,
     @UploadedFiles('image') image: Express.Multer.File[]
-  ): Promise<ITsoaSuccessResponse<ChatDataDTO>> {
+  ): Promise<ITsoaSuccessResponse<string>> {
     const userId = req.user.index;
     const imageUrl = await this.chatService.uploadPhoto(image[0]);
+    
+    //const result = await this.chatService.sendPhoto(userId, chatRoomId, imageUrl);
 
-    const result = await this.chatService.sendPhoto(
-      userId,
-      chatRoomId,
-      imageUrl
-    );
-
-    return new TsoaSuccessResponse<ChatDataDTO>(result);
+    return new TsoaSuccessResponse<string>(imageUrl);
   }
 
   /**

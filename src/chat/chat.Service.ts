@@ -75,7 +75,8 @@ export class ChatService {
   public async sendMessage(
     userId: number,
     chatRoomId: string,
-    message: string
+    message: string,
+    isPhoto?: boolean | false
   ): Promise<string> {
     const chatRoom = await this.chatModel.getChatRoom(userId);
     if (!chatRoom.some((room) => room.chatroomId === chatRoomId)) {
@@ -85,7 +86,8 @@ export class ChatService {
     const result = await this.chatModel.sendMessage(
       userId,
       chatRoomId,
-      message
+      message,
+      isPhoto
     );
     await this.chatModel.updateLastSendMessage(result); // 해당 채팅방의 마지막 메시지 업데이트
     return '메시지 전송 성공';

@@ -80,7 +80,8 @@ export class ChatModel {
   public async sendMessage(
     userId: number,
     chatRoomId: string,
-    message: string
+    message: string,
+    isPhoto?: boolean | false
   ): Promise<ChatDataDTO> {
     try {
       const data = await mongo.message.create({
@@ -89,7 +90,7 @@ export class ChatModel {
           chatRoomId: chatRoomId,
           messageBody: message,
           createdAt: KSTtime(),
-          isPhoto: false,
+          isPhoto: isPhoto,
           check: false
         }
       });

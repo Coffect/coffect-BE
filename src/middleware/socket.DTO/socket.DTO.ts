@@ -4,6 +4,7 @@ export interface ServerToClientEvents {
     senderName: string;
     message: string;
     timestamp?: string;
+    isPhoto?: boolean;
   }) => void;
   errorAck: (err: {
     error: string;
@@ -24,6 +25,7 @@ export interface ServerToClientEvents {
 
 export interface ClientToServerEvents {
   send: (data: { message: string; chatRoomId: string }) => void;
+  sendImage: (data: {message: string; chatRoomId: string}) => void;
   typing: (data: { chatRoomId: string; isTyping: boolean }) => void;
   seen: (data: { chatRoomId: string; messageId: string }) => void;
   disconnect: () => void;
