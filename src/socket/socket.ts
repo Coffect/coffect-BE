@@ -10,7 +10,7 @@ import {
 } from '../middleware/socket.DTO/socket.DTO';
 import verifySocket from '../middleware/verifySocket';
 import { SocketConnectionError } from './socket.message';
-import { KSTtime } from '../config/KSTtime';
+import { KSTtime, KSTtimeToISOString } from '../config/KSTtime';
 
 export default function initSocket(
   io: Server<
@@ -67,7 +67,7 @@ export default function initSocket(
           sender: userId,
           senderName: userName,
           message: message,
-          timestamp: KSTtime().toISOString()
+          timestamp: KSTtimeToISOString()
         });
       } catch (err: any) {
         console.error('메시지 전송 오류:', err);
