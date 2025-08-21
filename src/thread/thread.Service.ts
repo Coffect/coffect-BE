@@ -75,6 +75,7 @@ export class ThreadService {
     return reform;
   };
 
+  // 필터링 있는 최신순 조회
   public lookUpThreadMainService = async (
     body: BodyToLookUpMainThread,
     userId: number
@@ -84,7 +85,14 @@ export class ThreadService {
     if(body.orderBy === 'createdAt'){
       results = await this.ThreadModel.lookUpThreadMainRepository(body, userId);  
     }else{
-      results = await this.ThreadModel.lookUpThreadMainByLikesRepository(body, userId);
+      if(body.type === undefined && body.threadSubject === undefined){
+        console.log('필터링 없는 좋아요 조회');
+        results = await this.ThreadModel.threadByLikesRepository(userId);
+      }else{
+        results = await this.ThreadModel.lookUpThreadMainByLikesRepository(body, userId);
+      }
+
+      console.log(results);
       
       if(results === null){
         return {thread: [], nextCursor: null};
@@ -109,6 +117,7 @@ export class ThreadService {
     return { thread, nextCursor: results.nextCursor };
   };
 
+  // 필터링 없는 최신순 조회
   public lookUpLatestThreadMainService = async (
     userId: number,
     dateCursor?: Date
@@ -130,6 +139,7 @@ export class ThreadService {
     return { thread, nextCursor: results.nextCursor };
   };
 
+  // 필터링 없이 좋아요 순으로 게시글 조회
   public lookUpLikesThreadService = async (
     userId: number
   ): Promise<ResponseFromThreadMainCursorToClient> => {

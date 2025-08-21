@@ -11,9 +11,9 @@ export class UnivCertRespone {
 }
 export class UnivCertBody {
   @Example(123456)
-  certCode!: number;
+    certCode!: number;
   @Example('seoki180@inha.edu')
-  email!: string;
+    email!: string;
 }
 export class UnivCertRequest {
   certCode: number;
@@ -32,7 +32,7 @@ export type UnivList = {
 
 export class UnivSearchBody {
   @Example('인하')
-  univName!: string;
+    univName!: string;
 }
 
 export class UnivSearchResponse {
@@ -51,9 +51,9 @@ type DeptList = {
 };
 export class DeptSearchBody {
   @Example('인하')
-  univName!: string;
+    univName!: string;
   @Example('컴퓨터공학과')
-  search!: string;
+    search!: string;
 }
 export class DeptSearchResponse {
   deptList: DeptList[];
@@ -65,7 +65,7 @@ export class DeptSearchResponse {
 
 export class UnivDomainBody {
   @Example('seoki180@inha.edu')
-  email!: string;
+    email!: string;
   @Example('인하대학교')
-  univ!: string;
+    univ!: string;
 }

@@ -28,20 +28,20 @@ export class BodyToAddThread {
 }
 
 export class BodyToLookUpMainThread {
-  type: Thread_type;
-  threadSubject: number[];
+  type?: Thread_type;
+  threadSubject?: number[];
   orderBy: 'createdAt' | 'likeCount';
   dateCursor?: Date;
 
   constructor(body: {
-    type: Thread_type;
-    threadSubject: number[];
+    type?: Thread_type;
+    threadSubject?: number[];
     dateCursor?: Date;
     orderBy?: 'createdAt' | 'likeCount';
   }) {
     this.type = body.type;
     this.orderBy = body.orderBy ?? 'createdAt'; // 기본값은 createdAt
-    this.threadSubject = body.threadSubject ?? []; // 기본값은 빈 배열
+    this.threadSubject = body.threadSubject; // 기본값은 빈 배열
     this.dateCursor = body.dateCursor;
   }
 }
