@@ -86,25 +86,25 @@ export class HomeModel {
     const filteredArray: number[] = await this.sameSchool(userId);
 
     switch (todayInterest) {
-      case 1:
-        // 가까운 거리 순 (같은 학교)
-        await this.closeDistance(userId, filteredArray);
-        break;
+    case 1:
+      // 가까운 거리 순 (같은 학교)
+      await this.closeDistance(userId, filteredArray);
+      break;
 
-      case 2:
-        // 나와 관심사가 비슷한 categoryMatch (다 대 다)
-        await this.sameInterestCategory(userId, filteredArray);
-        break;
+    case 2:
+      // 나와 관심사가 비슷한 categoryMatch (다 대 다)
+      await this.sameInterestCategory(userId, filteredArray);
+      break;
 
-      case 3:
-        // 같은 학번
-        await this.sameGrade(userId, filteredArray);
-        break;
+    case 3:
+      // 같은 학번
+      await this.sameGrade(userId, filteredArray);
+      break;
 
-      case 4:
-        // 최근에 글을 쓴 사용자
-        await this.recentPostUser(userId, filteredArray);
-        break;
+    case 4:
+      // 최근에 글을 쓴 사용자
+      await this.recentPostUser(userId, filteredArray);
+      break;
     }
   }
 
