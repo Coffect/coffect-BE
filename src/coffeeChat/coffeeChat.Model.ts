@@ -1,57 +1,58 @@
 import { KSTtime } from '../config/KSTtime';
 import { prisma } from '../config/prisma.config';
-import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatRecordDetail, CoffeeChatSchedule, CoffeeChatShowUpDTO } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import {
+  coffectChatCardDTO,
+  CoffeeChatRecord,
+  CoffeeChatRecordDetail,
+  CoffeeChatSchedule,
+  CoffeeChatShowUpDTO
+} from '../middleware/coffectChat.DTO/coffectChat.DTO';
 import { nonData } from './coffeeChat.Message';
 
 export class HomeModel {
-
   // 하루 관심란 입력
-  public async postTodayInterestModel (
-    userId : number,
-    todayInterest : number
-  ):Promise<void> {
+  public async postTodayInterestModel(
+    userId: number,
+    todayInterest: number
+  ): Promise<void> {
     await prisma.user.update({
-      where : {userId : userId},
-      data : {todayInterest : todayInterest}
+      where: { userId: userId },
+      data: { todayInterest: todayInterest }
     });
-  };
+  }
 
   // userId에 해당하는 todayInterest 값 가져오기 (1,2,3,4)
-  public async getTodayInterestValue (
-    userId : number
-  ):Promise<number> {
+  public async getTodayInterestValue(userId: number): Promise<number> {
     const value = await prisma.user.findUniqueOrThrow({
-      where : { userId : userId },
-      select : { todayInterest : true }
+      where: { userId: userId },
+      select: { todayInterest: true }
     });
 
-    if(value.todayInterest === 0) {
+    if (value.todayInterest === 0) {
       return value.todayInterest;
     }
 
-    if(value.todayInterest === null) {
-      throw new Error (`Invalid todayInterest value for user ${userId}: ${value.todayInterest}`);
+    if (value.todayInterest === null) {
+      throw new Error(
+        `Invalid todayInterest value for user ${userId}: ${value.todayInterest}`
+      );
     }
-    
+
     return value.todayInterest;
-  };
+  }
 
   // userId에 해당하는 coffeeChatCount값 불러오기
-  public async getCoffeeChatCount(
-    userId: number
-  ):Promise<number> {
+  public async getCoffeeChatCount(userId: number): Promise<number> {
     const result = await prisma.user.findUniqueOrThrow({
-      where : {userId : userId},
-      select : { coffeeChatCount : true }
+      where: { userId: userId },
+      select: { coffeeChatCount: true }
     });
 
     return result.coffeeChatCount;
-  };
+  }
 
   // userId에 해당하는 coffeeChatCount값 감소하기
-  public async decreaseCoffeeChatCount(
-    userId : number
-  ):Promise<void> {
+  public async decreaseCoffeeChatCount(userId: number): Promise<void> {
     await prisma.user.update({
       where: {
         userId: userId,
@@ -61,75 +62,73 @@ export class HomeModel {
         coffeeChatCount: { decrement: 1 } // 1 감소
       }
     });
-  };
+  }
 
   // userId에 해당하는 todayInterestArray 배열 가져오기
-  public async getTodayInterestArray(
-    userId : number
-  ):Promise<number[]> {
-    const result = await prisma.user.findUnique ({
-      where : {userId : userId},
-      select : { todayInterestArray : true} as any // any로 타입 우회
+  public async getTodayInterestArray(userId: number): Promise<number[]> {
+    const result = await prisma.user.findUnique({
+      where: { userId: userId },
+      select: { todayInterestArray: true } as any // any로 타입 우회
     });
- 
-    if(result?.todayInterestArray === null) {
+
+    if (result?.todayInterestArray === null) {
       return [];
     }
 
-    return (result!.todayInterestArray as unknown) as number[];
-  };
-  
+    return result!.todayInterestArray as unknown as number[];
+  }
 
   // 각 로직 별로 postTodainterestArray값을 userId로 채워넣는 함수 ( [3, 4, 5, 6] 총 4개 )
   public async postTodayInterestArray(
-    userId : number,
-    todayInterest : number
+    userId: number,
+    todayInterest: number
   ): Promise<void> {
-    const filteredArray : number[] = await this.sameSchool(userId);
+    const filteredArray: number[] = await this.sameSchool(userId);
 
-    switch(todayInterest) {
-    case 1 :
-      // 가까운 거리 순 (같은 학교)
-      await this.closeDistance(userId, filteredArray);
-      break;
+    switch (todayInterest) {
+      case 1:
+        // 가까운 거리 순 (같은 학교)
+        await this.closeDistance(userId, filteredArray);
+        break;
 
-    case 2 :
-      // 나와 관심사가 비슷한 categoryMatch (다 대 다)
-      await this.sameInterestCategory(userId, filteredArray);
-      break;
+      case 2:
+        // 나와 관심사가 비슷한 categoryMatch (다 대 다)
+        await this.sameInterestCategory(userId, filteredArray);
+        break;
 
-    case 3 : 
-      // 같은 학번 
-      await this.sameGrade(userId, filteredArray);
-      break;
+      case 3:
+        // 같은 학번
+        await this.sameGrade(userId, filteredArray);
+        break;
 
-    case 4 : 
-      // 최근에 글을 쓴 사용자
-      await this.recentPostUser(userId, filteredArray);
-      break;
+      case 4:
+        // 최근에 글을 쓴 사용자
+        await this.recentPostUser(userId, filteredArray);
+        break;
     }
-  };
+  }
 
   // 같은 학교사람 구분하는 로직
-  private async sameSchool(
-    userId : number
-  ):Promise<number[]> {
+  private async sameSchool(userId: number): Promise<number[]> {
     const result = await prisma.user.findUniqueOrThrow({
-      where : {userId : userId},
-      select : {univId : true} 
+      where: { userId: userId },
+      select: { univId: true }
     });
 
     const compareSameSchoole = result.univId; // 나의 학교 조회
-    
+
     if (compareSameSchoole === null || compareSameSchoole === undefined) {
       throw new Error(`User ${userId} has no university ID`);
     }
 
     // 같은 학교 사용자 조회
-    const sameSchoolUsers = await this.getUsersBySchoolDomain(userId, compareSameSchoole);
+    const sameSchoolUsers = await this.getUsersBySchoolDomain(
+      userId,
+      compareSameSchoole
+    );
 
     return sameSchoolUsers;
-  };
+  }
 
   // // 이메일 도메인 추출
   // private extractSchoolDomain(email: string): string | null {
@@ -149,7 +148,7 @@ export class HomeModel {
         userId: { not: userId },
         univId: { equals: schoolDomain }
       },
-      select: { userId : true },
+      select: { userId: true },
       take: 20
     });
 
@@ -158,41 +157,41 @@ export class HomeModel {
     // 같은 학교 사용자가 20명 미만이면 전체 사용자 중에서 랜덤으로 추가
     if (userIds.length < 20) {
       const remainingCount = 20 - userIds.length;
-      
+
       // 전체 사용자 중에서 같은 학교 사용자와 본인을 제외한 사용자 조회
       const allOtherUsers = await prisma.user.findMany({
         where: {
           userId: { not: userId },
           univId: { not: schoolDomain } // 같은 학교가 아닌 사용자
         },
-        select: { userId : true }
+        select: { userId: true }
       });
 
       const otherUserIds = allOtherUsers.map((user: any) => user.userId);
-      
+
       // 랜덤으로 추가할 사용자 선택
       const shuffledOtherUsers = otherUserIds.sort(() => Math.random() - 0.5);
       const additionalUsers = shuffledOtherUsers.slice(0, remainingCount);
-      
+
       userIds = [...userIds, ...additionalUsers];
     }
 
     return userIds;
-  };
+  }
 
   // <1> 가까운 거리 순 (같은 학교)
   private async closeDistance(
-    userId : number,
-    filteredArray : number[]
-  ):Promise<void> {
-    const array : number[] = [];
+    userId: number,
+    filteredArray: number[]
+  ): Promise<void> {
+    const array: number[] = [];
 
-    const copyFiltedArray  = [... filteredArray];
+    const copyFiltedArray = [...filteredArray];
 
     // 최대 4개까지 선택하되, 배열 크기보다 작으면 그만큼만 선택
     const maxCount = Math.min(4, copyFiltedArray.length);
 
-    for(let i = 0; i < maxCount; i++) {
+    for (let i = 0; i < maxCount; i++) {
       if (copyFiltedArray.length === 0) break;
 
       const randomIndex = Math.floor(Math.random() * copyFiltedArray.length);
@@ -204,9 +203,9 @@ export class HomeModel {
 
     // 만약 4명보다 적으면 나머지는 랜덤으로 채움
     if (array.length < 4 && filteredArray.length > array.length) {
-      const remainingUsers = filteredArray.filter(id => !array.includes(id));
+      const remainingUsers = filteredArray.filter((id) => !array.includes(id));
       const additionalCount = Math.min(4 - array.length, remainingUsers.length);
-      
+
       for (let i = 0; i < additionalCount; i++) {
         const randomIndex = Math.floor(Math.random() * remainingUsers.length);
         array.push(remainingUsers[randomIndex]);
@@ -215,27 +214,27 @@ export class HomeModel {
     }
 
     await prisma.user.update({
-      where : {userId : userId},
-      data : {
-        todayInterestArray : array
+      where: { userId: userId },
+      data: {
+        todayInterestArray: array
       } as any // any로 타입 우회
     });
-  };
+  }
 
   // <2> 나와 관심사가 비슷한 categoryMatch
   private async sameInterestCategory(
-    userId : number,
-    filteredArray : number[]
-  ):Promise<void> {
-    let array : number[] = [];
+    userId: number,
+    filteredArray: number[]
+  ): Promise<void> {
+    let array: number[] = [];
 
     const currentUserCategory = await prisma.user.findUniqueOrThrow({
-      where : {userId :userId},
-      select : {
-        categoryMatch : {
-          select : {
-            category : {
-              select : {
+      where: { userId: userId },
+      select: {
+        categoryMatch: {
+          select: {
+            category: {
+              select: {
                 categoryName: true
               }
             }
@@ -249,13 +248,13 @@ export class HomeModel {
     );
 
     const ArrayuserCategory = await prisma.user.findMany({
-      where : {userId : {in: filteredArray}},
-      select : {
-        userId : true,
-        categoryMatch : {
-          select : {
-            category : {
-              select : {
+      where: { userId: { in: filteredArray } },
+      select: {
+        userId: true,
+        categoryMatch: {
+          select: {
+            category: {
+              select: {
                 categoryName: true
               }
             }
@@ -266,24 +265,26 @@ export class HomeModel {
 
     const score = ArrayuserCategory.map((user: any) => {
       const userCategory = user.categoryMatch.map(
-        (match: any) => match.category.categoryName);
+        (match: any) => match.category.categoryName
+      );
 
-      const sameCategory = userCategory.filter(
-        (category: any) => myCategory.includes(category));
+      const sameCategory = userCategory.filter((category: any) =>
+        myCategory.includes(category)
+      );
 
       return {
-        userId : user.userId,
-        sameCategory : sameCategory,
-        score : sameCategory.length
+        userId: user.userId,
+        sameCategory: sameCategory,
+        score: sameCategory.length
       };
-    }).filter((user: any) => user.score > 0)
+    })
+      .filter((user: any) => user.score > 0)
       .sort((a: any, b: any) => b.score - a.score);
 
-      
     const selectedUser = new Set<number>();
 
-    for(const user of score) {
-      if(selectedUser.size >= 4) break;
+    for (const user of score) {
+      if (selectedUser.size >= 4) break;
 
       selectedUser.add(user.userId);
     }
@@ -292,9 +293,9 @@ export class HomeModel {
 
     // 만약 4명보다 적으면 나머지는 랜덤으로 채움
     if (array.length < 4 && filteredArray.length > array.length) {
-      const remainingUsers = filteredArray.filter(id => !array.includes(id));
+      const remainingUsers = filteredArray.filter((id) => !array.includes(id));
       const additionalCount = Math.min(4 - array.length, remainingUsers.length);
-      
+
       for (let i = 0; i < additionalCount; i++) {
         const randomIndex = Math.floor(Math.random() * remainingUsers.length);
         array.push(remainingUsers[randomIndex]);
@@ -303,40 +304,42 @@ export class HomeModel {
     }
 
     await prisma.user.update({
-      where : {userId : userId},
-      data : {
-        todayInterestArray : array
+      where: { userId: userId },
+      data: {
+        todayInterestArray: array
       } as any // any로 타입 우회
     });
-  };
+  }
 
   // <3> 같은 학번
   private async sameGrade(
-    userId : number,
-    filteredArray : number[]
-  ):Promise<void> {
-    const array : number[] = [];
+    userId: number,
+    filteredArray: number[]
+  ): Promise<void> {
+    const array: number[] = [];
 
     const userGrade = await prisma.user.findUniqueOrThrow({
-      where : {userId : userId},
-      select : {studentId : true}
+      where: { userId: userId },
+      select: { studentId: true }
     });
 
     const currentGrade = userGrade.studentId;
 
-    if(currentGrade === null || currentGrade === undefined) {
+    if (currentGrade === null || currentGrade === undefined) {
       // studentId가 없으면 랜덤으로 4명 선택
       const copyFilteredArray = [...filteredArray];
       const maxCount = Math.min(4, copyFilteredArray.length);
-      
-      for(let i = 0; i < maxCount; i++) {
+
+      for (let i = 0; i < maxCount; i++) {
         if (copyFilteredArray.length === 0) break;
-        
-        const randomIndex = Math.floor(Math.random() * copyFilteredArray.length);
+
+        const randomIndex = Math.floor(
+          Math.random() * copyFilteredArray.length
+        );
         array.push(copyFilteredArray[randomIndex]);
         copyFilteredArray.splice(randomIndex, 1);
       }
-      
+
       await prisma.user.update({
         where: { userId: userId },
         data: { todayInterestArray: array } as any
@@ -345,20 +348,20 @@ export class HomeModel {
     }
 
     // filteredArray를 순회하면서 조건에 맞는 사용자를 탐색
-    for(const targetUserId of filteredArray) {
-      if(array.length >= 4) {
+    for (const targetUserId of filteredArray) {
+      if (array.length >= 4) {
         break;
       }
 
       const targetUser = await prisma.user.findFirst({
-        where : { userId : targetUserId },
-        select : { studentId : true }
+        where: { userId: targetUserId },
+        select: { studentId: true }
       });
 
-      if(targetUser) {
+      if (targetUser) {
         const targetGrade = targetUser.studentId;
 
-        if(targetGrade === currentGrade) {
+        if (targetGrade === currentGrade) {
           array.push(targetUserId);
         }
       }
@@ -366,9 +369,9 @@ export class HomeModel {
 
     // 만약 4명보다 적으면 나머지는 랜덤으로 채움
     if (array.length < 4 && filteredArray.length > array.length) {
-      const remainingUsers = filteredArray.filter(id => !array.includes(id));
+      const remainingUsers = filteredArray.filter((id) => !array.includes(id));
       const additionalCount = Math.min(4 - array.length, remainingUsers.length);
-      
+
       for (let i = 0; i < additionalCount; i++) {
         const randomIndex = Math.floor(Math.random() * remainingUsers.length);
         array.push(remainingUsers[randomIndex]);
@@ -380,36 +383,36 @@ export class HomeModel {
       where: { userId: userId },
       data: { todayInterestArray: array } as any // any로 타입 우회
     });
-  };
-  
+  }
+
   // private extractGrade(
   //   email: string
   // ):string{
   //   // 202010836@school.kr에서 앞 4자리(2020) 추출
   //   const match = email.match(/^(\d{4})/);
 
-  //   return match![0]; 
+  //   return match![0];
   // };
 
   // <4> 최근에 글을 쓴 사용자
   private async recentPostUser(
-    userId : number,
-    filteredArray : number[]
-  ):Promise<void> {
-    let array : number[] = [];
+    userId: number,
+    filteredArray: number[]
+  ): Promise<void> {
+    let array: number[] = [];
 
     // 사용자별 최근 게시물 조회
     const userRecentThread = await prisma.user.findMany({
-      where : { userId : { in: filteredArray }},
-      select : {
-        userId : true, 
-        threads : {
-          orderBy : {
-            createdAt : 'desc'
+      where: { userId: { in: filteredArray } },
+      select: {
+        userId: true,
+        threads: {
+          orderBy: {
+            createdAt: 'desc'
           },
-          take : 1,
-          select : {
-            createdAt : true
+          take: 1,
+          select: {
+            createdAt: true
           }
         }
       }
@@ -420,19 +423,19 @@ export class HomeModel {
       .filter((user: any) => user.threads.length > 0)
       .map((user: any) => ({
         userId: user.userId,
-        createdAt : user.threads[0].createdAt
+        createdAt: user.threads[0].createdAt
       }))
       .sort((a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime())
-      .slice(0,4)
+      .slice(0, 4)
       .map((user: any) => user.userId);
 
     array = usersWithThreads;
 
     // 만약 4명보다 적으면 나머지는 랜덤으로 채움
     if (array.length < 4 && filteredArray.length > array.length) {
-      const remainingUsers = filteredArray.filter(id => !array.includes(id));
+      const remainingUsers = filteredArray.filter((id) => !array.includes(id));
       const additionalCount = Math.min(4 - array.length, remainingUsers.length);
-      
+
       for (let i = 0; i < additionalCount; i++) {
         const randomIndex = Math.floor(Math.random() * remainingUsers.length);
         array.push(remainingUsers[randomIndex]);
@@ -441,29 +444,27 @@ export class HomeModel {
     }
 
     await prisma.user.update({
-      where : {userId : userId},
-      data : { todayInterestArray : array } as any // any로 타입 우회
+      where: { userId: userId },
+      data: { todayInterestArray: array } as any // any로 타입 우회
     });
-  };
+  }
 
   // 특정 사용자 CardProfile 가져오는 API
-  public async showFrontProfile(
-    userId: number
-  ):Promise<coffectChatCardDTO> {
-    const result  = await prisma.user.findUniqueOrThrow({
-      where : {userId : userId},
+  public async showFrontProfile(userId: number): Promise<coffectChatCardDTO> {
+    const result = await prisma.user.findUniqueOrThrow({
+      where: { userId: userId },
       select: {
-        userId : true,
-        name : true,
-        studentId : true,
-        introduce : true,
-        profileImage : true,
+        userId: true,
+        name: true,
+        studentId: true,
+        introduce: true,
+        profileImage: true,
 
-        categoryMatch : {
-          select : {
-            category : {
-              select : {
-                categoryName : true
+        categoryMatch: {
+          select: {
+            category: {
+              select: {
+                categoryName: true
               }
             }
           }
@@ -472,7 +473,7 @@ export class HomeModel {
     });
 
     const grade = result.studentId;
-    
+
     if (grade === null || grade === undefined) {
       throw new Error(`User ${userId} has no student ID`);
     }
@@ -480,7 +481,7 @@ export class HomeModel {
       (match: any) => match.category.categoryName
     );
 
-    const cardDTO = new coffectChatCardDTO (
+    const cardDTO = new coffectChatCardDTO(
       result.userId,
       result.name,
       grade,
@@ -490,28 +491,26 @@ export class HomeModel {
     );
 
     return cardDTO;
-  };
+  }
 
   /** 5. random user */
-  public async RandomUser (
-    userId : number
-  ):Promise<void> {
-    const array : number[] = [];
+  public async RandomUser(userId: number): Promise<void> {
+    const array: number[] = [];
 
     // 20명을 미리 추림
     const users = await prisma.user.findMany({
-      select : {userId : true},
+      select: { userId: true },
       take: 20
     });
 
-    const userArray = users.map((user : any) => user.userId);
+    const userArray = users.map((user: any) => user.userId);
 
-    const copyUserArray = [... userArray];
+    const copyUserArray = [...userArray];
 
     const maxCount = Math.min(4, userArray.length);
 
-    for(let i = 0; i < maxCount; i++) {
-      if(copyUserArray.length === 0) break;
+    for (let i = 0; i < maxCount; i++) {
+      if (copyUserArray.length === 0) break;
 
       const randomIndex = Math.floor(Math.random() * copyUserArray.length);
 
@@ -521,16 +520,16 @@ export class HomeModel {
     }
 
     await prisma.user.update({
-      where : { userId : userId},
-      data : {todayInterestArray : array} as any
+      where: { userId: userId },
+      data: { todayInterestArray: array } as any
     });
-  };
+  }
 
-  public async postSuggestCoffeeChatModel (
-    myUserId : number,
-    otherUserId : number,
-    suggestion : string
-  ):Promise<number> {
+  public async postSuggestCoffeeChatModel(
+    myUserId: number,
+    otherUserId: number,
+    suggestion: string
+  ): Promise<number> {
     const currentDate = KSTtime();
 
     const alreadyExsist = await prisma.coffeeChat.findFirst({
@@ -542,13 +541,13 @@ export class HomeModel {
       }
     });
 
-    if(alreadyExsist) {
+    if (alreadyExsist) {
       throw new Error('이미 존재하는 coffeeChat 제안입니다.');
     }
 
     const coffeeChat = await prisma.coffeeChat.create({
       data: {
-        firstUserId: myUserId,   
+        firstUserId: myUserId,
         secondUserId: otherUserId,
         message: suggestion,
         coffectDate: currentDate,
@@ -561,20 +560,19 @@ export class HomeModel {
   }
 
   /** 커피챗 일정 가져오는 Model */
-  public async GetCoffeeChatScheduleModel (
-    userId : number
-  ):Promise<CoffeeChatSchedule[]> {
-
+  public async GetCoffeeChatScheduleModel(
+    userId: number
+  ): Promise<CoffeeChatSchedule[]> {
     // 현재 날짜를 한국 시간으로 가져오기
     const now = new Date();
     const kstOffset = 9 * 60; // KST는 UTC+9
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const currentDate = new Date(utc + (kstOffset * 60000));
-    
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    const currentDate = new Date(utc + kstOffset * 60000);
+
     // 오늘 날짜의 시작 시간 (00:00:00)
     const todayStart = new Date(currentDate);
     todayStart.setHours(0, 0, 0, 0);
-    
+
     // 내일 자정 (오늘은 제외, 내일 이후만 조회)
     const tomorrowStart = new Date(todayStart);
     tomorrowStart.setDate(tomorrowStart.getDate() + 1);
@@ -584,13 +582,10 @@ export class HomeModel {
     console.log('GetCoffeeChatScheduleModel - todayStart:', todayStart);
 
     const result = await prisma.coffeeChat.findMany({
-      where : { 
-        OR: [
-          { firstUserId: userId },
-          { secondUserId: userId }
-        ],
+      where: {
+        OR: [{ firstUserId: userId }, { secondUserId: userId }],
         valid: true,
-        isDelete : false,
+        isDelete: false,
         // 커피챗 일정이 내일 이후인 경우만 조회 (오늘 제외)
         coffectDate: {
           gte: tomorrowStart
@@ -619,21 +614,23 @@ export class HomeModel {
     console.log('GetCoffeeChatScheduleModel - result:', result);
 
     const schedules: CoffeeChatSchedule[] = result.map((coffeeChat: any) => {
-      const opponentId = coffeeChat.firstUserId === userId 
-        ? coffeeChat.secondUserId.toString() 
-        : coffeeChat.firstUserId.toString();
+      const opponentId =
+        coffeeChat.firstUserId === userId
+          ? coffeeChat.secondUserId.toString()
+          : coffeeChat.firstUserId.toString();
 
-      const opponentName = coffeeChat.firstUserId === userId 
-        ? coffeeChat.secondUser.name 
-        : coffeeChat.firstUser.name;
-      
+      const opponentName =
+        coffeeChat.firstUserId === userId
+          ? coffeeChat.secondUser.name
+          : coffeeChat.firstUser.name;
+
       const firstUserImage = coffeeChat.firstUser?.profileImage || '';
       const secondUserImage = coffeeChat.secondUser?.profileImage || '';
-      
+
       // 남은 일수 계산 (밀리초를 일수로 변환)
       const timeDiff = coffeeChat.coffectDate.getTime() - currentDate.getTime();
       const restDate = Math.max(0, Math.ceil(timeDiff / (1000 * 60 * 60 * 24))); // 밀리초를 일수로 변환, 음수 방지
-      
+
       return new CoffeeChatSchedule(
         opponentId,
         opponentName,
@@ -655,26 +652,27 @@ export class HomeModel {
     // 현재 날짜를 한국 시간으로 가져오기
     const now = new Date();
     const kstOffset = 9 * 60; // KST는 UTC+9
-    const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-    const currentDate = new Date(utc + (kstOffset * 60000));
-    
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    const currentDate = new Date(utc + kstOffset * 60000);
+
     // 오늘 날짜의 시작 시간 (00:00:00)
     const todayStart = new Date(currentDate);
     todayStart.setHours(0, 0, 0, 0);
-    
+
     console.log('getPastCoffeeChatModel - userId:', userId);
     console.log('getPastCoffeeChatModel - currentDate:', currentDate);
     console.log('getPastCoffeeChatModel - todayStart:', todayStart);
-    
+
     // 과거 커피챗 기록 조회 (오늘 이전의 데이터만)
     const result = await prisma.coffeeChat.findMany({
       where: {
         OR: [{ firstUserId: userId }, { secondUserId: userId }],
         valid: true,
-        isDelete : false, // 삭제된 커피챗 제외
-        coffectDate: {
-          lt: todayStart // 오늘 이전의 데이터만
-        }
+        isDelete: false // 삭제된 커피챗 제외
+        //TODO: 이 조건이 왜 필요한지 모르겠습니다.
+        // coffectDate: {
+        //   lt: todayStart // 오늘 이전의 데이터만
+        // }
       },
       select: {
         coffectId: true,
@@ -727,7 +725,8 @@ export class HomeModel {
     // CoffeeChatRecord[] 생성
     const records: CoffeeChatRecord[] = result.map((chat: any) => {
       // 상대방 구분
-      let opponent; let me;
+      let opponent;
+      let me;
       if (chat.firstUserId === userId) {
         opponent = chat.secondUser;
         me = chat.firstUser;
@@ -735,29 +734,36 @@ export class HomeModel {
         opponent = chat.firstUser;
         me = chat.secondUser;
       }
-      
+
       const opponentName = opponent?.name || '';
       // 상대방 카테고리 컬러
-      const color1 = (opponent?.categoryMatch?.[0]?.category?.categoryColor) || '';
+      const color1 =
+        opponent?.categoryMatch?.[0]?.category?.categoryColor || '';
       // 내 카테고리 컬러
-      const color2 = (me?.categoryMatch?.[0]?.category?.categoryColor) || '';
-      
+      const color2 = me?.categoryMatch?.[0]?.category?.categoryColor || '';
+
       const coffeeDate = chat.coffectDate;
-      return new CoffeeChatRecord(chat.coffectId, opponentName, color1, color2, coffeeDate);
+      return new CoffeeChatRecord(
+        chat.coffectId,
+        opponentName,
+        color1,
+        color2,
+        coffeeDate
+      );
     });
 
     return records;
-  };
+  }
 
   /** 커피챗 상세 보기 Model */
   public async getSpecifyCoffeeChatModel(
-    userId : number,
-    coffectId : number
-  ):Promise<CoffeeChatRecordDetail> {
+    userId: number,
+    coffectId: number
+  ): Promise<CoffeeChatRecordDetail> {
     // 커피챗 상세 조회 (valid 조건 제거)
     const result = await prisma.coffeeChat.findFirstOrThrow({
       where: {
-        coffectId : coffectId,
+        coffectId: coffectId,
         OR: [{ firstUserId: userId }, { secondUserId: userId }]
       },
       orderBy: {
@@ -804,7 +810,8 @@ export class HomeModel {
     });
 
     // 상대방/본인 구분
-    let opponent; let me;
+    let opponent;
+    let me;
     if (result.firstUserId === userId) {
       opponent = result.secondUser;
       me = result.firstUser;
@@ -813,8 +820,8 @@ export class HomeModel {
       me = result.secondUser;
     }
     const opponentName = opponent?.name || '';
-    const color1 = (opponent?.categoryMatch?.[0]?.category?.categoryColor) || '';
-    const color2 = (me?.categoryMatch?.[0]?.category?.categoryColor) || '';
+    const color1 = opponent?.categoryMatch?.[0]?.category?.categoryColor || '';
+    const color2 = me?.categoryMatch?.[0]?.category?.categoryColor || '';
     const coffeeDate = result.coffectDate;
     const location = result.location;
     const firstUserImage = result.firstUser?.profileImage || '';
@@ -829,18 +836,20 @@ export class HomeModel {
       firstUserImage,
       secondUserImage
     );
-  };
+  }
 
   public async fixCoffeeChatScheduleModel(
-    userId : number,
-    coffectId : number,
-    coffeeChat : Date,
-    location : string,
-    time : Date
-  ):Promise<void> {
+    userId: number,
+    coffectId: number,
+    coffeeChat: Date,
+    location: string,
+    time: Date
+  ): Promise<void> {
     // 날짜와 시간 입력을 안전하게 결합 (문자열/Date 모두 허용)
     // 1) 날짜 파싱: YYYY-MM-DD 문자열 또는 Date 지원
-    let year: number; let monthIndex: number; let day: number;
+    let year: number;
+    let monthIndex: number;
+    let day: number;
     if (typeof (coffeeChat as any) === 'string') {
       const dateStr = (coffeeChat as unknown as string).trim();
       const md = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
@@ -849,7 +858,9 @@ export class HomeModel {
         if (isNaN(d.getTime())) {
           throw new Error('Invalid coffeeDate format');
         }
-        year = d.getFullYear(); monthIndex = d.getMonth(); day = d.getDate();
+        year = d.getFullYear();
+        monthIndex = d.getMonth();
+        day = d.getDate();
       } else {
         year = parseInt(md[1], 10);
         monthIndex = parseInt(md[2], 10) - 1;
@@ -860,11 +871,16 @@ export class HomeModel {
       if (isNaN(d.getTime())) {
         throw new Error('Invalid coffeeDate value');
       }
-      year = d.getFullYear(); monthIndex = d.getMonth(); day = d.getDate();
+      year = d.getFullYear();
+      monthIndex = d.getMonth();
+      day = d.getDate();
     }
 
     // 2) 시간 파싱: 'HH:mm' / 'HH:mm:ss' 문자열 또는 Date 지원
-    let hours = 0; let minutes = 0; let seconds = 0; let ms = 0;
+    let hours = 0;
+    let minutes = 0;
+    let seconds = 0;
+    let ms = 0;
     if (typeof (time as any) === 'string') {
       const timeStr = (time as unknown as string).trim();
       const mt = timeStr.match(/^(\d{2}):(\d{2})(?::(\d{2}))?$/);
@@ -873,7 +889,10 @@ export class HomeModel {
         if (isNaN(td.getTime())) {
           throw new Error('Invalid time format');
         }
-        hours = td.getHours(); minutes = td.getMinutes(); seconds = td.getSeconds(); ms = td.getMilliseconds();
+        hours = td.getHours();
+        minutes = td.getMinutes();
+        seconds = td.getSeconds();
+        ms = td.getMilliseconds();
       } else {
         hours = parseInt(mt[1], 10);
         minutes = parseInt(mt[2], 10);
@@ -884,11 +903,22 @@ export class HomeModel {
       if (isNaN(td.getTime())) {
         throw new Error('Invalid time value');
       }
-      hours = td.getHours(); minutes = td.getMinutes(); seconds = td.getSeconds(); ms = td.getMilliseconds();
+      hours = td.getHours();
+      minutes = td.getMinutes();
+      seconds = td.getSeconds();
+      ms = td.getMilliseconds();
     }
 
     // 로컬 타임존 기준으로 조합 (연/월/일 유지, 시/분/초만 설정)
-    const combined = new Date(year, monthIndex, day, hours, minutes, seconds, ms);
+    const combined = new Date(
+      year,
+      monthIndex,
+      day,
+      hours,
+      minutes,
+      seconds,
+      ms
+    );
 
     // 먼저 레코드가 존재하는지 확인
     const existingRecord = await prisma.coffeeChat.findFirst({
@@ -899,25 +929,27 @@ export class HomeModel {
     });
 
     if (!existingRecord) {
-      throw new Error(`CoffeeChat with id ${coffectId} not found for user ${userId}`);
+      throw new Error(
+        `CoffeeChat with id ${coffectId} not found for user ${userId}`
+      );
     }
 
     await prisma.coffeeChat.update({
-      where : {
-        coffectId : coffectId,
-        OR : [{firstUserId : userId}, {secondUserId : userId}]
+      where: {
+        coffectId: coffectId,
+        OR: [{ firstUserId: userId }, { secondUserId: userId }]
       },
-      data : {
-        coffectDate : combined,
-        location : location
+      data: {
+        coffectDate: combined,
+        location: location
       }
     });
-  };
+  }
 
   public async acceptCoffeeChatModel(
-    userId : number,
-    coffectId : number
-  ):Promise<void> {
+    userId: number,
+    coffectId: number
+  ): Promise<void> {
     // 먼저 레코드가 존재하는지 확인
     const existingRecord = await prisma.coffeeChat.findFirst({
       where: {
@@ -927,44 +959,44 @@ export class HomeModel {
     });
 
     if (!existingRecord) {
-      throw new Error(`CoffeeChat with id ${coffectId} not found for user ${userId}`);
+      throw new Error(
+        `CoffeeChat with id ${coffectId} not found for user ${userId}`
+      );
     }
 
     // 수정된 쿼리 - coffectId와 userId를 모두 조건으로 사용
     await prisma.coffeeChat.update({
-      where : {
-        coffectId : coffectId,
-        OR : [{firstUserId : userId}, {secondUserId : userId}]
+      where: {
+        coffectId: coffectId,
+        OR: [{ firstUserId: userId }, { secondUserId: userId }]
       },
-      data : {
-        valid : true
+      data: {
+        valid: true
       }
     });
-  };
+  }
 
-  public async getTotalCoffeeChatCountModel(
-    userId : number
-  ):Promise<number> {
+  public async getTotalCoffeeChatCountModel(userId: number): Promise<number> {
     const result = await prisma.coffeeChat.count({
-      where : {
-        OR : [{firstUserId : userId}, {secondUserId : userId}],
-        valid : true,
-        isDelete : false
+      where: {
+        OR: [{ firstUserId: userId }, { secondUserId: userId }],
+        valid: true,
+        isDelete: false
       }
     });
 
     return result;
-  };
+  }
 
   /** 스케줄러 수동 실행 모델 */
   public async resetDailyFieldsModel(): Promise<void> {
     console.log('Manual reset job started at:', new Date().toISOString());
-    
+
     try {
       // 먼저 전체 사용자 수 확인
       const totalUsers = await prisma.user.count();
       console.log(`Total users in database: ${totalUsers}`);
-      
+
       // 모든 사용자의 daily 필드 초기화
       const result = await prisma.user.updateMany({
         where: {}, // 모든 사용자 대상
@@ -974,50 +1006,50 @@ export class HomeModel {
           todayInterestArray: []
         }
       });
-      
-      console.log(`Manual reset completed. Updated ${result.count} users out of ${totalUsers} total users`);
-      
+
+      console.log(
+        `Manual reset completed. Updated ${result.count} users out of ${totalUsers} total users`
+      );
+
       // 변경된 사용자 수가 전체 사용자 수와 일치하는지 확인
       if (result.count !== totalUsers) {
-        console.warn(`Warning: Only ${result.count} users were updated, but there are ${totalUsers} total users`);
+        console.warn(
+          `Warning: Only ${result.count} users were updated, but there are ${totalUsers} total users`
+        );
       }
     } catch (err) {
       console.error('Failed to reset daily fields:', err);
       throw err;
     }
-  };
-
+  }
 
   public async messageShowUpModel(
-    userId : number,
-    coffectId : number
-  ):Promise<CoffeeChatShowUpDTO> {
+    userId: number,
+    coffectId: number
+  ): Promise<CoffeeChatShowUpDTO> {
     const result = await prisma.coffeeChat.findFirstOrThrow({
-      where : {
-        coffectId : coffectId,
-        OR : [
-          { firstUserId : userId },
-          { secondUserId : userId }
-        ]
-      }, 
-      select : {
-        coffectId : true,
-        firstUserId : true,
-        secondUserId : true,
-        firstUser : {
-          select : {
-            userId : true,
-            name : true
+      where: {
+        coffectId: coffectId,
+        OR: [{ firstUserId: userId }, { secondUserId: userId }]
+      },
+      select: {
+        coffectId: true,
+        firstUserId: true,
+        secondUserId: true,
+        firstUser: {
+          select: {
+            userId: true,
+            name: true
           }
         },
-        secondUser : {
-          select : {
-            userId : true,
-            name : true
+        secondUser: {
+          select: {
+            userId: true,
+            name: true
           }
         },
-        message : true,
-        createdAt : true
+        message: true,
+        createdAt: true
       }
     });
 
@@ -1045,26 +1077,27 @@ export class HomeModel {
   }
 
   public async deleteCoffeeChatModel(
-    userId : number,
-    coffectId : number
-  ):Promise<void> {
+    userId: number,
+    coffectId: number
+  ): Promise<void> {
     await prisma.coffeeChat.update({
-      where : { coffectId : coffectId },
-      data : { isDelete : true }
+      where: { coffectId: coffectId },
+      data: { isDelete: true }
     });
   }
 
   public async sendAcceptFCM(
-    secondUserId : number, // 승낙 한 사람
-    coffectId : number
-  ):Promise<void> {
+    secondUserId: number, // 승낙 한 사람
+    coffectId: number
+  ): Promise<void> {
     const result = await prisma.coffeeChat.findFirstOrThrow({
-      where : { coffectId : coffectId, secondUserId : secondUserId },
-      select : {
-        firstUser : { // 승낙 되었다고 받는 사람람
-          select : {
-            userId : true,
-            name : true
+      where: { coffectId: coffectId, secondUserId: secondUserId },
+      select: {
+        firstUser: {
+          // 승낙 되었다고 받는 사람람
+          select: {
+            userId: true,
+            name: true
           }
         }
       }
@@ -1073,28 +1106,33 @@ export class HomeModel {
     // 알림 전송 - 매개변수 순서 수정
     try {
       const { FCMService } = await import('../config/fcm');
-      
+
       // FCM 토큰 유효성 사전 검증
       const userFCMToken = await prisma.userFCMToken.findUnique({
         where: { userId: result.firstUser.userId }
       });
 
       if (!userFCMToken || !userFCMToken.fcmToken) {
-        console.log(`FCM 토큰이 없는 사용자: ${result.firstUser.name} (ID: ${result.firstUser.userId})`);
+        console.log(
+          `FCM 토큰이 없는 사용자: ${result.firstUser.name} (ID: ${result.firstUser.userId})`
+        );
         return; // 토큰이 없으면 알림 전송을 건너뛰고 성공 처리
       }
 
-      const notificationResult = await FCMService.sendAcceptCoffeeChatNotification(
-        secondUserId,               // secondUserId (승낙을 보낸 사람)
-        result.firstUser.userId,    // firstUserId (승낙을 받는 사람 - 커피챗을 제안한 사람)
-        result.firstUser.name,      // 승낙을 받는 사람의 이름
-        coffectId
-      );
+      const notificationResult =
+        await FCMService.sendAcceptCoffeeChatNotification(
+          secondUserId, // secondUserId (승낙을 보낸 사람)
+          result.firstUser.userId, // firstUserId (승낙을 받는 사람 - 커피챗을 제안한 사람)
+          result.firstUser.name, // 승낙을 받는 사람의 이름
+          coffectId
+        );
 
-      if(notificationResult) {
+      if (notificationResult) {
         console.log(`알림 전송 성공: 사용자 ${result.firstUser.name}`);
       } else {
-        console.log(`알림 전송 실패: 사용자 ${result.firstUser.name} (토큰이 없거나 유효하지 않음)`);
+        console.log(
+          `알림 전송 실패: 사용자 ${result.firstUser.name} (토큰이 없거나 유효하지 않음)`
+        );
       }
     } catch (error) {
       console.error('알림 전송 실패:', error);
@@ -1103,25 +1141,23 @@ export class HomeModel {
   }
 
   public async getInterestModel(
-    oppenentUserId : number
-  ):Promise<number | null> {
+    oppenentUserId: number
+  ): Promise<number | null> {
     const checkUser = await prisma.user.findFirstOrThrow({
-      where : {
-        userId : oppenentUserId
+      where: {
+        userId: oppenentUserId
       }
     });
 
-    if(!checkUser) {
+    if (!checkUser) {
       throw new nonData('User가 존재하지 않습니다.');
     }
 
     const result = await prisma.user.findFirstOrThrow({
-      where : { userId : oppenentUserId },
-      select : {todayInterest : true }
+      where: { userId: oppenentUserId },
+      select: { todayInterest: true }
     });
 
     return result.todayInterest;
-  };
+  }
 }
-
-
