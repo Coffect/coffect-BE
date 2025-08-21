@@ -33,8 +33,11 @@ export class ChatService {
       1000,
       32,
       'sha512'
-    ).then((result) => result.toString('base64'));
+    ).then(
+      (result) => result.toString('base64').replace(/\//g, '') // 슬래시(/)를 모두 제거
+    );
 
+    console.log('chatRoomId', chatRoomId);
     if (usersRooms.some((room) => room.chatroomId === chatRoomId)) {
       // 이미 존재하는 채팅방이라면 예외 발생
       throw new ChatRoomAlreadyExists(chatRoomId);
