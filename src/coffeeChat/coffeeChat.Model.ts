@@ -838,7 +838,57 @@ export class HomeModel {
     location : string,
     time : Date
   ):Promise<void> {
-    const combineDate = new Date(coffeeChat.getTime() + time.getTime());
+    // 날짜와 시간 입력을 안전하게 결합 (문자열/Date 모두 허용)
+    // 1) 날짜 파싱: YYYY-MM-DD 문자열 또는 Date 지원
+    let year: number; let monthIndex: number; let day: number;
+    if (typeof (coffeeChat as any) === 'string') {
+      const dateStr = (coffeeChat as unknown as string).trim();
+      const md = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (!md) {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) {
+          throw new Error('Invalid coffeeDate format');
+        }
+        year = d.getFullYear(); monthIndex = d.getMonth(); day = d.getDate();
+      } else {
+        year = parseInt(md[1], 10);
+        monthIndex = parseInt(md[2], 10) - 1;
+        day = parseInt(md[3], 10);
+      }
+    } else {
+      const d = new Date(coffeeChat as any);
+      if (isNaN(d.getTime())) {
+        throw new Error('Invalid coffeeDate value');
+      }
+      year = d.getFullYear(); monthIndex = d.getMonth(); day = d.getDate();
+    }
+
+    // 2) 시간 파싱: 'HH:mm' / 'HH:mm:ss' 문자열 또는 Date 지원
+    let hours = 0; let minutes = 0; let seconds = 0; let ms = 0;
+    if (typeof (time as any) === 'string') {
+      const timeStr = (time as unknown as string).trim();
+      const mt = timeStr.match(/^(\d{2}):(\d{2})(?::(\d{2}))?$/);
+      if (!mt) {
+        const td = new Date(timeStr);
+        if (isNaN(td.getTime())) {
+          throw new Error('Invalid time format');
+        }
+        hours = td.getHours(); minutes = td.getMinutes(); seconds = td.getSeconds(); ms = td.getMilliseconds();
+      } else {
+        hours = parseInt(mt[1], 10);
+        minutes = parseInt(mt[2], 10);
+        seconds = mt[3] ? parseInt(mt[3], 10) : 0;
+      }
+    } else {
+      const td = new Date(time as any);
+      if (isNaN(td.getTime())) {
+        throw new Error('Invalid time value');
+      }
+      hours = td.getHours(); minutes = td.getMinutes(); seconds = td.getSeconds(); ms = td.getMilliseconds();
+    }
+
+    // 로컬 타임존 기준으로 조합 (연/월/일 유지, 시/분/초만 설정)
+    const combined = new Date(year, monthIndex, day, hours, minutes, seconds, ms);
 
     // 먼저 레코드가 존재하는지 확인
     const existingRecord = await prisma.coffeeChat.findFirst({
@@ -858,7 +908,7 @@ export class HomeModel {
         OR : [{firstUserId : userId}, {secondUserId : userId}]
       },
       data : {
-        coffectDate : combineDate,
+        coffectDate : combined,
         location : location
       }
     });
