@@ -196,6 +196,11 @@ export class UserModel {
         where: { userId: userId }
       });
 
+      // 8-1. 사용자가 다른 글에 남긴 Comment 삭제
+      await tx.comment.deleteMany({
+        where: { userId: userId }
+      });
+
       // 9. ChatRoomUser 삭제
       await tx.chatRoomUser.deleteMany({
         where: { userId: userId }
@@ -247,6 +252,20 @@ export class UserModel {
       });
 
       // 18. ThreadScrap 삭제
+      // 18-1. 사용자의 ThreadScrap 목록 조회 후 ScrapMatch 먼저 정리
+      const userScraps = await tx.threadScrap.findMany({
+        where: { userId: userId },
+        select: { scrapId: true }
+      });
+
+      const scrapIds = userScraps.map((scrap) => scrap.scrapId);
+      if (scrapIds.length > 0) {
+        await tx.scrapMatch.deleteMany({
+          where: { scrapId: { in: scrapIds } }
+        });
+      }
+
+      // 18-2. ThreadScrap 삭제
       await tx.threadScrap.deleteMany({
         where: { userId: userId }
       });

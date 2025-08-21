@@ -14,7 +14,10 @@ export class MongoTestController extends Controller {
       data: {
         userId,
         chatRoomId: chatRoomId,
-        messageBody
+        messageBody,
+        createdAt: new Date().toISOString(),
+        isPhoto: false,
+        check: false
       }
     });
 

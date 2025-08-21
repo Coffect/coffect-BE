@@ -14,7 +14,7 @@ model Message {
   chatRoomId String
   isPhoto Boolean @default(false)
   messageBody   String
-  createdAt DateTime @default(now())
+  createdAt String
   check Boolean @default(false)
   
   @@index([userId], map: "Message_senderId_idx")
