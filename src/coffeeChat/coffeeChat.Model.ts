@@ -1,6 +1,7 @@
 import { KSTtime } from '../config/KSTtime';
 import { prisma } from '../config/prisma.config';
 import { coffectChatCardDTO, CoffeeChatRecord, CoffeeChatRecordDetail, CoffeeChatSchedule, CoffeeChatShowUpDTO } from '../middleware/coffectChat.DTO/coffectChat.DTO';
+import { nonData } from './coffeeChat.Message';
 
 export class HomeModel {
 
@@ -142,7 +143,8 @@ export class HomeModel {
     userId: number,
     schoolDomain: number
   ): Promise<number[]> {
-    const users = await prisma.user.findMany({
+    // 같은 학교 사용자 조회
+    const sameSchoolUsers = await prisma.user.findMany({
       where: {
         userId: { not: userId },
         univId: { equals: schoolDomain }
@@ -151,7 +153,31 @@ export class HomeModel {
       take: 20
     });
 
-    return users.map((user: any) => user.userId);
+    let userIds = sameSchoolUsers.map((user: any) => user.userId);
+
+    // 같은 학교 사용자가 20명 미만이면 전체 사용자 중에서 랜덤으로 추가
+    if (userIds.length < 20) {
+      const remainingCount = 20 - userIds.length;
+      
+      // 전체 사용자 중에서 같은 학교 사용자와 본인을 제외한 사용자 조회
+      const allOtherUsers = await prisma.user.findMany({
+        where: {
+          userId: { not: userId },
+          univId: { not: schoolDomain } // 같은 학교가 아닌 사용자
+        },
+        select: { userId : true }
+      });
+
+      const otherUserIds = allOtherUsers.map((user: any) => user.userId);
+      
+      // 랜덤으로 추가할 사용자 선택
+      const shuffledOtherUsers = otherUserIds.sort(() => Math.random() - 0.5);
+      const additionalUsers = shuffledOtherUsers.slice(0, remainingCount);
+      
+      userIds = [...userIds, ...additionalUsers];
+    }
+
+    return userIds;
   };
 
   // <1> 가까운 거리 순 (같은 학교)
@@ -174,6 +200,18 @@ export class HomeModel {
       array.push(copyFiltedArray[randomIndex]);
 
       copyFiltedArray.splice(randomIndex, 1);
+    }
+
+    // 만약 4명보다 적으면 나머지는 랜덤으로 채움
+    if (array.length < 4 && filteredArray.length > array.length) {
+      const remainingUsers = filteredArray.filter(id => !array.includes(id));
+      const additionalCount = Math.min(4 - array.length, remainingUsers.length);
+      
+      for (let i = 0; i < additionalCount; i++) {
+        const randomIndex = Math.floor(Math.random() * remainingUsers.length);
+        array.push(remainingUsers[randomIndex]);
+        remainingUsers.splice(randomIndex, 1);
+      }
     }
 
     await prisma.user.update({
@@ -287,7 +325,22 @@ export class HomeModel {
     const currentGrade = userGrade.studentId;
 
     if(currentGrade === null || currentGrade === undefined) {
-      // studentId가 없으면 filteredArray 그대로 사용
+      // studentId가 없으면 랜덤으로 4명 선택
+      const copyFilteredArray = [...filteredArray];
+      const maxCount = Math.min(4, copyFilteredArray.length);
+      
+      for(let i = 0; i < maxCount; i++) {
+        if (copyFilteredArray.length === 0) break;
+        
+        const randomIndex = Math.floor(Math.random() * copyFilteredArray.length);
+        array.push(copyFilteredArray[randomIndex]);
+        copyFilteredArray.splice(randomIndex, 1);
+      }
+      
+      await prisma.user.update({
+        where: { userId: userId },
+        data: { todayInterestArray: array } as any
+      });
       return;
     }
 
@@ -363,7 +416,7 @@ export class HomeModel {
     });
 
     // 최근 게시물이 존재하는 user별로 정렬 진행
-    const userFilterThread = userRecentThread
+    const usersWithThreads = userRecentThread
       .filter((user: any) => user.threads.length > 0)
       .map((user: any) => ({
         userId: user.userId,
@@ -373,7 +426,7 @@ export class HomeModel {
       .slice(0,4)
       .map((user: any) => user.userId);
 
-    array = userFilterThread;
+    array = usersWithThreads;
 
     // 만약 4명보다 적으면 나머지는 랜덤으로 채움
     if (array.length < 4 && filteredArray.length > array.length) {
@@ -437,6 +490,40 @@ export class HomeModel {
     );
 
     return cardDTO;
+  };
+
+  /** 5. random user */
+  public async RandomUser (
+    userId : number
+  ):Promise<void> {
+    const array : number[] = [];
+
+    // 20명을 미리 추림
+    const users = await prisma.user.findMany({
+      select : {userId : true},
+      take: 20
+    });
+
+    const userArray = users.map((user : any) => user.userId);
+
+    const copyUserArray = [... userArray];
+
+    const maxCount = Math.min(4, userArray.length);
+
+    for(let i = 0; i < maxCount; i++) {
+      if(copyUserArray.length === 0) break;
+
+      const randomIndex = Math.floor(Math.random() * copyUserArray.length);
+
+      array.push(copyUserArray[randomIndex]);
+
+      copyUserArray.splice(randomIndex, 1);
+    }
+
+    await prisma.user.update({
+      where : { userId : userId},
+      data : {todayInterestArray : array} as any
+    });
   };
 
   public async postSuggestCoffeeChatModel (
@@ -940,6 +1027,27 @@ export class HomeModel {
       // 알림 전송 실패해도 커피챗 제안은 성공으로 처리
     }
   }
+
+  public async getInterestModel(
+    oppenentUserId : number
+  ):Promise<number | null> {
+    const checkUser = await prisma.user.findFirstOrThrow({
+      where : {
+        userId : oppenentUserId
+      }
+    });
+
+    if(!checkUser) {
+      throw new nonData('User가 존재하지 않습니다.');
+    }
+
+    const result = await prisma.user.findFirstOrThrow({
+      where : { userId : oppenentUserId },
+      select : {todayInterest : true }
+    });
+
+    return result.todayInterest;
+  };
 }
 
 
