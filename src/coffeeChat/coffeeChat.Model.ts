@@ -945,12 +945,22 @@ export class HomeModel {
     const result = await prisma.coffeeChat.findFirstOrThrow({
       where : {
         coffectId : coffectId,
-        secondUserId : userId
+        OR : [
+          { firstUserId : userId },
+          { secondUserId : userId }
+        ]
       }, 
       select : {
         coffectId : true,
         firstUserId : true,
+        secondUserId : true,
         firstUser : {
+          select : {
+            userId : true,
+            name : true
+          }
+        },
+        secondUser : {
           select : {
             userId : true,
             name : true
@@ -961,10 +971,24 @@ export class HomeModel {
       }
     });
 
+    // userId가 firstUserId인지 secondUserId인지 확인하여 상대방 정보 반환
+    let opponentUserId: number;
+    let opponentName: string;
+
+    if (result.firstUserId === userId) {
+      // 현재 사용자가 firstUserId인 경우, secondUser 정보 반환
+      opponentUserId = result.secondUserId;
+      opponentName = result.secondUser.name;
+    } else {
+      // 현재 사용자가 secondUserId인 경우, firstUser 정보 반환
+      opponentUserId = result.firstUserId;
+      opponentName = result.firstUser.name;
+    }
+
     return new CoffeeChatShowUpDTO(
       result.coffectId,
-      result.firstUserId,
-      result.firstUser.name,
+      opponentUserId,
+      opponentName,
       result.message || '',
       result.createdAt
     );
