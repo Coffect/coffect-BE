@@ -572,7 +572,6 @@ export class HomeController extends Controller {
     );
   }
 
-
   @Get('messageShowUp')
   @Security('jwt_token')
   @SuccessResponse('200', '성공적으로 메시지를 표시했습니다.')
@@ -597,12 +596,15 @@ export class HomeController extends Controller {
   public async messageShowUp(
     @Request() req: ExpressRequest,
     @Query() coffectId: number
-  ):Promise<ITsoaSuccessResponse<CoffeeChatShowUpDTO>> {
+  ): Promise<ITsoaSuccessResponse<CoffeeChatShowUpDTO>> {
     const userId = req.user.index;
 
-    const result = await this.homeService.messageShowUpService(userId, coffectId);
+    const result = await this.homeService.messageShowUpService(
+      userId,
+      coffectId
+    );
 
-    if(result === null) {
+    if (result === null) {
       throw new nonData('존재하지 않는 커피챗 일정입니다.');
     }
 
@@ -636,7 +638,7 @@ export class HomeController extends Controller {
       body: {
       coffectId: number;
     }
-  ):Promise<ITsoaSuccessResponse<string>> {
+  ): Promise<ITsoaSuccessResponse<string>> {
     const userId = req.user.index;
     const { coffectId } = body;
 
@@ -678,12 +680,56 @@ export class HomeController extends Controller {
   public async getInterest(
     @Request() req: ExpressRequest,
     @Query() oppenentUserId: number
-  ):Promise<ITsoaSuccessResponse<number | null>> {
+  ): Promise<ITsoaSuccessResponse<number | null>> {
     const userId = req.user.index;
 
     const result = await this.homeService.getInterestService(oppenentUserId);
 
-    if(result === 0 || result === null) {
+    if (result === 0 || result === null) {
+      throw new nonInterest('주제를 선택하지 않았습니다.');
+    }
+
+    return new TsoaSuccessResponse<number | null>(result);
+  }
+
+  @Get('getMyInterest')
+  @Security('jwt_token')
+  @SuccessResponse('200', '성공적으로 메시지를 표시했습니다.')
+  @Response<ITsoaErrorResponse>(400, 'Bad Request', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE404',
+      reason: 'User가 존재하지 않습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(400, 'Bad Request', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE406',
+      reason: '주제를 선택하지 않았습니다.',
+      data: null
+    },
+    success: null
+  })
+  @Response<ITsoaErrorResponse>(500, 'Internal Server Error', {
+    resultType: 'FAIL',
+    error: {
+      errorCode: 'HE500',
+      reason: '서버 오류가 발생했습니다.',
+      data: null
+    },
+    success: null
+  })
+  public async getMyInterest(
+    @Request() req: ExpressRequest
+  ): Promise<ITsoaSuccessResponse<number | null>> {
+    const userId = req.user.index;
+
+    const result = await this.homeService.getInterestService(userId);
+
+    if (result === 0 || result === null) {
       throw new nonInterest('주제를 선택하지 않았습니다.');
     }
 
