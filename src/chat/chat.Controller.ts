@@ -59,7 +59,7 @@ export class ChatController extends Controller {
   public async makeChatRoom(
     @Request() req: ExpressRequest,
     @Body()
-    body: {
+      body: {
       userId: number;
     }
   ): Promise<ITsoaSuccessResponse<{ chatRoomId: string }>> {
