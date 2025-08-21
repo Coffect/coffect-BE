@@ -1,4 +1,4 @@
-import { KSTtime } from '../config/KSTtime';
+import { KSTtime, KSTtimeToISOString } from '../config/KSTtime';
 import { mongo, prisma } from '../config/prisma.config';
 import { uploadToS3 } from '../config/s3';
 import { ChatDataDTO, ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
@@ -89,7 +89,7 @@ export class ChatModel {
           userId,
           chatRoomId: chatRoomId,
           messageBody: message,
-          createdAt: KSTtime(),
+          createdAt: KSTtimeToISOString(),
           isPhoto: isPhoto,
           check: false
         }
@@ -194,7 +194,7 @@ export class ChatModel {
           userId,
           chatRoomId: chatRoomId,
           messageBody: imageUrl,
-          createdAt: KSTtime(),
+          createdAt: KSTtimeToISOString(),
           isPhoto: true,
           check: false
         }
