@@ -51,9 +51,9 @@ model UserTimetable {
 }
 
 model Follow {
-  id                            Int  @id @default(autoincrement())
   followingId                   Int
   followerId                    Int
+  id                            Int  @id @default(autoincrement())
   User_Follow_followerIdToUser  User @relation("Follow_followerIdToUser", fields: [followerId], references: [userId], onDelete: Cascade, map: "fk_follow_follower")
   User_Follow_followingIdToUser User @relation("Follow_followingIdToUser", fields: [followingId], references: [userId], onDelete: Cascade, map: "fk_follow_following")
 
@@ -65,9 +65,9 @@ model Follow {
 }
 
 model ChatRoom {
-  chatroomId   String         @id @db.VarChar(100)
   createdAt    DateTime       @default(now())
   createdTime  DateTime
+  chatroomId   String         @id @db.VarChar(100)
   coffectId    Int
   ChatRoomUser ChatRoomUser[]
   Message      Message[]
@@ -78,7 +78,7 @@ model Thread {
   userId       Int
   type         Thread_type    @default(아티클)
   threadTitle  String
-  thradBody    String?
+  thradBody    String?        @db.Text
   createdAt    DateTime       @unique(map: "ThreadCreatedAtUnique") @default(now())
   threadShare  Int
   comments     Comment[]
@@ -102,7 +102,7 @@ model ThreadImage {
 model ThreadLike {
   threadId  String
   userId    Int
-  createdAt DateTime @default(now()) @db.Timestamp(3)
+  createdAt DateTime @default(now())
   thread    Thread   @relation(fields: [threadId], references: [threadId])
   user      User     @relation(fields: [userId], references: [userId])
 
@@ -161,9 +161,9 @@ model SubjectMatch {
 }
 
 model Category {
-  categoryId    Int             @id @default(autoincrement())
-  categoryColor String
   categoryName  String          @db.VarChar(255)
+  categoryColor String
+  categoryId    Int             @id @default(autoincrement())
   categoryMatch CategoryMatch[]
 }
 
@@ -227,8 +227,8 @@ model UnivList {
   created_at   DateTime? @default(now()) @db.DateTime(0)
   updated_at   DateTime? @default(now()) @db.DateTime(0)
   name_initial String?   @db.VarChar(50)
-  location     String?   @db.VarChar(100)
   domain       String?   @db.VarChar(30)
+  location     String?   @db.VarChar(100)
   User         User[]
 }
 
