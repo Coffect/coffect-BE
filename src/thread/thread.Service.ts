@@ -85,7 +85,7 @@ export class ThreadService {
     if(body.orderBy === 'createdAt'){
       results = await this.ThreadModel.lookUpThreadMainRepository(body, userId);  
     }else{
-      if(body.type === '' && body.threadSubject.length === 0){
+      if(body.type === '아티클' && body.threadSubject.length === 0){
         console.log('필터링 없는 좋아요 조회');
         results = await this.ThreadModel.threadByLikesRepository(userId);
       }else{
