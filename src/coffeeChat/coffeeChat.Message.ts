@@ -44,3 +44,14 @@ export class exsist extends BasicError {
     );
   }
 }
+
+export class nonInterest extends BasicError {
+  constructor(description: string) {
+    super (
+      400,
+      'HE406',
+      '주제를 선택하지 않았습니다.',
+      description
+    );
+  }
+}

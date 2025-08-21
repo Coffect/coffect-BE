@@ -48,7 +48,7 @@ export class HomeService {
       todayInterestArray = await this.homeModel.getTodayInterestArray(userId);
 
       if (!todayInterestArray || todayInterestArray.length === 0) {
-        throw new Error('Failed to create todayInterestArray');
+        await this.homeModel.RandomUser(userId);
       }
     }
 
@@ -215,4 +215,12 @@ export class HomeService {
   ):Promise<void> {
     await this.homeModel.deleteCoffeeChatModel(userId, coffectId);
   }
+
+  public async getInterestService(
+    oppenentUserId : number
+  ):Promise<number | null> {
+    const result = await this.homeModel.getInterestModel(oppenentUserId);
+
+    return result;
+  };
 }
