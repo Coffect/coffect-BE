@@ -59,7 +59,7 @@ export class ChatController extends Controller {
   public async makeChatRoom(
     @Request() req: ExpressRequest,
     @Body()
-      body: {
+    body: {
       userId: number;
     }
   ): Promise<ITsoaSuccessResponse<{ chatRoomId: string }>> {
@@ -187,8 +187,8 @@ export class ChatController extends Controller {
   ): Promise<ITsoaSuccessResponse<string>> {
     const userId = req.user.index;
     const chatRoomId = body.chatRoomId;
-    await this.chatService.readMessage(chatRoomId, userId);
-    return new TsoaSuccessResponse<string>('메시지 읽음 처리 성공');
+    const message = await this.chatService.readMessage(chatRoomId, userId);
+    return new TsoaSuccessResponse<string>(message);
   }
 
   /**
