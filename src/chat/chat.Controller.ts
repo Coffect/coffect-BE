@@ -182,10 +182,11 @@ export class ChatController extends Controller {
   @Security('jwt_token')
   @SuccessResponse(200, '메시지 읽음 처리 성공')
   public async readMessage(
-    @Query() chatRoomId: string,
-    @Request() req: ExpressRequest
+    @Request() req: ExpressRequest,
+    @Body() body: { chatRoomId: string }
   ): Promise<ITsoaSuccessResponse<string>> {
     const userId = req.user.index;
+    const chatRoomId = body.chatRoomId;
     await this.chatService.readMessage(chatRoomId, userId);
     return new TsoaSuccessResponse<string>('메시지 읽음 처리 성공');
   }
@@ -226,7 +227,7 @@ export class ChatController extends Controller {
   ): Promise<ITsoaSuccessResponse<string>> {
     const userId = req.user.index;
     const imageUrl = await this.chatService.uploadPhoto(image[0]);
-    
+
     //const result = await this.chatService.sendPhoto(userId, chatRoomId, imageUrl);
 
     return new TsoaSuccessResponse<string>(imageUrl);
