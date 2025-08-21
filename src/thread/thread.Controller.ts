@@ -244,8 +244,8 @@ export class ThreadController extends Controller {
   public async mainThread(
     @Request() req: ExpressRequest,
     @Body() body: {
-      type?: Thread_type;
-      threadSubject?: number[];
+      type: Thread_type | '';
+      threadSubject: number[];
       orderBy: 'createdAt' | 'likeCount';
       dateCursor?: Date
     }

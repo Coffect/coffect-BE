@@ -28,14 +28,14 @@ export class BodyToAddThread {
 }
 
 export class BodyToLookUpMainThread {
-  type?: Thread_type;
-  threadSubject?: number[];
+  type: Thread_type | '';
+  threadSubject: number[];
   orderBy: 'createdAt' | 'likeCount';
   dateCursor?: Date;
 
   constructor(body: {
-    type?: Thread_type;
-    threadSubject?: number[];
+    type: Thread_type | '';
+    threadSubject: number[];
     dateCursor?: Date;
     orderBy?: 'createdAt' | 'likeCount';
   }) {
