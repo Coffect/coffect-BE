@@ -18,5 +18,5 @@ export const KSTtimeToISOString = () => {
   const seconds = String(kstTime.getUTCSeconds()).padStart(2, '0');
   const milliseconds = String(kstTime.getUTCMilliseconds()).padStart(3, '0');
   
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}+09:00`;
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}`;
 };

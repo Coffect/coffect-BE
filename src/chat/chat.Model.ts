@@ -4,6 +4,17 @@ import { uploadToS3 } from '../config/s3';
 import { ChatDataDTO, ChatRoomsDTO } from '../middleware/chat.DTO/chat.DTO';
 
 export class ChatModel {
+  private toISOStringOrString(value: unknown): string {
+    if (typeof value === 'string') return value;
+    if (value instanceof Date) return value.toISOString();
+    try {
+      // Prisma Mongo 클라이언트가 Date 유사 객체를 줄 수도 있어 new Date 처리
+      const d = new Date(value as any);
+      return isNaN(d.getTime()) ? String(value) : d.toISOString();
+    } catch {
+      return String(value);
+    }
+  }
   public async makeChatRoom(
     myId: number,
     otherId: number,
@@ -94,7 +105,16 @@ export class ChatModel {
           check: false
         }
       });
-      return data;
+      // DTO 매핑: createdAt을 문자열(ISO)로 유지
+      return {
+        id: data.id,
+        chatRoomId: data.chatRoomId,
+        userId: data.userId,
+        messageBody: data.messageBody,
+        createdAt: this.toISOStringOrString(data.createdAt as unknown),
+        isPhoto: data.isPhoto,
+        check: data.check
+      };
     } catch (error) {
       console.error('메시지 전송 중 오류 발생:', error);
       throw new Error('메시지를 전송하는 중 오류가 발생했습니다.');
@@ -111,7 +131,15 @@ export class ChatModel {
     if (!result) {
       return null;
     }
-    return result;
+    return {
+      id: result.id,
+      chatRoomId: result.chatRoomId,
+      userId: result.userId,
+      messageBody: result.messageBody,
+      createdAt: this.toISOStringOrString(result.createdAt as unknown),
+      isPhoto: result.isPhoto,
+      check: result.check
+    };
   }
 
   public async getChatRoomInfo(chatRoomId: string): Promise<ChatDataDTO[]> {
@@ -131,7 +159,15 @@ export class ChatModel {
           createdAt: 'desc'
         }
       });
-      return result;
+      return result.map((row) => ({
+        id: row.id,
+        chatRoomId: row.chatRoomId,
+        userId: row.userId,
+        messageBody: row.messageBody,
+        createdAt: this.toISOStringOrString(row.createdAt as unknown),
+        isPhoto: row.isPhoto,
+        check: row.check
+      }));
     } catch (error) {
       console.error('채팅방 메시지 조회 중 오류 발생:', error);
       throw new Error('채팅방 메시지를 조회하는 중 오류가 발생했습니다.');
@@ -199,7 +235,15 @@ export class ChatModel {
           check: false
         }
       });
-      return data;
+      return {
+        id: data.id,
+        chatRoomId: data.chatRoomId,
+        userId: data.userId,
+        messageBody: data.messageBody,
+        createdAt: this.toISOStringOrString(data.createdAt as unknown),
+        isPhoto: data.isPhoto,
+        check: data.check
+      };
     } catch (error) {
       console.error('사진 메시지 저장 중 오류 발생:', error);
       throw new Error('사진 메시지를 저장하는 중 오류가 발생했습니다.');

@@ -9,7 +9,7 @@ export interface ChatRoomInfoDTO {
   userId: number;
   lastMessage: string | null;
   check: boolean | null;
-  lastMessageTime: Date | null; // 오타 수정 lastMeesageTime → lastMessageTime
+  lastMessageTime: string | null; // 오타 수정 lastMeesageTime → lastMessageTime
 }
 
 export interface ChatDataDTO {
@@ -17,7 +17,7 @@ export interface ChatDataDTO {
   chatRoomId: string;
   userId: number;
   messageBody: string;
-  createdAt: Date;
+  createdAt: string;
   isPhoto: boolean;
   check: boolean;
 }

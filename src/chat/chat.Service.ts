@@ -64,7 +64,7 @@ export class ChatService {
       );
       if (lastMessage) {
         room.lastMessage = lastMessage.messageBody;
-        room.lastMessageTime = lastMessage.createdAt;
+        room.lastMessageTime = lastMessage.createdAt; // string으로 일치
       }
       resultInfo.push(room);
     }
